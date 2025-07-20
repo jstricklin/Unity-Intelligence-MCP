@@ -15,7 +15,7 @@ namespace UnityCodeIntelligence.Tools
             _analyzer = analyzer;
         }
 
-        [McpServerTool("analyze_unity_project"), Description("Analyzes a Unity project structure, scripts, and diagnostics.")]
+        [McpServerTool(Name = "analyze_unity_project"), Description("Analyzes a Unity project structure, scripts, and diagnostics.")]
         public async Task<ProjectContext> AnalyzeUnityProject(
             [Description("The absolute path to the Unity project directory.")] string projectPath,
             CancellationToken cancellationToken)
@@ -24,7 +24,7 @@ namespace UnityCodeIntelligence.Tools
             return context;
         }
 
-        [McpServerTool("find_unity_performance_issues"), Description("Finds performance issues in a Unity project using Microsoft.Unity.Analyzers.")]
+        [McpServerTool(Name = "find_unity_performance_issues"), Description("Finds performance issues in a Unity project using Microsoft.Unity.Analyzers.")]
         public async Task<IEnumerable<UnityDiagnostic>> FindUnityPerformanceIssues(
             [Description("The absolute path to the Unity project directory.")] string projectPath,
             CancellationToken cancellationToken)
@@ -35,7 +35,7 @@ namespace UnityCodeIntelligence.Tools
             return context.UnityDiagnostics.Where(d => d.Id is "UNT0006");
         }
 
-        [McpServerResource("unity://project-diagnostics/{**projectPath}")]
+        [McpServerResource(Uri = "unity://project-diagnostics/{**projectPath}")]
         [Description("Gets all Unity-specific diagnostics for a project.")]
         public async Task<IEnumerable<UnityDiagnostic>> GetUnityDiagnostics(
             string projectPath,
