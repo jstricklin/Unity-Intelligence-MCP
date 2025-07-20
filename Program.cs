@@ -6,8 +6,9 @@ using UnityCodeIntelligence.Analysis;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// Disable console logging to avoid interfering with MCP stdio transport
+// Keep stdout clean for MCP stdio transport by redirecting all logs to stderr.
 builder.Logging.ClearProviders();
+builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
 
 // Configure the MCP server and discover tools/resources from the assembly.
 builder.Services.AddMcpServer(options =>
