@@ -14,7 +14,6 @@ builder.Services.AddMcpServer(options =>
 
 // Register our custom analysis services for dependency injection.
 // These can be injected into tools and resources.
-builder.Services.AddSingleton<UnityAnalyzersService>();
 builder.Services.AddSingleton<UnityRoslynAnalysisService>();
 builder.Services.AddSingleton<UnityProjectAnalyzer>();
 

@@ -7,12 +7,9 @@ namespace UnityCodeIntelligence.Analysis
     public class UnityProjectAnalyzer
     {
         private readonly UnityRoslynAnalysisService _roslynService;
-        private readonly UnityAnalyzersService _unityAnalyzers;
-
-        public UnityProjectAnalyzer(UnityRoslynAnalysisService roslynService, UnityAnalyzersService unityAnalyzers)
+        public UnityProjectAnalyzer(UnityRoslynAnalysisService roslynService)
         {
             _roslynService = roslynService;
-            _unityAnalyzers = unityAnalyzers;
         }
 
         public async Task<ProjectContext> AnalyzeProjectAsync(string projectPath, CancellationToken cancellationToken = default)
@@ -24,9 +21,7 @@ namespace UnityCodeIntelligence.Analysis
                 Path.GetFileNameWithoutExtension(st.FilePath)
             )).ToList();
             
-            var unityDiagnostics = await _unityAnalyzers.AnalyzeWithUnityRulesAsync(compilation, cancellationToken);
-
-            return new ProjectContext(projectPath, scripts, unityDiagnostics.ToList());
+            return new ProjectContext(projectPath, scripts);
         }
     }
 }
