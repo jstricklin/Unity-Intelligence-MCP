@@ -1,1 +1,41 @@
+# Aider
 .aider*
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+
+# VS Code files for debugging
+.vscode/
+
+# Visual Studio/Rider cache/options directory
+.vs/
+.idea/
+*.sln.iml
+
+# Dotnet generated files
+project.lock.json
+project.assets.json
+*.nuget.props
+*.nuget.targets
+
+# Test results
+[Tt]est[Rr]esult*/
+*.trx
+
+# Log files
+*.log
+
+# OS-generated files
+.DS_Store
+
+# Secrets
+*.pfx
+*.key
