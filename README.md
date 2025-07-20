@@ -28,49 +28,16 @@ dotnet run
 
 The server will now be running and ready to accept requests from an MCP client.
 
-## Interacting with the Server using mcp-cli
+## Interacting with the Server
 
-You can use the `mcp-cli` tool to interact with the running server.
-
-### 1. Install mcp-cli
-
-If you don't have it installed, run the following command:
+You can interact with the server using the MCP Inspector, which provides a web-based interface.
 
 ```bash
-dotnet tool install --global mcp-cli --prerelease
+# Navigate to your MCP server project directory
+cd YourMCPServerProject
+
+# Install and run the MCP Inspector
+npx @modelcontextprotocol/inspector dotnet run
 ```
 
-### 2. List Available Tools
-
-To see the tools provided by the server, use the `list-tools` command. The `--cmd` argument tells `mcp-cli` how to start our server.
-
-```bash
-mcp-cli --cmd "dotnet run" list-tools
-```
-
-### 3. Call a Tool
-
-To analyze a Unity project, use the `call-tool` command. You must provide the absolute path to your Unity project.
-
-```bash
-# Replace "/path/to/your/unity/project" with an actual path
-mcp-cli --cmd "dotnet run" call-tool analyze_unity_project '{"projectPath": "/path/to/your/unity/project"}'
-```
-
-### 4. List Available Resources
-
-To see the available data resources, use the `list-resources` command.
-
-```bash
-mcp-cli --cmd "dotnet run" list-resources
-```
-
-### 5. Get a Resource
-
-To retrieve a resource, such as project-wide diagnostics, use the `get-resource` command. The project path must be URL-encoded within the resource URI.
-
-```bash
-# Replace "/path/to/your/unity/project" with a URL-encoded path.
-# For example, '/' becomes '%2F'.
-mcp-cli --cmd "dotnet run" get-resource "unity://project-diagnostics/%2Fpath%2Fto%2Fyour%2Funity%2Fproject"
-```
+Follow the instructions in your terminal. You will be prompted to open a URL in your web browser to access the inspector, which allows you to interact with the server.
