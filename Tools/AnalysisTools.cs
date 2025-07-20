@@ -35,7 +35,7 @@ namespace UnityCodeIntelligence.Tools
             return context.UnityDiagnostics.Where(d => d.Id is "UNT0006");
         }
 
-        [McpServerResource(Uri = "unity://project-diagnostics/{**projectPath}")]
+        [McpServerResource(UriTemplate = "unity://project-diagnostics/{**projectPath}")]
         [Description("Gets all Unity-specific diagnostics for a project.")]
         public async Task<IEnumerable<UnityDiagnostic>> GetUnityDiagnostics(
             string projectPath,
