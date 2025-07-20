@@ -4,46 +4,47 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Unity.Analyzers;
 using UnityCodeIntelligence.Models;
 
-namespace UnityCodeIntelligence.Analysis;
-
-public class UnityAnalyzersService
+namespace UnityCodeIntelligence.Analysis
 {
-    private readonly IReadOnlyList<DiagnosticAnalyzer> _unityAnalyzers;
-
-    public UnityAnalyzersService()
+    public class UnityAnalyzersService
     {
-        // A subset of available analyzers for this phase.
-        _unityAnalyzers = new DiagnosticAnalyzer[]
+        private readonly IReadOnlyList<DiagnosticAnalyzer> _unityAnalyzers;
+
+        public UnityAnalyzersService()
         {
-            new EmptyUnityMessageAnalyzer(),
-            new InefficientCameraMainUsageAnalyzer(),
-            new UnityObjectNullComparisonAnalyzer(),
-        };
-    }
+            // A subset of available analyzers for this phase.
+            _unityAnalyzers = new DiagnosticAnalyzer[]
+            {
+                new EmptyUnityMessageAnalyzer(),
+                new InefficientCameraMainUsageAnalyzer(),
+                new UnityObjectNullComparisonAnalyzer(),
+            };
+        }
 
-    public async Task<IEnumerable<UnityDiagnostic>> AnalyzeWithUnityRulesAsync(
-        Compilation compilation, CancellationToken cancellationToken = default)
-    {
-        var diagnostics = new List<UnityDiagnostic>();
-        
-        var compilationWithAnalyzers = compilation.WithAnalyzers(
-            _unityAnalyzers.ToImmutableArray(), 
-            cancellationToken: cancellationToken);
+        public async Task<IEnumerable<UnityDiagnostic>> AnalyzeWithUnityRulesAsync(
+            Compilation compilation, CancellationToken cancellationToken = default)
+        {
+            var diagnostics = new List<UnityDiagnostic>();
             
-        var analyzerDiagnostics = await compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync(cancellationToken);
-        
-        diagnostics.AddRange(analyzerDiagnostics.Select(d => {
-            var lineSpan = d.Location.GetMappedLineSpan();
-            return new UnityDiagnostic(
-                d.Id,
-                d.GetMessage(),
-                d.Severity,
-                lineSpan.Path,
-                lineSpan.StartLinePosition.Line,
-                lineSpan.StartLinePosition.Character
-            );
-        }));
-        
-        return diagnostics;
+            var compilationWithAnalyzers = compilation.WithAnalyzers(
+                _unityAnalyzers.ToImmutableArray(), 
+                cancellationToken: cancellationToken);
+                
+            var analyzerDiagnostics = await compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync(cancellationToken);
+            
+            diagnostics.AddRange(analyzerDiagnostics.Select(d => {
+                var lineSpan = d.Location.GetMappedLineSpan();
+                return new UnityDiagnostic(
+                    d.Id,
+                    d.GetMessage(),
+                    d.Severity,
+                    lineSpan.Path,
+                    lineSpan.StartLinePosition.Line,
+                    lineSpan.StartLinePosition.Character
+                );
+            }));
+            
+            return diagnostics;
+        }
     }
 }
