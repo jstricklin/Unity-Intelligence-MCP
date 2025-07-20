@@ -7,7 +7,7 @@ var builder = Host.CreateApplicationBuilder(args);
 // Configure the MCP server and discover tools/resources from the assembly.
 builder.Services.AddMcpServer(options =>
     {
-        options.ServerInfo = new() { Name = "Unity Code Intelligence MCP Server" };
+        options.ServerInfo = new() { Name = "Unity Code Intelligence MCP Server", Version = "1.0.0" };
     })
     .WithStdioServerTransport()
     .WithToolsAndResourcesFromAssembly();
