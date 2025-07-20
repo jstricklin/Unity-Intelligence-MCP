@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using ModelContextProtocol;
+using ModelContextProtocol.Server;
 using UnityCodeIntelligence.Analysis;
 using UnityCodeIntelligence.Models;
 
