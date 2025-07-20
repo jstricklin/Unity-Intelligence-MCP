@@ -1,9 +1,13 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using UnityCodeIntelligence.Analysis;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+// Disable console logging to avoid interfering with MCP stdio transport
+builder.Logging.ClearProviders();
 
 // Configure the MCP server and discover tools/resources from the assembly.
 builder.Services.AddMcpServer(options =>
