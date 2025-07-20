@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ModelContextProtocol.Server;
 using UnityCodeIntelligence.Analysis;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -10,7 +11,7 @@ builder.Services.AddMcpServer(options =>
         options.ServerInfo = new() { Name = "Unity Code Intelligence MCP Server", Version = "1.0.0" };
     })
     .WithStdioServerTransport()
-    .WithToolsAndResourcesFromAssembly();
+    .WithToolsFromAssembly();
 
 // Register our custom analysis services for dependency injection.
 // These can be injected into tools and resources.
