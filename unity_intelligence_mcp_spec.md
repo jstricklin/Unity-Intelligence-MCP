@@ -306,6 +306,11 @@ public record ComponentRelationship(string TargetComponent, string Type);
 ```
 
 #### 3. Enhanced Tools
+
+The enhanced tools in Phase 2 provide deeper insights into the project's architecture and design patterns.
+
+- **`find_unity_patterns`**: This tool scans the Unity project for specific, user-defined design patterns (e.g., Singleton, Object Pool, Service Locator). It takes the project path and a list of pattern types as input, returning a detailed list of all detected occurrences. This is useful for architectural reviews and identifying code smells or best practices.
+
 ```csharp
 [Tool("find_unity_patterns")]
 public async Task<ToolResult> FindUnityPatterns(
@@ -315,7 +320,11 @@ public async Task<ToolResult> FindUnityPatterns(
         request.ProjectPath, request.PatternTypes);
     return ToolResult.Success(patterns);
 }
+```
 
+- **`analyze_component_relationships`**: This tool analyzes and visualizes the complex web of interactions between `MonoBehaviour` components. It produces a component graph that details dependencies created by `GetComponent`, `[RequireComponent]`, and event-based messaging. This is invaluable for understanding coupling and cohesion within the project's runtime architecture.
+
+```csharp
 [Tool("analyze_component_relationships")]
 public async Task<ToolResult> AnalyzeComponentRelationships(
     [FromJson] ComponentRequest request)
@@ -323,7 +332,11 @@ public async Task<ToolResult> AnalyzeComponentRelationships(
     var graph = await _componentAnalyzer.AnalyzeAsync(request.ProjectPath);
     return ToolResult.Success(graph);
 }
+```
 
+- **`get_pattern_metrics`**: This tool provides quantitative data on the usage of design patterns throughout the project. It can report on the frequency, distribution, and complexity of various patterns, offering measurable insights for assessing code quality, consistency, and architectural health.
+
+```csharp
 [Tool("get_pattern_metrics")]
 public async Task<ToolResult> GetPatternMetrics(
     [FromJson] PatternMetricRequest request)
