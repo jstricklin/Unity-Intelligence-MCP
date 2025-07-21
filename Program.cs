@@ -25,6 +25,8 @@ builder.Services.AddSingleton<UnityRoslynAnalysisService>();
 builder.Services.AddSingleton<PatternDetectorRegistry>();
 builder.Services.AddSingleton<UnityComponentRelationshipAnalyzer>();
 builder.Services.AddSingleton<UnityProjectAnalyzer>();
+builder.Services.AddSingleton<UnityPatternAnalyzer>();
+builder.Services.AddSingleton<PatternMetricsAnalyzer>();
 
 var host = builder.Build();
 await host.RunAsync();
