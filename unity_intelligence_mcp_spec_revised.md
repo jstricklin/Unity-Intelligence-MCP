@@ -159,7 +159,10 @@ public record ProjectContext(
     IReadOnlyList<ScriptInfo> Scripts,
     IReadOnlyList<AssetInfo> Assets,
     DependencyGraph Dependencies,
-    IReadOnlyList<UnityDiagnostic> UnityDiagnostics
+    IReadOnlyList<UnityDiagnostic> UnityDiagnostics,
+    // Phase 2: Pattern recognition and relationships
+    IReadOnlyList<DetectedUnityPattern> DetectedPatterns,
+    UnityComponentGraph ComponentRelationships
 );
 
 public record ScriptInfo(
