@@ -3,21 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace UnityCodeIntelligence.Analysis
 {
     public class UnityComponentRelationshipAnalyzer
     {
-        private readonly UnityProjectAnalyzer _projectAnalyzer;
+        private readonly UnityRoslynAnalysisService _roslynService;
 
-        public UnityComponentRelationshipAnalyzer(UnityProjectAnalyzer projectAnalyzer)
+        public UnityComponentRelationshipAnalyzer(UnityRoslynAnalysisService roslynService)
         {
-            _projectAnalyzer = projectAnalyzer;
+            _roslynService = roslynService;
         }
 
         public async Task<UnityComponentGraph> AnalyzeAsync(string projectPath, CancellationToken cancellationToken)
         {
-            var context = await _projectAnalyzer.AnalyzeProjectAsync(projectPath, cancellationToken);
+            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, cancellationToken);
+            
+            var scripts = compilation.SyntaxTrees.Select(st => new ScriptInfo(
+                st.FilePath,
+                Path.GetFileNameWithoutExtension(st.FilePath),
+                "MonoBehaviour" // TODO: Replace with actual base type from Roslyn analysis
+            )).ToList();
+            
+            var context = new ProjectContext(projectPath, scripts, new List<DetectedUnityPattern>(), new UnityComponentGraph());
+            
             return AnalyzeMonoBehaviours(context);
         }
 
