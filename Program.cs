@@ -8,7 +8,8 @@ var builder = Host.CreateApplicationBuilder(args);
 
 // Keep stdout clean for MCP stdio transport by redirecting all logs to stderr.
 builder.Logging.ClearProviders();
-builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
+// This can be changed to LogLevel.Trace for verbose debugging output.
+builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Warning);
 
 // Configure the MCP server and discover tools/resources from the assembly.
 builder.Services.AddMcpServer(options =>
