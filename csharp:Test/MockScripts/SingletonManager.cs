@@ -1,20 +1,20 @@
-public class SingletonManager : MonoBehaviour
-{
-    private static SingletonManager _instance;
+// public class SingletonManager : MonoBehaviour
+// {
+//     private static SingletonManager _instance;
     
-    public static SingletonManager Instance {
-        get { return _instance; }
-    }
+//     public static SingletonManager Instance {
+//         get { return _instance; }
+//     }
     
-    private void Awake() 
-    {
-        if (_instance != null && _instance != this) 
-        { 
-            Destroy(this.gameObject);
-            return;
-        }
+//     private void Awake() 
+//     {
+//         if (_instance != null && _instance != this) 
+//         { 
+//             Destroy(this.gameObject);
+//             return;
+//         }
         
-        _instance = this;
-        DontDestroyOnLoad(this.gameObject);
-    }
-}
+//         _instance = this;
+//         DontDestroyOnLoad(this.gameObject);
+//     }
+// }
