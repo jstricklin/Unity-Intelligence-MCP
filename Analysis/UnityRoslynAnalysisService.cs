@@ -6,16 +6,23 @@ namespace UnityCodeIntelligence.Analysis
 {
     public class UnityRoslynAnalysisService
     {
-        // A more robust implementation would locate Unity-specific assemblies.
-        // For now, we'll use a basic set of references to enable analysis.
-        private static readonly IReadOnlyList<MetadataReference> References = new[]
-        {
-            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-            MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location),
-        };
-
         public async Task<Compilation> CreateUnityCompilationAsync(string projectPath, CancellationToken cancellationToken = default)
         {
+            var references = new List<MetadataReference>
+            {
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location)
+            };
+
+            var unityScriptAssembliesPath = Path.Combine(projectPath, "Library", "ScriptAssemblies");
+            if (Directory.Exists(unityScriptAssembliesPath))
+            {
+                foreach (var dll in Directory.GetFiles(unityScriptAssembliesPath, "*.dll"))
+                {
+                    references.Add(MetadataReference.CreateFromFile(dll));
+                }
+            }
+
             var syntaxTrees = new List<SyntaxTree>();
             var csFiles = Directory.GetFiles(projectPath, "*.cs", SearchOption.AllDirectories);
 
@@ -32,14 +39,14 @@ namespace UnityCodeIntelligence.Analysis
                 {
                     // Suppress errors about missing references to proceed with analysis.
                     { "CS1701", ReportDiagnostic.Suppress },
-                    { "CS0012", ReportDiagnostic.Suppress }, 
+                    { "CS0012", ReportDiagnostic.Suppress },
                     { "CS0246", ReportDiagnostic.Suppress }
                 });
 
             var compilation = CSharpCompilation.Create(
                 "UnityProject",
                 syntaxTrees,
-                References,
+                references,
                 compilationOptions
             );
 
