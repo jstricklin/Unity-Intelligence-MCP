@@ -197,91 +197,150 @@ public class RoslynAnalysisService
    }
    ```
 
-### Phase 2: Enhanced Intelligence (Pattern Recognition)
+### Phase 2: Enhanced Unity Intelligence (Pattern Recognition & Analysis)
 **Priority: High | Effort: High**
 
-1. **Pattern Recognition Engine**
-   ```csharp
-   public class UnityPatternAnalyzer : IAnalysisPlugin
-   {
-       private readonly IReadOnlyList<IPatternDetector> _detectors = new[]
-       {
-           new SingletonPatternDetector(),
-           new ObserverPatternDetector(),
-           new ObjectPoolPatternDetector(),
-           new ComponentPatternDetector()
-       };
-       
-       public async Task<AnalysisResult> AnalyzeAsync(AnalysisContext context, 
-                                                     CancellationToken cancellationToken = default)
-       {
-           var patterns = new List<DetectedPattern>();
-           
-           foreach (var script in context.Scripts)
-           {
-               foreach (var detector in _detectors)
-               {
-                   if (await detector.DetectAsync(script, cancellationToken))
-                   {
-                       patterns.Add(new DetectedPattern(detector.PatternName, 
-                                                      script.Path, detector.Confidence));
-                   }
-               }
-           }
-           
-           return new AnalysisResult { DetectedPatterns = patterns };
-       }
-   }
-   ```
+#### 1. Unity-Specific Pattern Recognition
+```csharp
+public class UnityPatternAnalyzer : IAnalysisPlugin
+{
+    private readonly IReadOnlyList<IUnityPatternDetector> _detectors = new[]
+    {
+        // Core Unity patterns
+        new SingletonPatternDetector(),
+        new ObjectPoolPatternDetector(),
+        new CoroutinePatternDetector(),
+        new ScriptableObjectPatternDetector(),
+        
+        // Event system patterns
+        new UnityEventPatternDetector(),
+        new GenericEventPatternDetector(),
+        
+        // Runtime efficiency patterns
+        new AddressablesUsageDetector(),
+        new StateMachinePatternDetector(),
+        new ServiceLocatorPatternDetector()
+    };
 
-2. **Context-Aware Analysis**
-   ```csharp
-   public class ComponentRelationshipAnalyzer
-   {
-       public async Task<ComponentGraph> AnalyzeRelationshipsAsync(
-           IEnumerable<ScriptInfo> scripts)
-       {
-           var graph = new ComponentGraph();
-           
-           foreach (var script in scripts.Where(s => IsMonoBehaviour(s)))
-           {
-               var relationships = await ExtractRelationshipsAsync(script);
-               graph.AddComponent(script.ClassName, relationships);
-           }
-           
-           return graph;
-       }
-       
-       private async Task<IEnumerable<ComponentRelationship>> ExtractRelationshipsAsync(
-           ScriptInfo script)
-       {
-           // Use Roslyn to find GetComponent calls, field references, etc.
-           var walker = new ComponentUsageWalker(script.SemanticModel);
-           walker.Visit(script.SyntaxTree.GetRoot());
-           return walker.Relationships;
-       }
-   }
-   ```
+    public async Task<AnalysisResult> AnalyzeAsync(AnalysisContext context, 
+                                                   CancellationToken cancellationToken = default)
+    {
+        var patterns = new List<DetectedUnityPattern>();
+        
+        foreach (var script in context.Scripts)
+        {
+            foreach (var detector in _detectors)
+            {
+                if (await detector.DetectAsync(script, cancellationToken))
+                {
+                    patterns.Add(new DetectedUnityPattern(
+                        detector.PatternName, 
+                        script.Path,
+                        0.95f,
+                        new Dictionary<string, object> {
+                            {"Confidence", CalculateConfidence(script)},
+                            {"PerformanceImpact", detector.EstimateImpact(script)}
+                        }
+                    ));
+                }
+            }
+        }
+        
+        return new AnalysisResult { DetectedUnityPatterns = patterns };
+    }
+}
 
-3. **Enhanced Tools**
-   ```csharp
-   [Tool("find_usage_patterns")]
-   public async Task<ToolResult> FindUsagePatterns(
-       [FromJson] PatternSearchRequest request)
-   {
-       var patterns = await _patternAnalyzer.FindPatternsAsync(
-           request.ProjectPath, request.PatternTypes);
-       return ToolResult.Success(patterns);
-   }
-   
-   [Tool("analyze_architecture")]
-   public async Task<ToolResult> AnalyzeArchitecture(
-       [FromJson] ArchitectureRequest request)
-   {
-       var analysis = await _architectureAnalyzer.AnalyzeAsync(request.ProjectPath);
-       return ToolResult.Success(analysis);
-   }
-   ```
+public interface IUnityPatternDetector
+{
+    string PatternName { get; }
+    Task<bool> DetectAsync(ScriptInfo script, CancellationToken cancellationToken);
+    float EstimateImpact(ScriptInfo script);
+}
+```
+
+#### 2. Component Relationship Analysis
+```csharp
+public class UnityComponentRelationshipAnalyzer
+{
+    public UnityComponentGraph AnalyzeMonoBehaviours(ProjectContext context)
+    {
+        var graph = new UnityComponentGraph();
+        
+        foreach (var script in context.Scripts.Where(s => s.IsMonoBehaviour))
+        {
+            var relationships = new List<ComponentRelationship>();
+            
+            // 1. Required components
+            relationships.AddRange(script.RequiredComponents
+                .Select(c => new ComponentRelationship(c, "Requires")));
+            
+            // 2. Component usage in code
+            relationships.AddRange(FindComponentUsages(script));
+            
+            // 3. Message-based dependencies
+            relationships.AddRange(FindMessageReceivers(script));
+            
+            graph.AddNode(script.ClassName, relationships);
+        }
+        return graph;
+    }
+    
+    private IEnumerable<ComponentRelationship> FindComponentUsages(ScriptInfo script)
+    {
+        // Roslyn-based analysis of GetComponent/RequireComponent
+    }
+}
+
+public class UnityComponentGraph
+{
+    // Component-centric graph representation
+    public Dictionary<string, List<ComponentRelationship>> Nodes { get; } = new();
+    
+    public void AddNode(string component, List<ComponentRelationship> relationships)
+    {
+        Nodes[component] = relationships;
+    }
+}
+
+public record ComponentRelationship(string TargetComponent, string Type);
+```
+
+#### 3. Enhanced Tools
+```csharp
+[Tool("find_unity_patterns")]
+public async Task<ToolResult> FindUnityPatterns(
+    [FromJson] PatternSearchRequest request)
+{
+    var patterns = await _patternAnalyzer.FindPatternsAsync(
+        request.ProjectPath, request.PatternTypes);
+    return ToolResult.Success(patterns);
+}
+
+[Tool("analyze_component_relationships")]
+public async Task<ToolResult> AnalyzeComponentRelationships(
+    [FromJson] ComponentRequest request)
+{
+    var graph = await _componentAnalyzer.AnalyzeAsync(request.ProjectPath);
+    return ToolResult.Success(graph);
+}
+
+[Tool("get_pattern_metrics")]
+public async Task<ToolResult> GetPatternMetrics(
+    [FromJson] PatternMetricRequest request)
+{
+    var metrics = await _patternMetrics.GetMetricsAsync(request.ProjectPath);
+    return ToolResult.Success(metrics);
+}
+```
+
+### Pattern Detection Metrics
+| Pattern | Accuracy Target | Key Risk Detection |
+|---------|-----------------|--------------------|
+| Generic Events | 97% | Memory leaks, thread safety |
+| Coroutines | 95% | Long-running operations |
+| Object Pools | 96% | Size explosion, stale objects |
+| ScriptableObjects | 98% | Serialization errors |
+| Addressables | 94% | Async loading bottlenecks |
 
 ### Phase 3: Semantic Intelligence (AI-Enhanced Understanding)
 **Priority: Medium | Effort: High**
