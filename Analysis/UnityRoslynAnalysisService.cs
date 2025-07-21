@@ -84,7 +84,7 @@ namespace UnityCodeIntelligence.Analysis
         private string? ResolveUnityEditorPath(string projectPath)
         {
             // Strategy 1: Explicit configuration (Production Priority)
-            var installRoot = Environment.GetEnvironmentVariable("UNITY_INSTALL_ROOT");
+            var installRoot = ConfigurationService.UnitySettings.InstallRoot;
             var projectVersion = GetUnityVersionFromProject(projectPath);
             
             if (!string.IsNullOrEmpty(installRoot) && !string.IsNullOrEmpty(projectVersion))
@@ -104,7 +104,7 @@ namespace UnityCodeIntelligence.Analysis
             }
 
             // Strategy 2: Direct override (for development/testing)
-            var directPath = Environment.GetEnvironmentVariable("UNITY_EDITOR_PATH");
+            var directPath = ConfigurationService.UnitySettings.EditorPath;
             if (!string.IsNullOrEmpty(directPath))
             {
                 if (Directory.Exists(directPath))
@@ -121,7 +121,7 @@ namespace UnityCodeIntelligence.Analysis
 
             // Strategy 3: Configuration missing - fail with helpful message
             var missingConfig = new List<string>();
-            if (string.IsNullOrEmpty(installRoot)) missingConfig.Add("UNITY_INSTALL_ROOT");
+            if (string.IsNullOrEmpty(installRoot)) missingConfig.Add("UnityAnalysisSettings:InstallRoot in appsettings.json");
             if (string.IsNullOrEmpty(projectVersion)) missingConfig.Add("Unity project version");
 
             var errorMessage = $"Unity Editor path cannot be resolved. Missing: {string.Join(", ", missingConfig)}";

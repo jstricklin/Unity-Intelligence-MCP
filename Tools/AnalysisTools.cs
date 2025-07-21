@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
@@ -30,34 +31,45 @@ namespace UnityCodeIntelligence.Tools
 
         [McpServerTool(Name = "analyze_unity_project"), Description("Analyzes a Unity project structure, scripts, and diagnostics.")]
         public Task<ProjectContext> AnalyzeUnityProject(
-            [Description("The absolute path to the Unity project directory.")] string projectPath,
             CancellationToken cancellationToken)
         {
+            var projectPath = GetConfiguredProjectPath();
             return _projectAnalyzer.AnalyzeProjectAsync(projectPath, cancellationToken);
         }
 
         [McpServerTool(Name = "find_unity_patterns"), Description("Scans the Unity project for specific design patterns.")]
         public Task<IEnumerable<DetectedPattern>> FindUnityPatterns(
-            PatternSearchRequest request,
+            [Description("A list of pattern names to search for.")] List<string> patternTypes,
             CancellationToken cancellationToken)
         {
-            return _patternAnalyzer.FindPatternsAsync(request.ProjectPath, request.PatternTypes, cancellationToken);
+            var projectPath = GetConfiguredProjectPath();
+            return _patternAnalyzer.FindPatternsAsync(projectPath, patternTypes, cancellationToken);
         }
 
         [McpServerTool(Name = "analyze_component_relationships"), Description("Analyzes and returns a graph of MonoBehaviour component interactions.")]
         public Task<UnityComponentGraph> AnalyzeComponentRelationships(
-            ComponentRequest request,
             CancellationToken cancellationToken)
         {
-            return _componentAnalyzer.AnalyzeAsync(request.ProjectPath, cancellationToken);
+            var projectPath = GetConfiguredProjectPath();
+            return _componentAnalyzer.AnalyzeAsync(projectPath, cancellationToken);
         }
 
         [McpServerTool(Name = "get_pattern_metrics"), Description("Provides quantitative data on the usage of design patterns throughout the project.")]
         public Task<PatternMetrics> GetPatternMetrics(
-            PatternMetricRequest request,
             CancellationToken cancellationToken)
         {
-            return _patternMetricsAnalyzer.GetMetricsAsync(request.ProjectPath, cancellationToken);
+            var projectPath = GetConfiguredProjectPath();
+            return _patternMetricsAnalyzer.GetMetricsAsync(projectPath, cancellationToken);
+        }
+
+        private string GetConfiguredProjectPath()
+        {
+            var projectPath = ConfigurationService.UnitySettings.ProjectPath;
+            if (string.IsNullOrEmpty(projectPath))
+            {
+                throw new InvalidOperationException("Unity project path is not configured in appsettings.json (UnityAnalysisSettings:ProjectPath).");
+            }
+            return projectPath;
         }
     }
 }
