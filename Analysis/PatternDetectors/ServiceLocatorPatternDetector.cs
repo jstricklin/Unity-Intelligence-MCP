@@ -1,3 +1,4 @@
+using UnityCodeIntelligence.Analysis;
 using UnityCodeIntelligence.Models;
 using System.Threading.Tasks;
 using System.Threading;
