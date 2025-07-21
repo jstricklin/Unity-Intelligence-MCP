@@ -1,15 +1,27 @@
 using Microsoft.CodeAnalysis;
 using System.IO;
 using UnityCodeIntelligence.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace UnityCodeIntelligence.Analysis
 {
     public class UnityProjectAnalyzer
     {
         private readonly UnityRoslynAnalysisService _roslynService;
-        public UnityProjectAnalyzer(UnityRoslynAnalysisService roslynService)
+        private readonly PatternDetectorRegistry _patternDetectors;
+        private readonly UnityComponentRelationshipAnalyzer _relationshipAnalyzer;
+        
+        public UnityProjectAnalyzer(
+            UnityRoslynAnalysisService roslynService,
+            PatternDetectorRegistry patternDetectors,
+            UnityComponentRelationshipAnalyzer relationshipAnalyzer)
         {
             _roslynService = roslynService;
+            _patternDetectors = patternDetectors;
+            _relationshipAnalyzer = relationshipAnalyzer;
         }
 
         public async Task<ProjectContext> AnalyzeProjectAsync(string projectPath, CancellationToken cancellationToken = default)
@@ -21,7 +33,33 @@ namespace UnityCodeIntelligence.Analysis
                 Path.GetFileNameWithoutExtension(st.FilePath)
             )).ToList();
             
-            return new ProjectContext(projectPath, scripts);
+            // Run pattern detection
+            var patterns = new List<DetectedUnityPattern>();
+            foreach (var script in scripts)
+            {
+                foreach (var detector in _patternDetectors.GetAllDetectors())
+                {
+                    if (await detector.DetectAsync(script, cancellationToken))
+                    {
+                        patterns.Add(new DetectedUnityPattern(
+                            detector.PatternName,
+                            script.Path,
+                            script.ClassName,
+                            detector.Confidence
+                        ));
+                    }
+                }
+            }
+            
+            // Analyze component relationships
+            var relationships = _relationshipAnalyzer.Analyze(scripts);
+            
+            return new ProjectContext(
+                projectPath,
+                scripts,
+                patterns,
+                relationships
+            );
         }
     }
 }

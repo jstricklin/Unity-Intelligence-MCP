@@ -1,14 +1,41 @@
-namespace UnityCodeIntelligence.Models;
+using System.Collections.Generic;
 
-public record ProjectContext(
-    string RootPath,
-    IReadOnlyList<ScriptInfo> Scripts
-);
+namespace UnityCodeIntelligence.Models
+{
+    public record ProjectContext(
+        string RootPath,
+        IReadOnlyList<ScriptInfo> Scripts,
+        IReadOnlyList<DetectedUnityPattern> DetectedPatterns,
+        UnityComponentGraph ComponentRelationships
+    );
 
-public record ScriptInfo(
-    string Path,
-    string ClassName
-);
+    public record ScriptInfo(
+        string Path,
+        string ClassName
+    );
 
-// Request models for tools
-public record UnityProjectAnalysisRequest(string ProjectPath);
+    public record DetectedUnityPattern(
+        string PatternName,
+        string ScriptPath,
+        string ClassName,
+        float Confidence = 1.0f
+    );
+
+    public record ComponentRelationship(
+        string TargetComponent,
+        string RelationshipType
+    );
+
+    public class UnityComponentGraph
+    {
+        public Dictionary<string, List<ComponentRelationship>> Nodes { get; } = new();
+        
+        public void AddNode(string className, List<ComponentRelationship> relationships)
+        {
+            Nodes[className] = relationships;
+        }
+    }
+
+    // Request models for tools
+    public record UnityProjectAnalysisRequest(string ProjectPath);
+}
