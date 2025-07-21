@@ -30,7 +30,8 @@ namespace UnityCodeIntelligence.Analysis
             
             var scripts = compilation.SyntaxTrees.Select(st => new ScriptInfo(
                 st.FilePath,
-                Path.GetFileNameWithoutExtension(st.FilePath)
+                Path.GetFileNameWithoutExtension(st.FilePath),
+                "MonoBehaviour" // TODO: Replace with actual base type from Roslyn analysis
             )).ToList();
             
             // Run pattern detection
@@ -52,7 +53,8 @@ namespace UnityCodeIntelligence.Analysis
             }
             
             // Analyze component relationships
-            var relationships = _relationshipAnalyzer.Analyze(scripts);
+            var partialContext = new ProjectContext(projectPath, scripts, patterns, new UnityComponentGraph());
+            var relationships = _relationshipAnalyzer.AnalyzeMonoBehaviours(partialContext);
             
             return new ProjectContext(
                 projectPath,

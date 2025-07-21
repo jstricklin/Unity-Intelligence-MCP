@@ -11,7 +11,8 @@ namespace UnityCodeIntelligence.Models
 
     public record ScriptInfo(
         string Path,
-        string ClassName
+        string ClassName,
+        string BaseType
     );
 
     public record DetectedUnityPattern(
