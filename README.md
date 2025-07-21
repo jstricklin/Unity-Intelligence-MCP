@@ -34,10 +34,13 @@ You can interact with the server using the MCP Inspector, which provides a web-b
 
 ```bash
 # Navigate to your MCP server project directory
-cd YourMCPServerProject
+# (The directory containing Unity_Intelligence_MCP.csproj)
+cd path/to/Unity_Intelligence_MCP
 
 # Install and run the MCP Inspector
 npx @modelcontextprotocol/inspector dotnet run
 ```
 
-Follow the instructions in your terminal. You will be prompted to open a URL in your web browser to access the inspector, which allows you to interact with the server.
+Follow the instructions in your terminal. You will be prompted to open a URL in your web browser to access the inspector.
+
+From the web interface, you can select a tool like `analyze_unity_project`. The inspector will then display a form where you must provide the required arguments, such as the `projectPath`. Enter the full, absolute path to your Unity project and execute the tool.
