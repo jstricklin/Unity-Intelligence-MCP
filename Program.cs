@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Server;
 using UnityCodeIntelligence.Extensions;
 
@@ -18,8 +17,9 @@ builder.Services
         options.ServerInfo = new() { Name = "Unity Code Intelligence MCP Server", Version = "1.0.0" };
     })
     .WithStdioServerTransport()
-    .WithToolsFromAssembly()
-    .AddUnityAnalysisServices(); // Clean registration using extension method
+    .WithToolsFromAssembly();
+// Clean registration using extension method below
+builder.Services.AddUnityAnalysisServices();
 
 var host = builder.Build();
 await host.RunAsync();
