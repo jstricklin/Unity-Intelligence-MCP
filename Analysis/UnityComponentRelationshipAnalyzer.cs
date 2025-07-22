@@ -29,8 +29,9 @@ namespace UnityCodeIntelligence.Analysis
         {
             var graph = new UnityComponentGraph();
             var monoBehaviourSymbol = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
+            Console.Error.WriteLine($"[DEBUG] {monoBehaviourSymbol} MonoBehaviour symbol test");
             if (monoBehaviourSymbol == null) return graph; // MonoBehaviour not found
-
+            Console.Error.WriteLine($"[INFO] {DateTime.UtcNow:O} MonoBehaviour analysis starting");
             var monoBehaviourClasses = new List<INamedTypeSymbol>();
             foreach (var tree in compilation.SyntaxTrees)
             {
@@ -99,7 +100,7 @@ namespace UnityCodeIntelligence.Analysis
             return false;
         }
 
-        private string GetRelationshipType(string methodName) => methodName switch
+        private string? GetRelationshipType(string methodName) => methodName switch
         {
             "GetComponent" or "GetComponents" or "GetComponentInChildren" or "GetComponentsInChildren" or "GetComponentInParent" or "GetComponentsInParent" or "FindObjectOfType" or "FindObjectsOfType" => $"Reference ({methodName})",
             "AddComponent" => $"Creation ({methodName})",

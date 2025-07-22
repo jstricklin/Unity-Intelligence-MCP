@@ -53,8 +53,7 @@ namespace UnityCodeIntelligence.Analysis
             }
             
             // Analyze component relationships
-            var partialContext = new ProjectContext(projectPath, scripts, patterns, new UnityComponentGraph());
-            var relationships = _relationshipAnalyzer.AnalyzeMonoBehaviours(partialContext);
+            var relationships = _relationshipAnalyzer.AnalyzeMonoBehaviours(compilation, cancellationToken);
             
             return new ProjectContext(
                 projectPath,
