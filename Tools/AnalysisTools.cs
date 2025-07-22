@@ -4,7 +4,10 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
-using UnityCodeIntelligence.Analysis;
+using UnityCodeIntelligence.Configuration;
+using UnityCodeIntelligence.Core.Analysis.Patterns;
+using UnityCodeIntelligence.Core.Analysis.Project;
+using UnityCodeIntelligence.Core.Analysis.Relationships;
 using UnityCodeIntelligence.Models;
 
 namespace UnityCodeIntelligence.Tools

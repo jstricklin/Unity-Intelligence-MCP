@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityCodeIntelligence.Analysis.PatternDetectors;
 
-namespace UnityCodeIntelligence.Analysis
+namespace UnityCodeIntelligence.Core.Analysis.Patterns
 {
     public class PatternDetectorRegistry
     {

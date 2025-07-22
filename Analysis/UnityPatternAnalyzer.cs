@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityCodeIntelligence.Core.Analysis.Project;
 using UnityCodeIntelligence.Models;
 
-namespace UnityCodeIntelligence.Analysis
+namespace UnityCodeIntelligence.Core.Analysis.Patterns
 {
     public class UnityPatternAnalyzer
     {

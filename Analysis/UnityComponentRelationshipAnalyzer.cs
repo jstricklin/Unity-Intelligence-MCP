@@ -7,8 +7,9 @@ using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using UnityCodeIntelligence.Core.Compilation;
 
-namespace UnityCodeIntelligence.Analysis
+namespace UnityCodeIntelligence.Core.Analysis.Relationships
 {
     public class UnityComponentRelationshipAnalyzer
     {
@@ -19,9 +20,9 @@ namespace UnityCodeIntelligence.Analysis
             _roslynService = roslynService;
         }
 
-        public async Task<UnityComponentGraph> AnalyzeAsync(string projectPath, CancellationToken cancellationToken)
+        public async Task<UnityComponentGraph> AnalyzeAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken)
         {
-            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, cancellationToken);
+            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, searchScope, cancellationToken);
             return AnalyzeMonoBehaviours(compilation, cancellationToken);
         }
 

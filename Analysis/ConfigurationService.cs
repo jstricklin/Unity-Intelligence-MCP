@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using UnityCodeIntelligence.Models;
 
-namespace UnityCodeIntelligence.Analysis
+namespace UnityCodeIntelligence.Configuration
 {
     public static class ConfigurationService
     {

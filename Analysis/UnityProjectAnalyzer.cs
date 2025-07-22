@@ -5,8 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityCodeIntelligence.Core.Analysis.Patterns;
+using UnityCodeIntelligence.Core.Analysis.Relationships;
+using UnityCodeIntelligence.Core.Compilation;
 
-namespace UnityCodeIntelligence.Analysis
+namespace UnityCodeIntelligence.Core.Analysis.Project
 {
     public class UnityProjectAnalyzer
     {
