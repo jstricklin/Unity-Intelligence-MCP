@@ -17,7 +17,8 @@ builder.Services
         options.ServerInfo = new() { Name = "Unity Code Intelligence MCP Server", Version = "1.0.0" };
     })
     .WithStdioServerTransport()
-    .WithToolsFromAssembly();
+    .WithToolsFromAssembly()
+    .WithResourcesFromAssembly(); // Add this to discover resources
 // Clean registration using extension method below
 builder.Services.AddUnityAnalysisServices();
 
