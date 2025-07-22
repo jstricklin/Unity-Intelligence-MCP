@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using System;
 using System.IO;
 using UnityCodeIntelligence.Models;
 
@@ -7,19 +6,17 @@ namespace UnityCodeIntelligence.Configuration
 {
     public static class ConfigurationService
     {
-        public static UnityAnalysisSettings UnitySettings { get; }
+        public static UnityAnalysisSettings UnitySettings { get; } = LoadSettings();
 
-        static ConfigurationService()
+        private static UnityAnalysisSettings LoadSettings()
         {
-            var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
-
-            var configuration = new ConfigurationBuilder()
+            return new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true)
-                .Build();
-
-            UnitySettings = configuration.GetSection("UnityAnalysisSettings").Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddEnvironmentVariables()
+                .Build()
+                .GetSection("UnityAnalysisSettings")
+                .Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
         }
     }
 }
