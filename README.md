@@ -47,6 +47,17 @@ All settings are located within the `UnityAnalysisSettings` object in `appsettin
 
 To function, the analyzer must be able to locate the Unity Editor installation. You must configure **either** `InstallRoot` (so the editor can be found automatically) **or** provide a direct `EditorPath`.
 
+### Sample appsettings.json:
+```
+{
+  "UnityAnalysisSettings": {
+    "InstallRoot": "/Applications/Unity/Hub/Editor/",
+    "EditorPath": "",
+    "ProjectPath": "C:\\Path\\To\\Your\\UnityProject"
+  }
+}
+```
+
 ## Interacting with the Server
 
 You can interact with the server using the MCP Inspector, which provides a web-based interface.
