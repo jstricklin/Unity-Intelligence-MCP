@@ -19,9 +19,9 @@ namespace UnityCodeIntelligence.Analysis
             _roslynService = roslynService;
         }
 
-        public async Task<UnityComponentGraph> AnalyzeAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken)
+        public async Task<UnityComponentGraph> AnalyzeAsync(string projectPath, CancellationToken cancellationToken)
         {
-            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, searchScope, cancellationToken);
+            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, cancellationToken);
             return AnalyzeMonoBehaviours(compilation, cancellationToken);
         }
 
@@ -29,9 +29,7 @@ namespace UnityCodeIntelligence.Analysis
         {
             var graph = new UnityComponentGraph();
             var monoBehaviourSymbol = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
-            Console.Error.WriteLine($"[DEBUG] {monoBehaviourSymbol} MonoBehaviour symbol test");
             if (monoBehaviourSymbol == null) return graph; // MonoBehaviour not found
-            Console.Error.WriteLine($"[INFO] {DateTime.UtcNow:O} MonoBehaviour analysis starting");
             var monoBehaviourClasses = new List<INamedTypeSymbol>();
             foreach (var tree in compilation.SyntaxTrees)
             {
