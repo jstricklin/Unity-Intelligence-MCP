@@ -2,7 +2,7 @@ using UnityCodeIntelligence.Models;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityCodeIntelligence.Analysis.PatternDetectors;
+using UnityCodeIntelligence.Core.Analysis.Patterns.PatternDetectors;
 
 namespace UnityCodeIntelligence.Core.Analysis.Patterns
 {

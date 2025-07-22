@@ -2,7 +2,7 @@ using UnityCodeIntelligence.Models;
 using System.Threading.Tasks;
 using System.Threading;
 
-namespace UnityCodeIntelligence.Analysis.PatternDetectors
+namespace UnityCodeIntelligence.Core.Analysis.Patterns.PatternDetectors
 {
     public class SingletonPatternDetector : IUnityPatternDetector
     {
