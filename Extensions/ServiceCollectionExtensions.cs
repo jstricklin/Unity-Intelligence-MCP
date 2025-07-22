@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using UnityCodeIntelligence.Core.Analysis;
 using UnityCodeIntelligence.Core.RoslynServices;
 using UnityCodeIntelligence.Core.Analysis.Patterns;
 using UnityCodeIntelligence.Core.Analysis.Project;

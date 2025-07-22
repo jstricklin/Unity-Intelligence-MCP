@@ -1,8 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Server;
-using UnityCodeIntelligence.Core.Analysis;
+using UnityCodeIntelligence.Extensions;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -11,22 +12,14 @@ builder.Logging.ClearProviders();
 // This can be changed to LogLevel.Trace for verbose debugging output.
 builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
 
-// Configure the MCP server and discover tools/resources from the assembly.
-builder.Services.AddMcpServer(options =>
+builder.Services
+    .AddMcpServer(options => 
     {
         options.ServerInfo = new() { Name = "Unity Code Intelligence MCP Server", Version = "1.0.0" };
     })
     .WithStdioServerTransport()
-    .WithToolsFromAssembly();
-
-// Register our custom analysis services for dependency injection.
-// These can be injected into tools and resources.
-builder.Services.AddSingleton<UnityRoslynAnalysisService>();
-builder.Services.AddSingleton<PatternDetectorRegistry>();
-builder.Services.AddSingleton<UnityComponentRelationshipAnalyzer>();
-builder.Services.AddSingleton<UnityProjectAnalyzer>();
-builder.Services.AddSingleton<UnityPatternAnalyzer>();
-builder.Services.AddSingleton<PatternMetricsAnalyzer>();
+    .WithToolsFromAssembly()
+    .AddUnityAnalysisServices(); // Clean registration using extension method
 
 var host = builder.Build();
 await host.RunAsync();
