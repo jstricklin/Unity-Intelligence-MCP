@@ -55,6 +55,33 @@ namespace UnityCodeIntelligence.Core.IO
             throw new InvalidOperationException(errMsg);
         }
 
+        public string GetDocumentationPath(string projectPath)
+        {
+            var editorPath = ResolveUnityEditorPath(projectPath);
+
+            var potentialDocumentationPaths = new[]
+            {
+                Path.Combine(editorPath, "Data", "Documentation"), // Windows/Linux
+                Path.Combine(editorPath, "Documentation"), // macOS inside Contents
+                Path.Combine(editorPath, "Contents", "Documentation"), // macOS for Unity.app path
+                Path.Combine(editorPath, "Unity.app", "Contents", "Documentation") // macOS Hub install
+            };
+
+            foreach (var docPath in potentialDocumentationPaths.Select(p => Path.GetFullPath(p)))
+            {
+                // Check for a known subdirectory to validate it's the correct documentation folder.
+                if (Directory.Exists(Path.Combine(docPath, "en", "ScriptReference")))
+                {
+                    Console.Error.WriteLine($"[INFO] Found documentation at: {docPath}");
+                    return docPath;
+                }
+            }
+
+            var errorMsg = $"Unable to find Unity Documentation folder for editor path: {editorPath}";
+            Console.Error.WriteLine($"[ERROR] {errorMsg}");
+            throw new DirectoryNotFoundException(errorMsg);
+        }
+
         private string? GetUnityVersionFromProject(string projectPath)
         {
             try
