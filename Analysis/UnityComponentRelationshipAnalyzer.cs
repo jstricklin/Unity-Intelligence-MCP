@@ -19,9 +19,9 @@ namespace UnityCodeIntelligence.Analysis
             _roslynService = roslynService;
         }
 
-        public async Task<UnityComponentGraph> AnalyzeAsync(string projectPath, CancellationToken cancellationToken)
+        public async Task<UnityComponentGraph> AnalyzeAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken)
         {
-            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, cancellationToken);
+            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, searchScope, cancellationToken);
             return AnalyzeMonoBehaviours(compilation, cancellationToken);
         }
 

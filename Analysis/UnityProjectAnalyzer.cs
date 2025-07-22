@@ -24,9 +24,9 @@ namespace UnityCodeIntelligence.Analysis
             _relationshipAnalyzer = relationshipAnalyzer;
         }
 
-        public async Task<ProjectContext> AnalyzeProjectAsync(string projectPath, CancellationToken cancellationToken = default)
+        public async Task<ProjectContext> AnalyzeProjectAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken = default)
         {
-            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, cancellationToken);
+            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, searchScope, cancellationToken);
             
             var scripts = compilation.SyntaxTrees.Select(st => new ScriptInfo(
                 st.FilePath,

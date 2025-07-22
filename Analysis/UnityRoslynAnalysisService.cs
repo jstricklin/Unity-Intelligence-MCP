@@ -6,12 +6,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using UnityCodeIntelligence.Models;
 
 namespace UnityCodeIntelligence.Analysis
 {
     public class UnityRoslynAnalysisService
     {
-        public async Task<Compilation> CreateUnityCompilationAsync(string projectPath, CancellationToken cancellationToken = default)
+        public async Task<Compilation> CreateUnityCompilationAsync(string projectPath, SearchScope searchScope = SearchScope.Assets, CancellationToken cancellationToken = default)
         {
             var references = new List<MetadataReference>
             {
@@ -51,9 +52,28 @@ namespace UnityCodeIntelligence.Analysis
                 }
             }
 
-            var syntaxTrees = new List<SyntaxTree>();
-            var csFiles = Directory.GetFiles(projectPath, "*.cs", SearchOption.AllDirectories);
+            var searchDirectories = new List<string>();
+            switch (searchScope)
+            {
+                case SearchScope.Assets:
+                    searchDirectories.Add(Path.Combine(projectPath, "Assets"));
+                    break;
+                case SearchScope.Packages:
+                    searchDirectories.Add(Path.Combine(projectPath, "Packages"));
+                    break;
+                case SearchScope.AssetsAndPackages:
+                    searchDirectories.Add(Path.Combine(projectPath, "Assets"));
+                    searchDirectories.Add(Path.Combine(projectPath, "Packages"));
+                    break;
+            }
 
+            var csFiles = new List<string>();
+            foreach (var dir in searchDirectories.Where(Directory.Exists))
+            {
+                csFiles.AddRange(Directory.GetFiles(dir, "*.cs", SearchOption.AllDirectories));
+            }
+
+            var syntaxTrees = new List<SyntaxTree>();
             foreach (var file in csFiles)
             {
                 cancellationToken.ThrowIfCancellationRequested();

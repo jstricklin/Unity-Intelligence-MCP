@@ -16,9 +16,9 @@ namespace UnityCodeIntelligence.Analysis
             _registry = registry;
         }
 
-        public async Task<PatternMetrics> GetMetricsAsync(string projectPath, CancellationToken cancellationToken)
+        public async Task<PatternMetrics> GetMetricsAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken)
         {
-            var context = await _projectAnalyzer.AnalyzeProjectAsync(projectPath, cancellationToken);
+            var context = await _projectAnalyzer.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
             var detectors = _registry.GetAllDetectors();
             var patternCounts = new Dictionary<string, int>();
 

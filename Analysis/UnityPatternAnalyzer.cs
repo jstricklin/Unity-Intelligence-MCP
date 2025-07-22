@@ -17,9 +17,9 @@ namespace UnityCodeIntelligence.Analysis
             _registry = registry;
         }
 
-        public async Task<IEnumerable<DetectedPattern>> FindPatternsAsync(string projectPath, List<string> patternTypes, CancellationToken cancellationToken)
+        public async Task<IEnumerable<DetectedPattern>> FindPatternsAsync(string projectPath, List<string> patternTypes, SearchScope searchScope, CancellationToken cancellationToken)
         {
-            var context = await _projectAnalyzer.AnalyzeProjectAsync(projectPath, cancellationToken);
+            var context = await _projectAnalyzer.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
             var detectors = _registry.GetAllDetectors();
 
             var requestedDetectors = detectors;
