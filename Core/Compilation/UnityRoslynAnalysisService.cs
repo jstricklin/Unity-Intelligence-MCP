@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -13,7 +15,10 @@ namespace UnityCodeIntelligence.Core.RoslynServices
 {
     public class UnityRoslynAnalysisService
     {
-        public async Task<Compilation> CreateUnityCompilationAsync(string projectPath, SearchScope searchScope = SearchScope.Assets, CancellationToken cancellationToken = default)
+        // Updated reference handling with caching
+        private static readonly ConcurrentDictionary<string, MetadataReference> _referenceCache = new();
+
+        public async Task<Compilation> CreateUnityCompilationAsync(string projectPath, SearchScope searchScope = SearchScope.AssetsAndPackages, CancellationToken cancellationToken = default)
         {
             var references = new List<MetadataReference>
             {
@@ -23,25 +28,11 @@ namespace UnityCodeIntelligence.Core.RoslynServices
 
             // Try to resolve Unity Editor path using multiple strategies
             var unityEditorPath = ResolveUnityEditorPath(projectPath);
-            
+
+            // Replace manual loading with cached loader
             if (!string.IsNullOrEmpty(unityEditorPath))
             {
-                Console.Error.WriteLine($"[DEBUG] Using Unity Editor path: {unityEditorPath}");
-                
-                var coreModuleDll = GetUnityEngineCorePath(unityEditorPath);
-                if (File.Exists(coreModuleDll))
-                {
-                    references.Add(MetadataReference.CreateFromFile(coreModuleDll));
-                    Console.Error.WriteLine($"[DEBUG] Added Unity CoreModule reference: {coreModuleDll}");
-                }
-                else
-                {
-                    Console.Error.WriteLine($"[ERROR] Unity CoreModule not found at {coreModuleDll}");
-                }
-            }
-            else
-            {
-                Console.Error.WriteLine("[ERROR] Unity Editor path could not be resolved");
+                LoadReferencesWithCaching(unityEditorPath, references);
             }
 
             var unityScriptAssembliesPath = Path.Combine(projectPath, "Library", "ScriptAssemblies");
@@ -104,51 +95,48 @@ namespace UnityCodeIntelligence.Core.RoslynServices
 
         private string? ResolveUnityEditorPath(string projectPath)
         {
-            // Strategy 1: Explicit configuration (Production Priority)
+            // Strategy 1: Explicit configuration
             var installRoot = ConfigurationService.UnitySettings.InstallRoot;
             var projectVersion = GetUnityVersionFromProject(projectPath);
-            
+            var directPath = ConfigurationService.UnitySettings.EditorPath;
+
             if (!string.IsNullOrEmpty(installRoot) && !string.IsNullOrEmpty(projectVersion))
             {
                 var explicitPath = Path.Combine(installRoot, projectVersion);
                 if (Directory.Exists(explicitPath))
                 {
-                    Console.Error.WriteLine($"[INFO] Using Unity Editor path from UNITY_INSTALL_ROOT + project version: {explicitPath}");
+                    Console.Error.WriteLine($"[INFO] Using config-specified installation: {explicitPath}");
                     return explicitPath;
                 }
-                else
-                {
-                    Console.Error.WriteLine($"[ERROR] Unity Editor not found at expected location: {explicitPath} (InstallRoot: {installRoot}, ProjectVersion: {projectVersion})");
-                    // Don't fallback - fail fast in production
-                    throw new DirectoryNotFoundException($"Unity Editor not found at: {explicitPath}");
-                }
+                Console.Error.WriteLine($"[WARN] Configured path not found: {explicitPath}");
             }
 
-            // Strategy 2: Direct override (for development/testing)
-            var directPath = ConfigurationService.UnitySettings.EditorPath;
+            // Strategy 2: Direct path override
             if (!string.IsNullOrEmpty(directPath))
             {
                 if (Directory.Exists(directPath))
                 {
-                    Console.Error.WriteLine($"[INFO] Using direct Unity Editor path override: {directPath}");
+                    Console.Error.WriteLine($"[INFO] Using direct path override: {directPath}");
                     return directPath;
                 }
-                else
+                Console.Error.WriteLine($"[WARN] Direct editor path not found: {directPath}");
+            }
+
+            // Strategy 3: Automatic resolution
+            if (!string.IsNullOrEmpty(projectVersion))
+            {
+                var commonPath = TryFindUnityInCommonLocations();
+                if (commonPath != null)
                 {
-                    Console.Error.WriteLine($"[ERROR] Direct Unity Editor path does not exist: {directPath}");
-                    throw new DirectoryNotFoundException($"Unity Editor not found at: {directPath}");
+                    Console.Error.WriteLine($"[INFO] Using automatically detected path: {commonPath}");
+                    return commonPath;
                 }
             }
 
-            // Strategy 3: Configuration missing - fail with helpful message
-            var missingConfig = new List<string>();
-            if (string.IsNullOrEmpty(installRoot)) missingConfig.Add("UnityAnalysisSettings:InstallRoot in appsettings.json");
-            if (string.IsNullOrEmpty(projectVersion)) missingConfig.Add("Unity project version");
-
-            var errorMessage = $"Unity Editor path cannot be resolved. Missing: {string.Join(", ", missingConfig)}";
-            Console.Error.WriteLine($"[ERROR] {errorMessage}");
-            
-            throw new InvalidOperationException(errorMessage);
+            // Final fallback
+            var errMsg = "Unable to resolve Unity path. Verify configuration in appsettings.json";
+            Console.Error.WriteLine($"[ERROR] {errMsg}");
+            throw new InvalidOperationException(errMsg);
         }
 
         private string? GetUnityVersionFromProject(string projectPath)
@@ -189,82 +177,66 @@ namespace UnityCodeIntelligence.Core.RoslynServices
             }
         }
 
-        private string? TryCommonUnityPaths()
+        private string? TryFindUnityInCommonLocations()
         {
-            var commonPaths = GetPlatformSpecificUnityPaths();
-            
-            foreach (var basePath in commonPaths)
+            var searchPaths = new List<string>();
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if (Directory.Exists(basePath))
+                searchPaths.AddRange(new[]
                 {
-                    // Look for Unity installations in common patterns
-                    var possiblePaths = new[]
-                    {
-                        basePath, // Direct path
-                        Path.Combine(basePath, "Hub", "Editor"), // Unity Hub structure
-                        Path.Combine(basePath, "Editor") // Alternative structure
-                    };
-
-                    foreach (var path in possiblePaths)
-                    {
-                        if (Directory.Exists(path))
-                        {
-                            // Find the most recent version directory
-                            var versionDirs = Directory.GetDirectories(path)
-                                .Where(d => Path.GetFileName(d).Contains('.'))
-                                .OrderByDescending(d => Path.GetFileName(d))
-                                .ToArray();
-
-                            if (versionDirs.Length > 0)
-                            {
-                                Console.Error.WriteLine($"[DEBUG] Found Unity installation via common paths: {versionDirs[0]}");
-                                return versionDirs[0];
-                            }
-                        }
-                    }
-                }
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Unity"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Unity"),
+                    @"C:\Program Files\Unity"
+                });
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                searchPaths.AddRange(new[]
+                {
+                    "/Applications/Unity",
+                    "/Applications/Unity/Hub/Editor",
+                    "~/Applications/Unity"
+                });
+            }
+            else // Linux
+            {
+                searchPaths.AddRange(new[]
+                {
+                    "/opt/Unity",
+                    "/usr/share/unity",
+                    "~/Unity"
+                });
             }
 
-            Console.Error.WriteLine("[ERROR] No Unity installation found in common paths");
+            foreach (var path in searchPaths.Select(Path.GetFullPath))
+            {
+                if (Directory.Exists(path))
+                {
+                    return path;
+                }
+            }
             return null;
         }
 
-        private string[] GetPlatformSpecificUnityPaths()
+        private void LoadReferencesWithCaching(string unityEditorPath, List<MetadataReference> references)
         {
-            return Environment.OSVersion.Platform switch
+            string[] managedPaths = {
+                Path.Combine(unityEditorPath, "Data", "Managed"),
+                Path.Combine(unityEditorPath, "Unity.app", "Contents", "Managed"),
+                Path.Combine(unityEditorPath, "Contents", "Managed")
+            };
+
+            foreach (var managedPath in managedPaths)
             {
-                PlatformID.MacOSX => new[]
+                if (!Directory.Exists(managedPath)) continue;
+                
+                foreach (var dll in Directory.GetFiles(managedPath, "*.dll", SearchOption.TopDirectoryOnly))
                 {
-                    "/Applications/Unity",
-                    "/Applications/Unity Hub/Editor"
-                },
-                PlatformID.Unix => new[]
-                {
-                    "/opt/Unity",
-                    "~/Unity",
-                    Environment.ExpandEnvironmentVariables("$HOME/Unity")
-                },
-                _ => new[] // Windows
-                {
-                    @"C:\Program Files\Unity",
-                    @"C:\Program Files\Unity Hub\Editor",
-                    Environment.ExpandEnvironmentVariables(@"%ProgramFiles%\Unity Hub\Editor")
+                    references.Add(_referenceCache.GetOrAdd(dll, path => 
+                        MetadataReference.CreateFromFile(path)));
                 }
-            };
-        }
-
-        private string GetUnityEngineCorePath(string unityEditorPath)
-        {
-            // Try different possible locations for UnityEngine.CoreModule.dll
-            var possiblePaths = new[]
-            {
-                Path.Combine(unityEditorPath, "Data", "Managed", "UnityEngine", "UnityEngine.CoreModule.dll"), // Windows/Linux
-                Path.Combine(unityEditorPath, "Unity.app", "Contents", "Managed", "UnityEngine", "UnityEngine.CoreModule.dll"), // macOS App Bundle
-                Path.Combine(unityEditorPath, "Contents", "Managed", "UnityEngine", "UnityEngine.CoreModule.dll"), // macOS alternative
-                Path.Combine(unityEditorPath, "Editor", "Data", "Managed", "UnityEngine", "UnityEngine.CoreModule.dll") // Hub structure
-            };
-
-            return possiblePaths.FirstOrDefault(File.Exists) ?? possiblePaths[0];
+            }
         }
     }
 }
