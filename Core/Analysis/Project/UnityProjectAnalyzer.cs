@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityCodeIntelligence.Core.Analysis.Patterns;
 using UnityCodeIntelligence.Core.Analysis.Relationships;
-using UnityCodeIntelligence.Core.Compilation;
+using UnityCodeIntelligence.Core.RoslynServices;
 
 namespace UnityCodeIntelligence.Core.Analysis.Project
 {

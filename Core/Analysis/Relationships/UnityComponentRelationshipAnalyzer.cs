@@ -7,7 +7,7 @@ using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using UnityCodeIntelligence.Core.Compilation;
+using UnityCodeIntelligence.Core.RoslynServices;
 
 namespace UnityCodeIntelligence.Core.Analysis.Relationships
 {

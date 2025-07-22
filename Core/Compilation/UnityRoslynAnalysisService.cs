@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using UnityCodeIntelligence.Configuration;
 using UnityCodeIntelligence.Models;
 
-namespace UnityCodeIntelligence.Core.Compilation
+namespace UnityCodeIntelligence.Core.RoslynServices
 {
     public class UnityRoslynAnalysisService
     {
