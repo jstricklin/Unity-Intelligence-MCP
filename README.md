@@ -10,43 +10,19 @@ This Model Context Protocol (MCP) server provides intelligent code analysis for 
 - 🔍 **Structured Documentation Access** - AI-optimized Unity documentation retrieval
 - ⚙️ **Automatic Configuration** - Resolves Unity installations based on project settings
 
-## Architectural Highlights
+## Designed for Extensibility
 
-### Pattern Detection System
-```csharp
-public class PatternDetectorRegistry
-{
-    public IEnumerable<IUnityPatternDetector> GetAllDetectors() => new List<IUnityPatternDetector>
-    {
-        new SingletonPatternDetector(),
-        new ObjectPoolPatternDetector(),
-        // ... 6+ more detectors
-    };
-}
-```
-Roslyn-based detectors implementing `IUnityPatternDetector` scan C# scripts for specific patterns.
+### Modular Pattern Detection
+Our pattern detection system uses a plugin architecture where new Unity patterns can be detected by implementing the `IUnityPatternDetector` interface. The registry automatically discovers and integrates all detectors found in the system.
 
-### Component Relationship Analysis
-```csharp
-GetRelationshipType("GetComponent");  // Returns "Dependency"
-GetRelationshipType("AddComponent");   // Returns "Creation"
-```
-Tracks MonoBehaviour inheritance and common Unity API calls to map component interactions.
+### Expandable Component Analysis
+The component relationship mapping uses an extensible rule system to identify interactions between MonoBehaviours. New relationship types can be added through straightforward configuration updates without core system changes.
 
-### Configuration Management
-```csharp
-public string? ResolveUnityEditorPath(string projectPath)
-{
-    // Auto-detects Unity version from project
-}
-```
-Automatically locates Unity installations based on project settings.
+### Flexible Configuration
+The dual-path configuration system supports both automatic Unity installation detection and manual overrides. This adaptive approach ensures compatibility with future Unity versions and custom deployment scenarios.
 
-### Documentation Engine
-```json
-"unity_docs_search": "Search API with snippet extraction"
-```
-Provides structured documentation access through multiple AI-friendly endpoints.
+### Documentation Framework
+The documentation engine provides a clean abstraction layer over Unity's documentation, offering multiple endpoints optimized for AI consumption. New documentation formats and search strategies can be added via our standardized plugin API.
 
 ## Getting Started
 
