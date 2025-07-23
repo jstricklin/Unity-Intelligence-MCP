@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using UnityCodeIntelligence.Core.IO;
+using UnityCodeIntelligence.Models;
 
 namespace UnityCodeIntelligence.Resources
 {

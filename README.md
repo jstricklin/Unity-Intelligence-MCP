@@ -15,9 +15,6 @@ This Model Context Protocol (MCP) server provides intelligent code analysis for 
 ### Modular Pattern Detection
 Our pattern detection system uses a plugin architecture where new Unity patterns can be detected by implementing the `IUnityPatternDetector` interface. The registry automatically discovers and integrates all detectors found in the system.
 
-### Expandable Component Analysis
-The component relationship mapping uses an extensible rule system to identify interactions between MonoBehaviours. New relationship types can be added through straightforward configuration updates without core system changes.
-
 ### Flexible Configuration
 The dual-path configuration system supports both automatic Unity installation detection and manual overrides. This adaptive approach ensures compatibility with future Unity versions and custom deployment scenarios.
 
