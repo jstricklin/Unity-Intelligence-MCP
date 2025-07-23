@@ -1,12 +1,60 @@
 # Unity Code Intelligence MCP Server
 
-This document provides instructions on how to build, run, and interact with the Unity Code Intelligence server.
+**AI-powered static analysis for Unity projects**  
+This Model Context Protocol (MCP) server provides intelligent code analysis for Unity, detecting common patterns, component relationships, and programming insights to augment developer workflows.
 
-## Prerequisites
+## Key Features
+- 🎮 **Unity-Specific Pattern Detection** - Identifies 8+ common Unity patterns (Singleton, Coroutine, ScriptableObject etc.)
+- 🤝 **Component Relationship Mapping** - Visualizes MonoBehaviour dependencies and interactions
+- 📊 **Quantitative Metrics** - Provides statistics on pattern usage across projects
+- 🔍 **Structured Documentation Access** - AI-optimized Unity documentation retrieval
+- ⚙️ **Automatic Configuration** - Resolves Unity installations based on project settings
+
+## Architectural Highlights
+
+### Pattern Detection System
+```csharp
+public class PatternDetectorRegistry
+{
+    public IEnumerable<IUnityPatternDetector> GetAllDetectors() => new List<IUnityPatternDetector>
+    {
+        new SingletonPatternDetector(),
+        new ObjectPoolPatternDetector(),
+        // ... 6+ more detectors
+    };
+}
+```
+Roslyn-based detectors implementing `IUnityPatternDetector` scan C# scripts for specific patterns.
+
+### Component Relationship Analysis
+```csharp
+GetRelationshipType("GetComponent");  // Returns "Dependency"
+GetRelationshipType("AddComponent");   // Returns "Creation"
+```
+Tracks MonoBehaviour inheritance and common Unity API calls to map component interactions.
+
+### Configuration Management
+```csharp
+public string? ResolveUnityEditorPath(string projectPath)
+{
+    // Auto-detects Unity version from project
+}
+```
+Automatically locates Unity installations based on project settings.
+
+### Documentation Engine
+```json
+"unity_docs_search": "Search API with snippet extraction"
+```
+Provides structured documentation access through multiple AI-friendly endpoints.
+
+## Getting Started
+
+### Prerequisites
 
 Before you begin, ensure you have the [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or a newer version installed.
 
-## Building and Running
+### Building and Running
 
 The following instructions apply to both Windows and macOS.
 
@@ -28,7 +76,7 @@ dotnet run
 
 The server will now be running and ready to accept requests from an MCP client.
 
-## Configuration
+### Configuration
 
 The server is configured using the `appsettings.json` file, which must be placed in the project's root directory. This file allows you to specify paths required for the analysis tools to function correctly.
 
@@ -58,7 +106,7 @@ To function, the analyzer must be able to locate the Unity Editor installation. 
 }
 ```
 
-## Interacting with the Server
+### Interacting with the Server
 
 You can interact with the server using the MCP Inspector, which provides a web-based interface.
 
