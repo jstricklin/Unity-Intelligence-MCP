@@ -669,9 +669,9 @@ public class UnityRoslynAnalysisService
 ## Directory Structure
 
 ```
-UnityCodeIntelligenceMCP/
+UnityIntelligenceMCPMCP/
 ├── src/
-│   ├── UnityCodeIntelligence.Core/
+│   ├── UnityIntelligenceMCP.Core/
 │   │   ├── Server/
 │   │   │   ├── McpServer.cs                   # Main MCP server
 │   │   │   ├── ToolRegistry.cs                # Dynamic tool management  
@@ -692,7 +692,7 @@ UnityCodeIntelligenceMCP/
 │   │       ├── UnityAnalysisResult.cs         # Unity analysis outputs
 │   │       ├── UnityDiagnostic.cs             # Unity diagnostic information
 │   │       └── UnityToolDefinitions.cs        # Unity tool schemas
-│   ├── UnityCodeIntelligence.Plugins/
+│   ├── UnityIntelligenceMCP.Plugins/
 │   │   ├── UnityPatterns/
 │   │   │   ├── UnityPatternDetectors.cs       # Unity-specific patterns
 │   │   │   ├── ComponentPatternDetector.cs    # Component patterns
@@ -705,11 +705,11 @@ UnityCodeIntelligenceMCP/
 │   │       ├── UnityDocumentationGenerator.cs # Unity API docs
 │   │       ├── UnityMarkdownRenderer.cs       # Unity-styled markdown
 │   │       └── UnityDocumentationPlugin.cs
-│   ├── UnityCodeIntelligence.Tools/
+│   ├── UnityIntelligenceMCP.Tools/
 │   │   ├── UnityAnalysisTools.cs              # Unity-specific analysis tools
 │   │   ├── UnitySearchTools.cs                # Unity search capabilities  
 │   │   └── UnityDocumentationTools.cs         # Unity doc generation
-│   └── UnityCodeIntelligence.Host/
+│   └── UnityIntelligenceMCP.Host/
 │       ├── Program.cs                         # Application entry point
 │       ├── ServiceCollectionExtensions.cs     # DI setup with Unity services
 │       └── appsettings.json                   # Configuration
@@ -718,8 +718,8 @@ UnityCodeIntelligenceMCP/
 │   ├── default-unity-config.json              # Unity-specific default config
 │   └── unity-schema.json                      # Unity configuration schema  
 └── tests/
-    ├── UnityCodeIntelligence.Core.Tests/      # Unit tests
-    ├── UnityCodeIntelligence.Integration.Tests/ # Integration tests with Unity
+    ├── UnityIntelligenceMCP.Core.Tests/      # Unit tests
+    ├── UnityIntelligenceMCP.Integration.Tests/ # Integration tests with Unity
     └── TestFixtures/                          # Test Unity projects
 ```
 

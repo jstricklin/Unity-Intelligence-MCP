@@ -4,13 +4,13 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
-using UnityCodeIntelligence.Configuration;
-using UnityCodeIntelligence.Core.Analysis.Patterns;
-using UnityCodeIntelligence.Core.Analysis.Project;
-using UnityCodeIntelligence.Core.Analysis.Relationships;
-using UnityCodeIntelligence.Models;
+using UnityIntelligenceMCP.Configuration;
+using UnityIntelligenceMCP.Core.Analysis.Patterns;
+using UnityIntelligenceMCP.Core.Analysis.Project;
+using UnityIntelligenceMCP.Core.Analysis.Relationships;
+using UnityIntelligenceMCP.Models;
 
-namespace UnityCodeIntelligence.Tools
+namespace UnityIntelligenceMCP.Tools
 {
     [McpServerToolType]
     public class AnalysisTools

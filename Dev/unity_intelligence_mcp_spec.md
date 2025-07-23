@@ -469,9 +469,9 @@ public async Task<ToolResult> GetPatternMetrics(
 ## Directory Structure
 
 ```
-UnityCodeIntelligenceMCP/
+UnityIntelligenceMCPMCP/
 ├── src/
-│   ├── UnityCodeIntelligence.Core/
+│   ├── UnityIntelligenceMCP.Core/
 │   │   ├── Server/
 │   │   │   ├── McpServer.cs                   # Main MCP server
 │   │   │   ├── ToolRegistry.cs                # Dynamic tool management  
@@ -490,7 +490,7 @@ UnityCodeIntelligenceMCP/
 │   │       ├── ProjectContext.cs              # Core data models
 │   │       ├── AnalysisResult.cs              # Analysis outputs
 │   │       └── ToolDefinitions.cs             # Tool schemas
-│   ├── UnityCodeIntelligence.Plugins/
+│   ├── UnityIntelligenceMCP.Plugins/
 │   │   ├── UnityPatterns/
 │   │   │   ├── SingletonDetector.cs
 │   │   │   ├── ObserverPatternDetector.cs
@@ -503,11 +503,11 @@ UnityCodeIntelligenceMCP/
 │   │       ├── DocumentationGenerator.cs
 │   │       ├── MarkdownRenderer.cs
 │   │       └── DocumentationPlugin.cs
-│   ├── UnityCodeIntelligence.Tools/
+│   ├── UnityIntelligenceMCP.Tools/
 │   │   ├── AnalysisTools.cs                   # Core analysis tools
 │   │   ├── SearchTools.cs                     # Search capabilities  
 │   │   └── DocumentationTools.cs              # Doc generation
-│   └── UnityCodeIntelligence.Host/
+│   └── UnityIntelligenceMCP.Host/
 │       ├── Program.cs                         # Application entry point
 │       ├── ServiceCollectionExtensions.cs     # DI setup
 │       └── appsettings.json                   # Configuration
@@ -516,8 +516,8 @@ UnityCodeIntelligenceMCP/
 │   ├── default-config.json                    # Default configuration
 │   └── schema.json                            # Configuration schema  
 └── tests/
-    ├── UnityCodeIntelligence.Core.Tests/      # Unit tests
-    ├── UnityCodeIntelligence.Integration.Tests/ # Integration tests
+    ├── UnityIntelligenceMCP.Core.Tests/      # Unit tests
+    ├── UnityIntelligenceMCP.Integration.Tests/ # Integration tests
     └── TestFixtures/                          # Test Unity projects
 ```
 

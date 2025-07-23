@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using UnityCodeIntelligence.Configuration;
+using UnityIntelligenceMCP.Configuration;
 
-namespace UnityCodeIntelligence.Core.IO
+namespace UnityIntelligenceMCP.Core.IO
 {
     public class UnityInstallationService
     {

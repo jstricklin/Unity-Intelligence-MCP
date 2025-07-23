@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace UnityCodeIntelligence.Models
+namespace UnityIntelligenceMCP.Models
 {
     public record PatternSearchRequest(string ProjectPath, List<string> PatternTypes);
 

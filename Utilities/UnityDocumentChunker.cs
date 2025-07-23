@@ -1,6 +1,25 @@
 public class UnityDocumentChunker : IDocumentChunker
 {
-    public List<DocumentChunk> ChunkDocument(ParsedDocument doc)
+    private async Task<UnityDocumentationData> ParseDocumentAsync(string filePath)
+    {
+        var html = await File.ReadAllTextAsync(filePath);
+        
+        // Parse Unity documentation structure
+        // Unity docs have specific patterns we can extract
+        return new UnityDocumentationData
+        {
+            FilePath = filePath,
+            Title = ExtractTitle(html),
+            Description = ExtractDescription(html),
+            Type = DetermineDocumentationType(html),
+            Namespace = ExtractNamespace(html),
+            UnityVersion = ExtractUnityVersion(html),
+            MainContent = ExtractMainContent(html),
+            CodeExamples = ExtractCodeExamples(html),
+            Parameters = ExtractParameters(html)
+        };
+    }
+    public List<DocumentChunk> ChunkDocument(UnityDocumentationData doc)
     {
         var chunks = new List<DocumentChunk>();
         

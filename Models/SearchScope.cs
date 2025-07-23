@@ -1,4 +1,4 @@
-namespace UnityCodeIntelligence.Models
+namespace UnityIntelligenceMCP.Models
 {
     public enum SearchScope
     {

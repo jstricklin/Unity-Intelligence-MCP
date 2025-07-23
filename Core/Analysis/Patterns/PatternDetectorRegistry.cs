@@ -1,10 +1,10 @@
-using UnityCodeIntelligence.Models;
+using UnityIntelligenceMCP.Models;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityCodeIntelligence.Core.Analysis.Patterns.PatternDetectors;
+using UnityIntelligenceMCP.Core.Analysis.Patterns.PatternDetectors;
 
-namespace UnityCodeIntelligence.Core.Analysis.Patterns
+namespace UnityIntelligenceMCP.Core.Analysis.Patterns
 {
     public class PatternDetectorRegistry
     {

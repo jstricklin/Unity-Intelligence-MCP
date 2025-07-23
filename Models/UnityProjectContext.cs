@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace UnityCodeIntelligence.Models
+namespace UnityIntelligenceMCP.Models
 {
     public record ProjectContext(
         string RootPath,

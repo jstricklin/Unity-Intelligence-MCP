@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
-using UnityCodeIntelligence.Extensions;
+using UnityIntelligenceMCP.Extensions;
 
 var builder = Host.CreateEmptyApplicationBuilder();
 // builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);

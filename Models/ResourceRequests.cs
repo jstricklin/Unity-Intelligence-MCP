@@ -1,7 +1,7 @@
 
 using System.Collections.Generic;
 
-namespace UnityCodeIntelligence.Models
+namespace UnityIntelligenceMCP.Models
 {
     public record RecordRequest(Dictionary<string, int> PatternCounts);
 }

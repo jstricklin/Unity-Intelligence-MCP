@@ -1,8 +1,8 @@
-using UnityCodeIntelligence.Models;
+using UnityIntelligenceMCP.Models;
 using System.Threading.Tasks;
 using System.Threading;
 
-namespace UnityCodeIntelligence.Core.Analysis.Patterns.PatternDetectors
+namespace UnityIntelligenceMCP.Core.Analysis.Patterns.PatternDetectors
 {
     public class CoroutinePatternDetector : IUnityPatternDetector
     {

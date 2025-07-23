@@ -1,15 +1,15 @@
 using Microsoft.CodeAnalysis;
 using System.IO;
-using UnityCodeIntelligence.Models;
+using UnityIntelligenceMCP.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityCodeIntelligence.Core.Analysis.Patterns;
-using UnityCodeIntelligence.Core.Analysis.Relationships;
-using UnityCodeIntelligence.Core.RoslynServices;
+using UnityIntelligenceMCP.Core.Analysis.Patterns;
+using UnityIntelligenceMCP.Core.Analysis.Relationships;
+using UnityIntelligenceMCP.Core.RoslynServices;
 
-namespace UnityCodeIntelligence.Core.Analysis.Project
+namespace UnityIntelligenceMCP.Core.Analysis.Project
 {
     public class UnityProjectAnalyzer
     {

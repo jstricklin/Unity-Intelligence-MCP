@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityCodeIntelligence.Core.Analysis.Project;
-using UnityCodeIntelligence.Models;
+using UnityIntelligenceMCP.Core.Analysis.Project;
+using UnityIntelligenceMCP.Models;
 
-namespace UnityCodeIntelligence.Core.Analysis.Patterns
+namespace UnityIntelligenceMCP.Core.Analysis.Patterns
 {
     public class PatternMetricsAnalyzer
     {

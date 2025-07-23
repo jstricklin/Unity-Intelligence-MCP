@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using System.IO;
-using UnityCodeIntelligence.Models;
+using UnityIntelligenceMCP.Models;
 
-namespace UnityCodeIntelligence.Configuration
+namespace UnityIntelligenceMCP.Configuration
 {
     public static class ConfigurationService
     {

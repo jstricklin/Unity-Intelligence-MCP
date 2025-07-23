@@ -7,10 +7,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using UnityCodeIntelligence.Core.IO;
-using UnityCodeIntelligence.Models;
+using UnityIntelligenceMCP.Core.IO;
+using UnityIntelligenceMCP.Models;
 
-namespace UnityCodeIntelligence.Core.RoslynServices
+namespace UnityIntelligenceMCP.Core.RoslynServices
 {
     public class UnityRoslynAnalysisService
     {

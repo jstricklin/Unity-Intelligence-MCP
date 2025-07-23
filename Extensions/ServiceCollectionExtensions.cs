@@ -1,12 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
-using UnityCodeIntelligence.Core.Analysis.Patterns;
-using UnityCodeIntelligence.Core.Analysis.Project;
-using UnityCodeIntelligence.Core.Analysis.Relationships;
-using UnityCodeIntelligence.Core.IO;
-using UnityCodeIntelligence.Core.RoslynServices;
-using UnityCodeIntelligence.Resources;
+using UnityIntelligenceMCP.Core.Analysis.Patterns;
+using UnityIntelligenceMCP.Core.Analysis.Project;
+using UnityIntelligenceMCP.Core.Analysis.Relationships;
+using UnityIntelligenceMCP.Core.IO;
+using UnityIntelligenceMCP.Core.RoslynServices;
+using UnityIntelligenceMCP.Resources;
 
-namespace UnityCodeIntelligence.Extensions
+namespace UnityIntelligenceMCP.Extensions
 {
     public static class ServiceCollectionExtensions
     {
