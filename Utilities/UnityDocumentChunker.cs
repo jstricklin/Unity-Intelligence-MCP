@@ -1,3 +1,6 @@
+using UnityIntelligenceMCP.Models;
+using System.Collections.Generic;
+
 public class UnityDocumentChunker : IDocumentChunker
 {
     private async Task<UnityDocumentationData> ParseDocumentAsync(string filePath)
