@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
+using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Models;
 
@@ -13,11 +14,13 @@ namespace UnityIntelligenceMCP.Resources
     {
         private readonly UnityInstallationService _installationService;
         private readonly ILogger<UnityDocumentationResource> _logger;
+        private readonly ConfigurationService _configurationService;
 
-        public UnityDocumentationResource(UnityInstallationService installationService, ILogger<UnityDocumentationResource> logger)
+        public UnityDocumentationResource(UnityInstallationService installationService, ILogger<UnityDocumentationResource> logger, ConfigurationService configurationService)
         {
             _installationService = installationService;
             _logger = logger;
+            _configurationService = configurationService;
         }
 
         [McpServerResource(Name = "unity_docs2")]
@@ -26,7 +29,7 @@ namespace UnityIntelligenceMCP.Resources
         {
             try
             {
-                string projectPath = ConfigurationService.GetConfiguredProjectPath();
+                string projectPath = _configurationService.GetConfiguredProjectPath();
                 var docRoot = _installationService.GetDocumentationPath(projectPath);
                 var fullPath = Path.GetFullPath(Path.Combine(docRoot, relativePath));
 

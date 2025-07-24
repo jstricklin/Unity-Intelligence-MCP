@@ -9,12 +9,29 @@ namespace UnityIntelligenceMCP.Core.IO
 {
     public class UnityInstallationService
     {
+        private readonly ConfigurationService _configurationService;
+        private readonly object _cacheLock = new();
+        private string _cachedEditorPath;
+
+        public UnityInstallationService(ConfigurationService configurationService)
+        {
+            _configurationService = configurationService;
+        }
+
         public string? ResolveUnityEditorPath(string projectPath)
         {
+            lock (_cacheLock)
+            {
+                return _cachedEditorPath ??= CalculateEditorPath(projectPath);
+            }
+        }
+
+        private string? CalculateEditorPath(string projectPath)
+        {
             // Strategy 1: Explicit configuration
-            var installRoot = ConfigurationService.UnitySettings.InstallRoot;
+            var installRoot = _configurationService.UnitySettings.InstallRoot;
             var projectVersion = GetUnityVersionFromProject(projectPath);
-            var directPath = ConfigurationService.UnitySettings.EditorPath;
+            var directPath = _configurationService.UnitySettings.EditorPath;
 
             if (!string.IsNullOrEmpty(installRoot) && !string.IsNullOrEmpty(projectVersion))
             {

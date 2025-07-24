@@ -1,25 +1,19 @@
 using Microsoft.Extensions.Configuration;
-using System.IO;
+using System;
 using UnityIntelligenceMCP.Models;
 
 namespace UnityIntelligenceMCP.Configuration
 {
-    public static class ConfigurationService
+    public class ConfigurationService
     {
-        public static UnityAnalysisSettings UnitySettings { get; } = LoadSettings();
+        public UnityAnalysisSettings UnitySettings { get; }
 
-        private static UnityAnalysisSettings LoadSettings()
+        public ConfigurationService(IConfiguration configuration)
         {
-            return new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true)
-                .AddEnvironmentVariables()
-                .Build()
-                .GetSection("UnityAnalysisSettings")
-                .Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
+            UnitySettings = configuration.GetSection("UnityAnalysisSettings").Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
         }
 
-        public static string GetConfiguredProjectPath()
+        public string GetConfiguredProjectPath()
         {
             var projectPath = UnitySettings.ProjectPath;
             if (string.IsNullOrEmpty(projectPath))
@@ -28,6 +22,5 @@ namespace UnityIntelligenceMCP.Configuration
             }
             return projectPath;
         }
-
     }
 }

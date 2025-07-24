@@ -19,17 +19,20 @@ namespace UnityIntelligenceMCP.Tools
         private readonly UnityPatternAnalyzer _patternAnalyzer;
         private readonly UnityComponentRelationshipAnalyzer _componentAnalyzer;
         private readonly PatternMetricsAnalyzer _patternMetricsAnalyzer;
+        private readonly ConfigurationService _configurationService;
 
         public AnalysisTools(
             UnityProjectAnalyzer projectAnalyzer,
             UnityPatternAnalyzer patternAnalyzer,
             UnityComponentRelationshipAnalyzer componentAnalyzer,
-            PatternMetricsAnalyzer patternMetricsAnalyzer)
+            PatternMetricsAnalyzer patternMetricsAnalyzer,
+            ConfigurationService configurationService)
         {
             _projectAnalyzer = projectAnalyzer;
             _patternAnalyzer = patternAnalyzer;
             _componentAnalyzer = componentAnalyzer;
             _patternMetricsAnalyzer = patternMetricsAnalyzer;
+            _configurationService = configurationService;
         }
 
         [McpServerTool(Name = "analyze_unity_project"), Description("Analyzes a Unity project structure, scripts, and diagnostics.")]
@@ -37,7 +40,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
-            var projectPath = ConfigurationService.GetConfiguredProjectPath();
+            var projectPath = _configurationService.GetConfiguredProjectPath();
             return _projectAnalyzer.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
         }
 
@@ -47,7 +50,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
-            var projectPath = ConfigurationService.GetConfiguredProjectPath();
+            var projectPath = _configurationService.GetConfiguredProjectPath();
             return _patternAnalyzer.FindPatternsAsync(projectPath, patternTypes, searchScope, cancellationToken);
         }
 
@@ -56,7 +59,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
-            var projectPath = ConfigurationService.GetConfiguredProjectPath();
+            var projectPath = _configurationService.GetConfiguredProjectPath();
             return _componentAnalyzer.AnalyzeAsync(projectPath, searchScope, cancellationToken);
         }
 
@@ -65,7 +68,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
-            var projectPath = ConfigurationService.GetConfiguredProjectPath();
+            var projectPath = _configurationService.GetConfiguredProjectPath();
             return _patternMetricsAnalyzer.GetMetricsAsync(projectPath, searchScope, cancellationToken);
         }
 
