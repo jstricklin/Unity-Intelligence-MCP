@@ -1,5 +1,7 @@
-namespace UnityIntelligenceMCP.Models;
-public interface IDocumentChunker 
+namespace UnityIntelligenceMCP.Models
 {
-    public List<DocumentChunk> ChunkDocument()
+    public interface IDocumentChunker 
+    {
+        public List<DocumentChunk> ChunkDocument(UnityDocumentationData doc);
+    }
 }

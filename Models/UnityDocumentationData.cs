@@ -60,10 +60,14 @@ namespace UnityIntelligenceMCP.Models;
 // Alternative simpler approach for initial implementation
 public class UnityDocumentationData
 {
-    public string Content { get; set; }
-    public string ContentType { get; set; } = "text/html";
-    public string Title { get; set; }
-    public string UnityVersion { get; set; }
-    public string RelativePath { get; set; }
-    public Dictionary<string, object> Metadata { get; set; } = new();
+    // public string MainContent { get; set; }
+    // public string FilePath { get; set; }
+    // public string Description { get; set; }
+    // public List<string> CodeExamples { get; set; }
+    // public string Namespace { get; set; }
+    // public string Title { get; set; }
+    // public List<string> Parameters { get; set; }
+    // public string UnityVersion { get; set; }
+    // public string RelativePath { get; set; }
+    // public Dictionary<string, object> Metadata { get; set; } = new();
 }

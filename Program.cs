@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using UnityIntelligenceMCP.Extensions;
 
-var builder = Host.CreateEmptyApplicationBuilder();
+var builder = Host.CreateEmptyApplicationBuilder(null);
 // builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
 
 builder.Services

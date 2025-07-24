@@ -38,11 +38,12 @@ namespace UnityIntelligenceMCP.Resources
 
                 if (!File.Exists(fullPath))
                 {
-                    return Task.FromResult(ResourceResult.NotFound());
+                    return Task.FromResult(ResourceResult.Error(404, "File Not Found"));
                 }
 
                 var stream = File.OpenRead(fullPath);
-                return Task.FromResult(ResourceResult.Success(new ResourceContent(stream, "text/html")));
+                // return Task.FromResult(ResourceResult.Success(new ResourceContent(stream, typeof(UnityDocumentationData))));
+                return Task.FromResult(ResourceResult.Success(typeof(Nullable), null));
             }
             catch (DirectoryNotFoundException ex)
             {

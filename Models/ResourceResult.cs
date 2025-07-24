@@ -6,15 +6,15 @@ public class ResourceResult
     // [QUESTION] can this object data below be a string type? the hope is that it would be serialized into JSON on final return
     public object? Data { get; }
     public int? ErrorCode { get; }
-    public string? ContentType { get; }
+    public Type? DataType { get; }
 
-    private ResourceResult(bool isSuccess, string status, object? data, int? errorCode, string? dataType)
+    private ResourceResult(bool isSuccess, string status, object? data, int? errorCode, Type? dataType)
     {
         IsSuccess = isSuccess;
         Status = status;
         Data = data;
         ErrorCode = errorCode;
-        ContentType = contentType;
+        DataType = DataType;
     }
 
     public static ResourceResult Success<T>(T data, string status = "Success") =>
