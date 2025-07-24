@@ -37,7 +37,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
-            var projectPath = GetConfiguredProjectPath();
+            var projectPath = ConfigurationService.GetConfiguredProjectPath();
             return _projectAnalyzer.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
         }
 
@@ -47,7 +47,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
-            var projectPath = GetConfiguredProjectPath();
+            var projectPath = ConfigurationService.GetConfiguredProjectPath();
             return _patternAnalyzer.FindPatternsAsync(projectPath, patternTypes, searchScope, cancellationToken);
         }
 
@@ -56,7 +56,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
-            var projectPath = GetConfiguredProjectPath();
+            var projectPath = ConfigurationService.GetConfiguredProjectPath();
             return _componentAnalyzer.AnalyzeAsync(projectPath, searchScope, cancellationToken);
         }
 
@@ -65,18 +65,9 @@ namespace UnityIntelligenceMCP.Tools
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
-            var projectPath = GetConfiguredProjectPath();
+            var projectPath = ConfigurationService.GetConfiguredProjectPath();
             return _patternMetricsAnalyzer.GetMetricsAsync(projectPath, searchScope, cancellationToken);
         }
 
-        private string GetConfiguredProjectPath()
-        {
-            var projectPath = ConfigurationService.UnitySettings.ProjectPath;
-            if (string.IsNullOrEmpty(projectPath))
-            {
-                throw new InvalidOperationException("Unity project path is not configured in appsettings.json (UnityAnalysisSettings:ProjectPath).");
-            }
-            return projectPath;
-        }
     }
 }

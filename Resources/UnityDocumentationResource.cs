@@ -20,13 +20,13 @@ namespace UnityIntelligenceMCP.Resources
             _logger = logger;
         }
 
-        [McpServerResource(Name = "unity_docs")]
+        [McpServerResource(Name = "unity_docs2")]
         public Task<ResourceResult> GetDocumentationPage(
-            [Description("The project path used to resolve the correct Unity version.")] string projectPath,
             [Description("The relative path to the HTML documentation file, e.g., 'ScriptReference/MonoBehaviour.html'")] string relativePath)
         {
             try
             {
+                string projectPath = ConfigurationService.GetConfiguredProjectPath();
                 var docRoot = _installationService.GetDocumentationPath(projectPath);
                 var fullPath = Path.GetFullPath(Path.Combine(docRoot, relativePath));
 
@@ -43,7 +43,7 @@ namespace UnityIntelligenceMCP.Resources
 
                 var stream = File.OpenRead(fullPath);
                 // return Task.FromResult(ResourceResult.Success(new ResourceContent(stream, typeof(UnityDocumentationData))));
-                return Task.FromResult(ResourceResult.Success(typeof(Nullable), null));
+                return Task.FromResult(ResourceResult.Success(typeof(string), "SUCCESFUL RESOURCE!"));
             }
             catch (DirectoryNotFoundException ex)
             {

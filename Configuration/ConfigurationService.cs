@@ -18,5 +18,16 @@ namespace UnityIntelligenceMCP.Configuration
                 .GetSection("UnityAnalysisSettings")
                 .Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
         }
+
+        public static string GetConfiguredProjectPath()
+        {
+            var projectPath = UnitySettings.ProjectPath;
+            if (string.IsNullOrEmpty(projectPath))
+            {
+                throw new InvalidOperationException("Unity project path is not configured in appsettings.json (UnityAnalysisSettings:ProjectPath).");
+            }
+            return projectPath;
+        }
+
     }
 }
