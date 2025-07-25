@@ -5,7 +5,9 @@ using ModelContextProtocol.Server;
 using UnityIntelligenceMCP.Extensions;
 
 var builder = Host.CreateEmptyApplicationBuilder(null);
-// builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
+builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
+// Add configuration sources to the builder
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 builder.Services
     .AddMcpServer(options => 

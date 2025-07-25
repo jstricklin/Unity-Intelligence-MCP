@@ -23,7 +23,7 @@ namespace UnityIntelligenceMCP.Resources
             _configurationService = configurationService;
         }
 
-        [McpServerResource(Name = "unity_docs2")]
+        [McpServerResource(Name = "get_unity_documentation_page")]
         public Task<ResourceResult> GetDocumentationPage(
             [Description("The relative path to the HTML documentation file, e.g., 'ScriptReference/MonoBehaviour.html'")] string relativePath)
         {

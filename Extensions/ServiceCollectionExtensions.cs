@@ -5,6 +5,7 @@ using UnityIntelligenceMCP.Core.Analysis.Relationships;
 using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Core.RoslynServices;
 using UnityIntelligenceMCP.Resources;
+using UnityIntelligenceMCP.Configuration;
 
 namespace UnityIntelligenceMCP.Extensions
 {
@@ -14,8 +15,9 @@ namespace UnityIntelligenceMCP.Extensions
         {
             // TODO: Refactor these registrations into more logical groupings (e.g., Analysis, IO, Resources).
             return services
-                .AddSingleton<UnityRoslynAnalysisService>()
+                .AddSingleton<ConfigurationService>()
                 .AddSingleton<UnityInstallationService>()
+                .AddSingleton<UnityRoslynAnalysisService>()
                 .AddSingleton<PatternDetectorRegistry>()
                 .AddSingleton<UnityComponentRelationshipAnalyzer>()
                 .AddSingleton<UnityProjectAnalyzer>()
