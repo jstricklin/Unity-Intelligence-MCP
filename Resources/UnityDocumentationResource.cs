@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ namespace UnityIntelligenceMCP.Resources
         }
 
         [McpServerResource(Name = "get_unity_documentation_page")]
-        public Task<ResourceResult> GetDocumentationPage(
+        public Task<ResourceContent> GetDocumentationPage(
             [Description("The relative path to the HTML documentation file, e.g., 'ScriptReference/MonoBehaviour.html'")] string relativePath)
         {
             try
@@ -36,26 +37,26 @@ namespace UnityIntelligenceMCP.Resources
                 // Security check to prevent path traversal attacks
                 if (!fullPath.StartsWith(Path.GetFullPath(docRoot)))
                 {
-                    return Task.FromResult(ResourceResult.Error(403, "Forbidden path."));
+                    throw new UnauthorizedAccessException("Forbidden path.");
                 }
 
                 if (!File.Exists(fullPath))
                 {
-                    return Task.FromResult(ResourceResult.Error(404, "File Not Found"));
+                    throw new FileNotFoundException("File Not Found", fullPath);
                 }
 
                 var stream = File.OpenRead(fullPath);
-                return Task.FromResult(ResourceResult.Success(new ResourceContent(stream, typeof(UnityDocumentationData))));
+                return Task.FromResult(new ResourceContent(stream, typeof(UnityDocumentationData)));
             }
             catch (DirectoryNotFoundException ex)
             {
                  _logger.LogError(ex, "Documentation directory not found.");
-                return Task.FromResult(ResourceResult.Error(500, $"Configuration error: {ex.Message}"));
+                throw new InvalidOperationException($"Configuration error: {ex.Message}", ex);
             }
             catch (IOException ex)
             {
                 _logger.LogError(ex, "Failed to read documentation file.");
-                return Task.FromResult(ResourceResult.Error(500, $"File access error: {ex.Message}"));
+                throw new InvalidOperationException($"File access error: {ex.Message}", ex);
             }
         }
     }
