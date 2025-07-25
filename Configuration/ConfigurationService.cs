@@ -8,8 +8,16 @@ namespace UnityIntelligenceMCP.Configuration
     {
         public UnityAnalysisSettings UnitySettings { get; }
 
-        public ConfigurationService(IConfiguration configuration)
+        public ConfigurationService()
         {
+            var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true)
+                .Build();
+
             UnitySettings = configuration.GetSection("UnityAnalysisSettings").Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
             Console.Error.WriteLine($"[Settings check] {UnitySettings.ProjectPath}");
         }

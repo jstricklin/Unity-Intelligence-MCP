@@ -3,11 +3,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using UnityIntelligenceMCP.Extensions;
+using UnityIntelligenceMCP.Configuration;
 
 var builder = Host.CreateEmptyApplicationBuilder(null);
 builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
 // Add configuration sources to the builder
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+builder.Services.AddSingleton<ConfigurationService>();
 
 builder.Services
     .AddMcpServer(options => 
@@ -17,6 +18,7 @@ builder.Services
     .WithStdioServerTransport()
     .WithToolsFromAssembly()
     .WithResourcesFromAssembly(); // Add this to discover resources
+
 // Clean registration using extension method below
 builder.Services.AddUnityAnalysisServices();
 
