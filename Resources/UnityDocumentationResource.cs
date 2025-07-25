@@ -45,8 +45,7 @@ namespace UnityIntelligenceMCP.Resources
                 }
 
                 var stream = File.OpenRead(fullPath);
-                // return Task.FromResult(ResourceResult.Success(new ResourceContent(stream, typeof(UnityDocumentationData))));
-                return Task.FromResult(ResourceResult.Success(typeof(string), "SUCCESFUL RESOURCE!"));
+                return Task.FromResult(ResourceResult.Success(new ResourceContent(stream, typeof(UnityDocumentationData))));
             }
             catch (DirectoryNotFoundException ex)
             {
