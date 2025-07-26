@@ -4,52 +4,38 @@ using HtmlAgilityPack;
 
 public class UnityDocumentChunker : IDocumentChunker
 {
-    private record ExtractionConfig(string Selector, Func<string, string> Transform);
-    // This below should extract values to build our document data object
-    private static readonly Dictionary<string, ExtractionConfig> ExtractionRules = new ()
-    {
-        ["Title"] = new (".content h1",
-        text => text?.Trim()),
-        ["Description"] = new (".description, .summary",
-        text => text?.Trim()),
-        ["Namespace"] = new (".namespace",
-        text => text?.Trim()),
-        ["UnityVersion"] = new ("[data-unity-version], .unity-version",
-        text => text?.Trim()),
-        ["MainContent"] = new (".content .section-content",
-        text => text?.Trim()),
-    };
 
-    private string ExtractByRule(string html, string ruleName)
-    {
-        var doc = new HtmlDocument();
-        doc.LoadHtml(html);
+    // private string ExtractByRule(string html, string ruleName)
+    // {
+    //     var doc = new HtmlDocument();
+    //     doc.LoadHtml(html);
 
-        var config = ExtractionRules[ruleName];
-        var node = doc.DocumentNode.SelectSingleNode(config.Selector);
-        return config.Transform(node?.InnerText);
-    }
+    //     var config = ExtractionRules[ruleName];
+    //     var node = doc.DocumentNode.SelectSingleNode(config.Selector);
+    //     return config.Transform(node?.InnerText);
+    // }
 
 
-    private async Task<UnityDocumentationData> ParseDocumentAsync(string filePath)
-    {
-        var html = await File.ReadAllTextAsync(filePath);
+    // private async Task<UnityDocumentationData> ParseDocumentAsync(string filePath)
+    // {
+    //     var html = await File.ReadAllTextAsync(filePath);
         
         // Parse Unity documentation structure
         // Unity docs have specific patterns we can extract - TODO: add commented out examples
-        return new UnityDocumentationData
-        {
-            // FilePath = filePath,
-            // Title = ExtractByRule(html, "Title"),
-            // Description = ExtractByRule(html, "Description"),
-            // Namespace = ExtractByRule(html, "Namespace"),
-            // UnityVersion = ExtractByRule(html, "UnityVersion"),
-            // MainContent = ExtractByRule(html, "MainContent")
-            // Type = DetermineDocumentationType(html, "Type"),
-            // CodeExamples = ExtractByRules(html),
-            // Parameters = ExtractByRules(html)
-        };
-    }
+        // return new UnityDocumentationData
+        // {
+        //     FilePath = filePath,
+        //     Title = ExtractByRule(html, "Title"),
+        //     Description = ExtractByRule(html, "Description"),
+        //     Namespace = ExtractByRule(html, "Namespace"),
+        //     // UnityVersion = ExtractByRule(html, "UnityVersion"),
+        //     MainContent = ExtractByRule(html, "MainContent"),
+        //     // Type = DetermineDocumentationType(html, "Type"),
+        //     CodeExamples = ExtractByRule(html, "Code Examples"),
+        //     Parameters = ExtractByRule(html, "Parameters")
+        // };
+    // }
+
     public List<DocumentChunk> ChunkDocument(UnityDocumentationData doc)
     {
         var chunks = new List<DocumentChunk>();

@@ -72,7 +72,7 @@ namespace UnityIntelligenceMCP.Core.IO
             throw new InvalidOperationException(errMsg);
         }
 
-        public string GetDocumentationPath(string projectPath)
+        public string GetDocumentationPath(string projectPath, string docDomain = "ScriptReference")
         {
             var editorPath = ResolveUnityEditorPath(projectPath);
 
@@ -87,10 +87,11 @@ namespace UnityIntelligenceMCP.Core.IO
             foreach (var docPath in potentialDocumentationPaths.Select(p => Path.GetFullPath(p)))
             {
                 // Check for a known subdirectory to validate it's the correct documentation folder.
-                if (Directory.Exists(Path.Combine(docPath, "en", "ScriptReference")))
+                if (Directory.Exists(docPath))
                 {
-                    Console.Error.WriteLine($"[INFO] Found documentation at: {docPath}");
-                    return docPath;
+                    string retVal = Path.Combine(docPath, "en", docDomain);
+                    Console.Error.WriteLine($"[INFO] Found documentation at: {retVal}");
+                    return retVal;
                 }
             }
 

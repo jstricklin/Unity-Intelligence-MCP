@@ -16,6 +16,7 @@ public class UnityDocumentationData
         ["Title"] = "//div[contains(@class, 'content')]//h1",
     };
 
+    // TODO update below to get class inheritance and implementation
     // XPaths to find the header of each section that contains a table of links
     private static readonly Dictionary<string, string> LinkSectionRules = new()
     {

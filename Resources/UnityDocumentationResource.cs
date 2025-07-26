@@ -4,9 +4,11 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
+using ModelContextProtocol.Protocol;
 using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Models;
+using System.Text.Json;
 
 namespace UnityIntelligenceMCP.Resources
 {
@@ -25,14 +27,18 @@ namespace UnityIntelligenceMCP.Resources
         }
 
         [McpServerResource(Name = "get_unity_documentation_page")]
-        public Task<ResourceContent> GetDocumentationPage(
-            [Description("The relative path to the HTML documentation file, e.g., 'ScriptReference/MonoBehaviour.html'")] string relativePath)
+        public Task<TextResourceContents> GetDocumentationPage(
+            [Description("The relative path to the HTML documentation file, e.g., 'MonoBehaviour.html'")] 
+            string relativePath,
+            [Description("The Document domain to explore: 'Manual' for Unity Editor Docs or 'ScriptReference' for Scripting API (Optional: Defaults to 'ScriptReference')")] 
+            string docDomain = "ScriptReference"
+            )
         {
             try
             {
                 string projectPath = _configurationService.GetConfiguredProjectPath();
-                var docRoot = _installationService.GetDocumentationPath(projectPath);
-                var fullPath = Path.GetFullPath(Path.Combine(docRoot, relativePath));
+                string docRoot = _installationService.GetDocumentationPath(projectPath, docDomain);
+                string fullPath = Path.GetFullPath(Path.Combine(docRoot, relativePath));
 
                 // Security check to prevent path traversal attacks
                 if (!fullPath.StartsWith(Path.GetFullPath(docRoot)))
@@ -45,8 +51,16 @@ namespace UnityIntelligenceMCP.Resources
                     throw new FileNotFoundException("File Not Found", fullPath);
                 }
 
-                var stream = File.OpenRead(fullPath);
-                return Task.FromResult(new ResourceContent(stream, typeof(UnityDocumentationData)));
+                // ResourceContent content = new ResourceContent(stream, typeof(UnityDocumentationData));
+                // return Task.FromResult(new ResourceContent(stream, typeof(UnityDocumentationData)));
+                // return Task.FromResult(new TextResourceContents { 
+                //     Text = File.ReadAllText(fullPath),
+                //     MimeType = "text/plain" 
+                //     });
+                return Task.FromResult(new TextResourceContents { 
+                    Text = JsonSerializer.Serialize(new UnityDocumentationData(fullPath)),
+                    MimeType = "text/json" 
+                    });
             }
             catch (DirectoryNotFoundException ex)
             {
