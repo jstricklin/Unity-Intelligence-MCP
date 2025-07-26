@@ -11,7 +11,7 @@ namespace UnityIntelligenceMCP.Core.IO
     {
         private readonly ConfigurationService _configurationService;
         private readonly object _cacheLock = new();
-        private string _cachedEditorPath;
+        private string? _cachedEditorPath;
 
         public UnityInstallationService(ConfigurationService configurationService)
         {
@@ -75,6 +75,13 @@ namespace UnityIntelligenceMCP.Core.IO
         public string GetDocumentationPath(string projectPath, string docDomain = "ScriptReference")
         {
             var editorPath = ResolveUnityEditorPath(projectPath);
+
+            if (string.IsNullOrEmpty(editorPath))
+            {
+                var errorMsg = "Could not resolve Unity Editor path. Cannot find documentation.";
+                Console.Error.WriteLine($"[ERROR] {errorMsg}");
+                throw new DirectoryNotFoundException(errorMsg);
+            }
 
             var potentialDocumentationPaths = new[]
             {

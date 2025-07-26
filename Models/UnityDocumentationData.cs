@@ -124,7 +124,7 @@ public class UnityDocumentationData
 
 public class DocumentationLink
 {
-    public string Title { get; set; }
-    public string RelativePath { get; set; }
-    public string Description { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string RelativePath { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
 }
