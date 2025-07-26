@@ -75,7 +75,7 @@ namespace UnityIntelligenceMCP.Tools
 
         [McpServerTool(Name = "analyze_unity_messages"), Description("Analyzes one or more scripts for Unity message methods (e.g., Awake, Start, Update).")]
         public async Task<UnityMessagesAnalysisResult> AnalyzeUnityMessages(
-            UnityMessageRequest request,
+            [Description("A request object containing a list of relative paths to the script files to be analyzed.")] UnityMessageRequest request,
             CancellationToken cancellationToken = default)
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
