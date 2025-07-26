@@ -43,6 +43,7 @@ namespace UnityIntelligenceMCP.Core.Data
         }
 
         private const string SchemaV1 = @"
+            -- Source registry for different documentation types
             CREATE TABLE doc_sources (
                 id INTEGER PRIMARY KEY,
                 source_type TEXT NOT NULL UNIQUE,
@@ -52,6 +53,8 @@ namespace UnityIntelligenceMCP.Core.Data
                 schema_version TEXT,
                 last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            -- Universal document container
             CREATE TABLE unity_docs (
                 id INTEGER PRIMARY KEY,
                 source_id INTEGER NOT NULL,
@@ -67,6 +70,8 @@ namespace UnityIntelligenceMCP.Core.Data
                 FOREIGN KEY (source_id) REFERENCES doc_sources (id),
                 UNIQUE(source_id, doc_key)
             );
+
+            -- Source-specific structured data (JSON for flexibility)
             CREATE TABLE doc_metadata (
                 id INTEGER PRIMARY KEY,
                 doc_id INTEGER NOT NULL,
@@ -75,6 +80,8 @@ namespace UnityIntelligenceMCP.Core.Data
                 FOREIGN KEY (doc_id) REFERENCES unity_docs (id) ON DELETE CASCADE,
                 UNIQUE(doc_id, metadata_type)
             );
+
+            -- Flexible content elements
             CREATE TABLE content_elements (
                 id INTEGER PRIMARY KEY,
                 doc_id INTEGER NOT NULL,
@@ -85,9 +92,74 @@ namespace UnityIntelligenceMCP.Core.Data
                 element_embedding BLOB,
                 FOREIGN KEY (doc_id) REFERENCES unity_docs (id) ON DELETE CASCADE
             );
+
+            -- Granular content chunks for detailed semantic search
+            CREATE TABLE content_chunks (
+                id INTEGER PRIMARY KEY,
+                doc_id INTEGER NOT NULL,
+                element_id INTEGER,
+                content TEXT NOT NULL,
+                token_count INTEGER,
+                embedding BLOB,
+                FOREIGN KEY (doc_id) REFERENCES unity_docs (id) ON DELETE CASCADE,
+                FOREIGN KEY (element_id) REFERENCES content_elements (id) ON DELETE CASCADE
+            );
+
+            -- Cross-document relationships
+            CREATE TABLE doc_relationships (
+                id INTEGER PRIMARY KEY,
+                source_doc_id INTEGER NOT NULL,
+                target_doc_id INTEGER NOT NULL,
+                relationship_type TEXT NOT NULL,
+                FOREIGN KEY (source_doc_id) REFERENCES unity_docs (id) ON DELETE CASCADE,
+                FOREIGN KEY (target_doc_id) REFERENCES unity_docs (id) ON DELETE CASCADE,
+                UNIQUE(source_doc_id, target_doc_id, relationship_type)
+            );
+
+            -- Vector similarity indices
             CREATE VIRTUAL TABLE vec_elements_index USING vss0(
                 embedding(768)
             );
+            CREATE VIRTUAL TABLE vec_chunks_index USING vss0(
+                embedding(768)
+            );
+
+            -- Performance indices
+            CREATE INDEX idx_docs_source_type ON unity_docs(source_id, doc_type);
+            CREATE INDEX idx_elements_doc ON content_elements(doc_id, element_type);
+
+            -- Source-specific views for common queries
+            CREATE VIEW scripting_api_docs AS
+            SELECT 
+                d.id,
+                d.title,
+                d.doc_key as file_path,
+                json_extract(dm.metadata_json, '$.description') as description,
+                json_extract(dm.metadata_json, '$.class_name') as class_name,
+                json_extract(dm.metadata_json, '$.namespace') as namespace,
+                d.title_embedding,
+                d.summary_embedding
+            FROM unity_docs d
+            JOIN doc_sources s ON d.source_id = s.id  
+            LEFT JOIN doc_metadata dm ON d.id = dm.doc_id AND dm.metadata_type = 'scripting_api'
+            WHERE s.source_type = 'scripting_api';
+
+            CREATE VIEW api_elements AS
+            SELECT 
+                ce.id,
+                ce.title,
+                ce.content as description,
+                ce.element_type,
+                json_extract(ce.attributes_json, '$.is_inherited') as is_inherited,
+                d.title as class_name,
+                json_extract(dm.metadata_json, '$.namespace') as namespace,
+                ce.element_embedding
+            FROM content_elements ce
+            JOIN unity_docs d ON ce.doc_id = d.id
+            JOIN doc_sources s ON d.source_id = s.id
+            LEFT JOIN doc_metadata dm ON d.id = dm.doc_id AND dm.metadata_type = 'scripting_api'
+            WHERE s.source_type = 'scripting_api'
+            AND ce.element_type IN ('property', 'public_method', 'static_method', 'message');
         ";
 
         private const string InitialData = @"
