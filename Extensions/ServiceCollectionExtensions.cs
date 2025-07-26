@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using UnityIntelligenceMCP.Core.Analysis.Dependencies;
 using UnityIntelligenceMCP.Core.Analysis.Patterns;
 using UnityIntelligenceMCP.Core.Analysis.Project;
 using UnityIntelligenceMCP.Core.Analysis.Relationships;
@@ -18,6 +19,7 @@ namespace UnityIntelligenceMCP.Extensions
                 .AddSingleton<UnityRoslynAnalysisService>()
                 .AddSingleton<PatternDetectorRegistry>()
                 .AddSingleton<UnityComponentRelationshipAnalyzer>()
+                .AddSingleton<UnityDependencyGraphAnalyzer>()
                 .AddSingleton<UnityProjectAnalyzer>()
                 .AddSingleton<UnityPatternAnalyzer>()
                 .AddSingleton<PatternMetricsAnalyzer>()

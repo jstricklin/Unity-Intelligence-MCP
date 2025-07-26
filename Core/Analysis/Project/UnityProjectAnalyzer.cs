@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityIntelligenceMCP.Core.Analysis.Dependencies;
 using UnityIntelligenceMCP.Core.Analysis.Patterns;
 using UnityIntelligenceMCP.Core.Analysis.Relationships;
 using UnityIntelligenceMCP.Core.RoslynServices;
@@ -16,15 +17,18 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
         private readonly UnityRoslynAnalysisService _roslynService;
         private readonly PatternDetectorRegistry _patternDetectors;
         private readonly UnityComponentRelationshipAnalyzer _relationshipAnalyzer;
+        private readonly UnityDependencyGraphAnalyzer _dependencyGraphAnalyzer;
         
         public UnityProjectAnalyzer(
             UnityRoslynAnalysisService roslynService,
             PatternDetectorRegistry patternDetectors,
-            UnityComponentRelationshipAnalyzer relationshipAnalyzer)
+            UnityComponentRelationshipAnalyzer relationshipAnalyzer,
+            UnityDependencyGraphAnalyzer dependencyGraphAnalyzer)
         {
             _roslynService = roslynService;
             _patternDetectors = patternDetectors;
             _relationshipAnalyzer = relationshipAnalyzer;
+            _dependencyGraphAnalyzer = dependencyGraphAnalyzer;
         }
 
         public async Task<ProjectContext> AnalyzeProjectAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken = default)
@@ -58,11 +62,15 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
             // Analyze component relationships
             var relationships = _relationshipAnalyzer.AnalyzeMonoBehaviours(compilation, cancellationToken);
             
+            // Build dependency graph
+            var dependencies = await _dependencyGraphAnalyzer.BuildGraphAsync(projectPath, searchScope, compilation);
+
             return new ProjectContext(
                 projectPath,
                 scripts,
                 patterns,
-                relationships
+                relationships,
+                dependencies
             );
         }
     }
