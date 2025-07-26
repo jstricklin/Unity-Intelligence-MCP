@@ -45,9 +45,13 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
                 if (classNode == null || semanticModel.GetDeclaredSymbol(classNode, cancellationToken) is not INamedTypeSymbol classSymbol) continue;
 
                 var isMonoBehaviour = IsSubclassOf(classSymbol, monoBehaviourSymbol);
-                // TODO: Populate UnityMessages by analyzing methods
+                // TODO: Expand script type identification for ScriptableObject and Editor classes.
+                
+                // TODO: Populate UnityMessages by analyzing class methods.
                 var unityAnalysis = new UnityScriptAnalysis(isMonoBehaviour, new List<UnityMessageInfo>());
 
+                // TODO: Extract public methods and serialized fields into dedicated models.
+                // TODO: Capture the class namespace and implemented interfaces.
                 scripts.Add(new ScriptInfo(
                     syntaxTree.FilePath,
                     classSymbol.Name,
