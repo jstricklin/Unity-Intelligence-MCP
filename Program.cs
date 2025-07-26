@@ -26,11 +26,6 @@ builder.Services.AddUnityAnalysisServices();
 var host = builder.Build();
 
 // Initialize the documentation database
-using (var scope = host.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<IDocumentationDatabase>();
-    await db.InitializeAsync();
-    Console.Error.WriteLine("[Database] Documentation database initialized.");
-}
+await host.Services.InitializeDatabaseServicesAsync();
 
 await host.RunAsync();

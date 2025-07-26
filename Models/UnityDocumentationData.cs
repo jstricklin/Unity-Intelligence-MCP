@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using UnityIntelligenceMCP.Core.Embedding;
+using UnityIntelligenceMCP.Core.Semantics;
 using UnityIntelligenceMCP.Models.Documentation;
 
 namespace UnityIntelligenceMCP.Models;
@@ -25,10 +25,9 @@ public class UnityDocumentationData : IDocumentationSource
             Title = this.Title,
             DocType = "class",
             Category = "Scripting API",
-            ContentHash = ComputeContentHash() // Assumes a new helper method
+            ContentHash = ComputeContentHash()
         };
 
-        // Generate and assign embeddings
         var titleContext = $"Unity Scripting API Class: {Title}";
         var summaryContext = $"Description for {Title}: {Description}";
         
@@ -38,11 +37,15 @@ public class UnityDocumentationData : IDocumentationSource
         record.TitleEmbedding = FloatArrayToByteArray(titleEmbedding);
         record.SummaryEmbedding = FloatArrayToByteArray(summaryEmbedding);
 
-        // Serialize this object as JSON metadata
         var metadata = new DocMetadata
         {
             MetadataType = SourceType,
-            MetadataJson = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = false })
+            // UPDATED: Serialize class_name and namespace for schema alignment
+            MetadataJson = JsonSerializer.Serialize(new { 
+                description = this.Description,
+                class_name = this.Title, // Use Title as the class name
+                @namespace = this.Namespace
+            }, new JsonSerializerOptions { WriteIndented = false })
         };
         record.Metadata.Add(metadata);
 
