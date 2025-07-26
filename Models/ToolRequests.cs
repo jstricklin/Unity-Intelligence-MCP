@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace UnityIntelligenceMCP.Models
 {
@@ -12,4 +13,10 @@ namespace UnityIntelligenceMCP.Models
 
     public record PatternMetrics(Dictionary<string, int> PatternCounts);
     public record UnityProjectAnalysisRequest(string ProjectPath);
+
+    public record UnityMessageRequest
+    {
+        [JsonPropertyName("script_paths")]
+        public required List<string> ScriptPaths { get; init; }
+    }
 }

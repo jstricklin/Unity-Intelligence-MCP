@@ -19,17 +19,20 @@ namespace UnityIntelligenceMCP.Tools
         private readonly UnityPatternAnalyzer _patternAnalyzer;
         private readonly PatternMetricsAnalyzer _patternMetricsAnalyzer;
         private readonly ConfigurationService _configurationService;
+        private readonly IUnityMessageAnalyzer _messageAnalyzer;
 
         public AnalysisTools(
             UnityProjectAnalyzer projectAnalyzer,
             UnityPatternAnalyzer patternAnalyzer,
             PatternMetricsAnalyzer patternMetricsAnalyzer,
-            ConfigurationService configurationService)
+            ConfigurationService configurationService,
+            IUnityMessageAnalyzer messageAnalyzer)
         {
             _projectAnalyzer = projectAnalyzer;
             _patternAnalyzer = patternAnalyzer;
             _patternMetricsAnalyzer = patternMetricsAnalyzer;
             _configurationService = configurationService;
+            _messageAnalyzer = messageAnalyzer;
         }
 
         [McpServerTool(Name = "analyze_unity_project"), Description("Analyzes a Unity project structure, scripts, and diagnostics.")]
@@ -68,6 +71,15 @@ namespace UnityIntelligenceMCP.Tools
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
             return await _patternMetricsAnalyzer.GetMetricsAsync(projectPath, searchScope, cancellationToken);
+        }
+
+        [McpServerTool(Name = "analyze_unity_messages"), Description("Analyzes one or more scripts for Unity message methods (e.g., Awake, Start, Update).")]
+        public async Task<UnityMessagesAnalysisResult> AnalyzeUnityMessages(
+            UnityMessageRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var projectPath = _configurationService.GetConfiguredProjectPath();
+            return await _messageAnalyzer.AnalyzeMessagesAsync(projectPath, request.ScriptPaths, cancellationToken);
         }
 
     }

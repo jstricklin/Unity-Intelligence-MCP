@@ -23,7 +23,8 @@ namespace UnityIntelligenceMCP.Extensions
                 .AddSingleton<UnityProjectAnalyzer>()
                 .AddSingleton<UnityPatternAnalyzer>()
                 .AddSingleton<PatternMetricsAnalyzer>()
-                .AddSingleton<UnityDocumentationResource>();
+                .AddSingleton<UnityDocumentationResource>()
+                .AddSingleton<IUnityMessageAnalyzer, UnityMessageAnalyzer>();
         }
     }
 }
