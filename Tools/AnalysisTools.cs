@@ -33,22 +33,22 @@ namespace UnityIntelligenceMCP.Tools
         }
 
         [McpServerTool(Name = "analyze_unity_project"), Description("Analyzes a Unity project structure, scripts, and diagnostics.")]
-        public Task<ProjectContext> AnalyzeUnityProject(
+        public async Task<ProjectContext> AnalyzeUnityProject(
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
-            return _projectAnalyzer.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
+            return await _projectAnalyzer.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
         }
 
         [McpServerTool(Name = "find_unity_patterns"), Description("Scans the Unity project for specific design patterns.")]
-        public Task<IEnumerable<DetectedPattern>> FindUnityPatterns(
+        public async Task<IEnumerable<DetectedPattern>> FindUnityPatterns(
             [Description("A list of pattern names to search for.")] List<string> patternTypes,
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
-            return _patternAnalyzer.FindPatternsAsync(projectPath, patternTypes, searchScope, cancellationToken);
+            return await _patternAnalyzer.FindPatternsAsync(projectPath, patternTypes, searchScope, cancellationToken);
         }
 
         [McpServerTool(Name = "analyze_component_relationships"), Description("Analyzes and returns a graph of MonoBehaviour component interactions.")]
@@ -62,12 +62,12 @@ namespace UnityIntelligenceMCP.Tools
         }
 
         [McpServerTool(Name = "get_pattern_metrics"), Description("Provides quantitative data on the usage of design patterns throughout the project.")]
-        public Task<PatternMetrics> GetPatternMetrics(
+        public async Task<PatternMetrics> GetPatternMetrics(
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
-            return _patternMetricsAnalyzer.GetMetricsAsync(projectPath, searchScope, cancellationToken);
+            return await _patternMetricsAnalyzer.GetMetricsAsync(projectPath, searchScope, cancellationToken);
         }
 
     }
