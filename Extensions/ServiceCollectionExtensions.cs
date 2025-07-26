@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
 using UnityIntelligenceMCP.Core.Analysis.Dependencies;
 using UnityIntelligenceMCP.Core.Analysis.Patterns;
 using UnityIntelligenceMCP.Core.Analysis.Project;
