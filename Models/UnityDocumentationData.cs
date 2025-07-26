@@ -8,15 +8,15 @@ public class UnityDocumentationData
     // This below should extract values to build our document data object
     private static readonly Dictionary<string, ExtractionConfig> ExtractionRules = new ()
     {
-        ["Title"] = new (".content h1",
+        ["Title"] = new ("//div[contains(@class, 'content')]/h1",
         text => text?.Trim()),
-        ["Description"] = new (".description, .summary",
+        ["Description"] = new ("//*[contains(@class, 'description') or contains(@class, 'summary')]",
         text => text?.Trim()),
-        ["Namespace"] = new (".namespace",
+        ["Namespace"] = new ("//*[contains(@class, 'namespace')]",
         text => text?.Trim()),
         // ["UnityVersion"] = new ("[data-unity-version], .unity-version",
         // text => text?.Trim()),
-        ["MainContent"] = new (".content .section-content",
+        ["MainContent"] = new ("//div[contains(@class, 'content')]//div[contains(@class, 'section-content')]",
         text => text?.Trim()),
     };
 
