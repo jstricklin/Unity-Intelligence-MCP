@@ -1,3 +1,4 @@
+using UnityIntelligenceMCP.Core.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -23,4 +24,13 @@ builder.Services
 builder.Services.AddUnityAnalysisServices();
 
 var host = builder.Build();
+
+// Initialize the documentation database
+using (var scope = host.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<IDocumentationDatabase>();
+    await db.InitializeAsync();
+    Console.Error.WriteLine("[Database] Documentation database initialized.");
+}
+
 await host.RunAsync();

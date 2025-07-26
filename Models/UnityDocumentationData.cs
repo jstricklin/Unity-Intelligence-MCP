@@ -4,10 +4,100 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using UnityIntelligenceMCP.Core.Embedding;
+using UnityIntelligenceMCP.Models.Documentation;
 
 namespace UnityIntelligenceMCP.Models;
-public class UnityDocumentationData
+
+// Modify class declaration to implement IDocumentationSource
+public class UnityDocumentationData : IDocumentationSource
 {
+    #region IDocumentationSource Implementation
+
+    public string SourceType => "scripting_api";
+
+    public async Task<UniversalDocumentRecord> ToUniversalRecord(IEmbeddingService embeddingService)
+    {
+        var record = new UniversalDocumentRecord
+        {
+            DocKey = Path.GetFileNameWithoutExtension(FilePath),
+            Title = this.Title,
+            DocType = "class",
+            Category = "Scripting API",
+            ContentHash = ComputeContentHash() // Assumes a new helper method
+        };
+
+        // Generate and assign embeddings
+        var titleContext = $"Unity Scripting API Class: {Title}";
+        var summaryContext = $"Description for {Title}: {Description}";
+        
+        var titleEmbedding = await embeddingService.EmbedAsync(titleContext);
+        var summaryEmbedding = await embeddingService.EmbedAsync(summaryContext);
+
+        record.TitleEmbedding = FloatArrayToByteArray(titleEmbedding);
+        record.SummaryEmbedding = FloatArrayToByteArray(summaryEmbedding);
+
+        // Serialize this object as JSON metadata
+        var metadata = new DocMetadata
+        {
+            MetadataType = SourceType,
+            MetadataJson = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = false })
+        };
+        record.Metadata.Add(metadata);
+
+        // Convert links to content elements
+        record.Elements.AddRange(await CreateContentElements(PublicMethods, "public_method", embeddingService));
+        record.Elements.AddRange(await CreateContentElements(Properties, "property", embeddingService));
+        record.Elements.AddRange(await CreateContentElements(StaticMethods, "static_method", embeddingService));
+        record.Elements.AddRange(await CreateContentElements(Messages, "message", embeddingService));
+        
+        return record;
+    }
+
+    private async Task<List<ContentElement>> CreateContentElements(IEnumerable<DocumentationLink> links, string elementType, IEmbeddingService embeddingService)
+    {
+        var elements = new List<ContentElement>();
+        foreach (var link in links)
+        {
+            var elementContext = $"Unity {elementType.Replace('_', ' ')} '{link.Title}' in class {this.Title}: {link.Description}";
+            var embedding = await embeddingService.EmbedAsync(elementContext);
+
+            elements.Add(new ContentElement
+            {
+                ElementType = elementType,
+                Title = link.Title,
+                Content = link.Description,
+                ElementEmbedding = FloatArrayToByteArray(embedding),
+                AttributesJson = JsonSerializer.Serialize(new { link.RelativePath })
+            });
+        }
+        return elements;
+    }
+
+    private string ComputeContentHash()
+    {
+        // A simple hash based on content properties.
+        // In a real implementation, use a more robust hashing algorithm like SHA256.
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append(Title).Append(Description);
+        Properties.ForEach(p => stringBuilder.Append(p.Title).Append(p.Description));
+        PublicMethods.ForEach(p => stringBuilder.Append(p.Title).Append(p.Description));
+        // ... add other lists as needed ...
+
+        return stringBuilder.ToString().GetHashCode().ToString("X");
+    }
+
+    private static byte[]? FloatArrayToByteArray(IReadOnlyCollection<float> floats)
+    {
+        if (floats == null || floats.Count == 0) return null;
+        var byteArray = new byte[floats.Count * sizeof(float)];
+        Buffer.BlockCopy(floats.ToArray(), 0, byteArray, 0, byteArray.Length);
+        return byteArray;
+    }
+
+    #endregion
+
     #region Extraction Logic
 
     // XPaths for simple text elements
