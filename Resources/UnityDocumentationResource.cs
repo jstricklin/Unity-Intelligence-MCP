@@ -26,18 +26,16 @@ namespace UnityIntelligenceMCP.Resources
             _configurationService = configurationService;
         }
 
-        [McpServerResource(Name = "get_unity_documentation_page")]
-        public Task<TextResourceContents> GetDocumentationPage(
+        [McpServerResource(Name = "get_script_reference_page")]
+        public Task<TextResourceContents> GetScriptReferencePage(
             [Description("The relative path to the HTML documentation file, e.g., 'MonoBehaviour.html'")] 
-            string relativePath,
-            [Description("The Document domain to explore: 'Manual' for Unity Editor Docs or 'ScriptReference' for Scripting API (Optional: Defaults to 'ScriptReference')")] 
-            string docDomain = "ScriptReference"
+            string relativePath
             )
         {
             try
             {
                 string projectPath = _configurationService.GetConfiguredProjectPath();
-                string docRoot = _installationService.GetDocumentationPath(projectPath, docDomain);
+                string docRoot = _installationService.GetDocumentationPath(projectPath, "ScriptReference");
                 string fullPath = Path.GetFullPath(Path.Combine(docRoot, relativePath));
 
                 // Security check to prevent path traversal attacks
