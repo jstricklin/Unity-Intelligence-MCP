@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace UnityIntelligenceMCP.Models
 {
@@ -7,8 +8,8 @@ namespace UnityIntelligenceMCP.Models
         string Path,
         string ClassName,
         string BaseType,
-        SemanticModel SemanticModel,
-        SyntaxTree SyntaxTree,
+        [property: JsonIgnore] SemanticModel SemanticModel,
+        [property: JsonIgnore] SyntaxTree SyntaxTree,
         UnityScriptAnalysis UnityAnalysis
     );
 
