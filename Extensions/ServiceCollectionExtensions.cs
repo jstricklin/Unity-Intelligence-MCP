@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using UnityIntelligenceMCP.Core.Analysis.Dependencies;
 using UnityIntelligenceMCP.Core.Analysis.Patterns;
 using UnityIntelligenceMCP.Core.Analysis.Project;
+using UnityIntelligenceMCP.Core.Analysis.Runtime;
 using UnityIntelligenceMCP.Core.Analysis.Relationships;
 using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Core.RoslynServices;
@@ -24,7 +26,9 @@ namespace UnityIntelligenceMCP.Extensions
                 .AddSingleton<UnityPatternAnalyzer>()
                 .AddSingleton<PatternMetricsAnalyzer>()
                 .AddSingleton<UnityDocumentationResource>()
-                .AddSingleton<IUnityMessageAnalyzer, UnityMessageAnalyzer>();
+                .AddSingleton<IUnityMessageAnalyzer, UnityMessageAnalyzer>()
+                // A concrete implementation would handle communication with a live Unity instance.
+                .AddSingleton<IUnityRuntimeService, MockUnityRuntimeService>();
         }
     }
 }
