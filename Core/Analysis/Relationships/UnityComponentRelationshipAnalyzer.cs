@@ -1,109 +1,102 @@
 using UnityIntelligenceMCP.Models;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using UnityIntelligenceMCP.Core.RoslynServices;
 
 namespace UnityIntelligenceMCP.Core.Analysis.Relationships
 {
     public class UnityComponentRelationshipAnalyzer
     {
-        private readonly UnityRoslynAnalysisService _roslynService;
-
-        public UnityComponentRelationshipAnalyzer(UnityRoslynAnalysisService roslynService)
-        {
-            _roslynService = roslynService;
-        }
-
-        public async Task<UnityComponentGraph> AnalyzeAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken)
-        {
-            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, searchScope, cancellationToken);
-            return AnalyzeMonoBehaviours(compilation, cancellationToken);
-        }
-
-        public UnityComponentGraph AnalyzeMonoBehaviours(Compilation compilation, CancellationToken cancellationToken)
+        public UnityComponentGraph AnalyzeRelationships(IEnumerable<ScriptInfo> scripts)
         {
             var graph = new UnityComponentGraph();
-            var monoBehaviourSymbol = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
-            if (monoBehaviourSymbol == null) return graph; // MonoBehaviour not found
-            var monoBehaviourClasses = new List<INamedTypeSymbol>();
-            foreach (var tree in compilation.SyntaxTrees)
+            var firstScript = scripts.FirstOrDefault(s => s.SemanticModel != null);
+            if (firstScript == null) return graph;
+
+            // All scripts share the same compilation, so we can get MonoBehaviour from the first one.
+            var monoBehaviourSymbol = firstScript.SemanticModel.Compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
+            if (monoBehaviourSymbol == null) return graph;
+
+            foreach (var script in scripts.Where(s => s.UnityAnalysis.IsMonoBehaviour))
             {
-                var semanticModel = compilation.GetSemanticModel(tree);
-                foreach (var classDeclaration in tree.GetRoot(cancellationToken).DescendantNodes().OfType<ClassDeclarationSyntax>())
-                {
-                    if (semanticModel.GetDeclaredSymbol(classDeclaration, cancellationToken) is INamedTypeSymbol classSymbol &&
-                        IsSubclassOf(classSymbol, monoBehaviourSymbol))
-                    {
-                        monoBehaviourClasses.Add(classSymbol);
-                    }
-                }
+                var relationships = ExtractUnityRelationships(script, monoBehaviourSymbol);
+                graph.AddComponent(script.ClassName, relationships, script.UnityAnalysis);
             }
-
-            foreach (var classSymbol in monoBehaviourClasses)
-            {
-                var relationships = new HashSet<(string, string)>();
-                foreach (var syntaxRef in classSymbol.DeclaringSyntaxReferences)
-                {
-                    var classNode = syntaxRef.GetSyntax(cancellationToken) as ClassDeclarationSyntax;
-                    if (classNode == null) continue;
-
-                    var semanticModel = compilation.GetSemanticModel(classNode.SyntaxTree);
-
-                    // Analyze field and property declarations
-                    foreach (var member in classNode.Members)
-                    {
-                        var typeSyntax = (member as FieldDeclarationSyntax)?.Declaration.Type ?? (member as PropertyDeclarationSyntax)?.Type;
-                        if (typeSyntax == null) continue;
-
-                        if (semanticModel.GetTypeInfo(typeSyntax, cancellationToken).Type is INamedTypeSymbol typeSymbol && IsSubclassOf(typeSymbol, monoBehaviourSymbol))
-                        {
-                            relationships.Add((typeSymbol.Name, "Reference (Field/Property)"));
-                        }
-                    }
-
-                    // Analyze method bodies for GetComponent, AddComponent, etc.
-                    foreach (var invocation in classNode.DescendantNodes().OfType<InvocationExpressionSyntax>())
-                    {
-                        if (semanticModel.GetSymbolInfo(invocation, cancellationToken).Symbol is IMethodSymbol { IsGenericMethod: true } methodSymbol)
-                        {
-                            var relationshipType = GetRelationshipType(methodSymbol.Name);
-                            if (relationshipType == null) continue;
-
-                            if (methodSymbol.TypeArguments.FirstOrDefault() is INamedTypeSymbol typeArgSymbol && IsSubclassOf(typeArgSymbol, monoBehaviourSymbol))
-                            {
-                                relationships.Add((typeArgSymbol.Name, relationshipType));
-                            }
-                        }
-                    }
-                }
-                graph.AddNode(classSymbol.Name, relationships.Select(r => new ComponentRelationship(r.Item1, r.Item2)).ToList());
-            }
-
             return graph;
         }
 
-        private bool IsSubclassOf(INamedTypeSymbol type, INamedTypeSymbol baseTypeSymbol)
+        private List<ComponentRelationship> ExtractUnityRelationships(ScriptInfo script, INamedTypeSymbol monoBehaviourSymbol)
         {
-            var current = type.BaseType;
-            while (current != null)
-            {
-                if (SymbolEqualityComparer.Default.Equals(current, baseTypeSymbol)) return true;
-                current = current.BaseType;
-            }
-            return false;
+            var walker = new UnityComponentUsageWalker(script.SemanticModel, monoBehaviourSymbol);
+            walker.Visit(script.SyntaxTree.GetRoot());
+            return walker.Relationships.ToList();
         }
 
-        private string? GetRelationshipType(string methodName) => methodName switch
+        private class UnityComponentUsageWalker : CSharpSyntaxWalker
         {
-            "GetComponent" or "GetComponents" or "GetComponentInChildren" or "GetComponentsInChildren" or "GetComponentInParent" or "GetComponentsInParent" or "FindObjectOfType" or "FindObjectsOfType" => $"Reference ({methodName})",
-            "AddComponent" => $"Creation ({methodName})",
-            _ => null
-        };
+            private readonly SemanticModel _semanticModel;
+            private readonly INamedTypeSymbol _monoBehaviourSymbol;
+            public readonly HashSet<ComponentRelationship> Relationships = new();
+
+            public UnityComponentUsageWalker(SemanticModel semanticModel, INamedTypeSymbol monoBehaviourSymbol)
+            {
+                _semanticModel = semanticModel;
+                _monoBehaviourSymbol = monoBehaviourSymbol;
+            }
+
+            public override void VisitFieldDeclaration(FieldDeclarationSyntax node)
+            {
+                if (_semanticModel.GetTypeInfo(node.Declaration.Type).Type is INamedTypeSymbol typeSymbol && IsSubclassOf(typeSymbol, _monoBehaviourSymbol))
+                {
+                    Relationships.Add(new ComponentRelationship(typeSymbol.Name, "Reference (Field/Property)"));
+                }
+                base.VisitFieldDeclaration(node);
+            }
+
+            public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+            {
+                if (_semanticModel.GetTypeInfo(node.Type).Type is INamedTypeSymbol typeSymbol && IsSubclassOf(typeSymbol, _monoBehaviourSymbol))
+                {
+                    Relationships.Add(new ComponentRelationship(typeSymbol.Name, "Reference (Field/Property)"));
+                }
+                base.VisitPropertyDeclaration(node);
+            }
+
+            public override void VisitInvocationExpression(InvocationExpressionSyntax node)
+            {
+                if (_semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol { IsGenericMethod: true } methodSymbol)
+                {
+                    var relationshipType = GetRelationshipType(methodSymbol.Name);
+                    if (relationshipType != null)
+                    {
+                        if (methodSymbol.TypeArguments.FirstOrDefault() is INamedTypeSymbol typeArgSymbol && IsSubclassOf(typeArgSymbol, _monoBehaviourSymbol))
+                        {
+                            Relationships.Add(new ComponentRelationship(typeArgSymbol.Name, relationshipType));
+                        }
+                    }
+                }
+                base.VisitInvocationExpression(node);
+            }
+
+            private bool IsSubclassOf(INamedTypeSymbol type, INamedTypeSymbol baseTypeSymbol)
+            {
+                var current = type.BaseType;
+                while (current != null)
+                {
+                    if (SymbolEqualityComparer.Default.Equals(current, baseTypeSymbol)) return true;
+                    current = current.BaseType;
+                }
+                return false;
+            }
+
+            private string? GetRelationshipType(string methodName) => methodName switch
+            {
+                "GetComponent" or "GetComponents" or "GetComponentInChildren" or "GetComponentsInChildren" or "GetComponentInParent" or "GetComponentsInParent" or "FindObjectOfType" or "FindObjectsOfType" => $"Reference ({methodName})",
+                "AddComponent" => $"Creation ({methodName})",
+                _ => null
+            };
+        }
     }
 }
