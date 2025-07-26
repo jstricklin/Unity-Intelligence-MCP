@@ -3,17 +3,6 @@ using Microsoft.CodeAnalysis;
 
 namespace UnityIntelligenceMCP.Models
 {
-    // Placeholder records based on the spec, allowing the new analyzer to compile.
-    // A more complete implementation of these will be part of a larger refactor.
-    public record ScriptInfo(
-        string ClassName,
-        SemanticModel SemanticModel,
-        SyntaxTree SyntaxTree,
-        UnityScriptAnalysis UnityAnalysis
-    );
-    public record UnityScriptAnalysis(bool IsMonoBehaviour, List<UnityMessageInfo> UnityMessages);
-    public record UnityMessageInfo(string MessageName);
-
     public class ComponentNode
     {
         public List<ComponentRelationship> Relationships { get; }

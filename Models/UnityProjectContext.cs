@@ -9,12 +9,6 @@ namespace UnityIntelligenceMCP.Models
         UnityComponentGraph ComponentRelationships
     );
 
-    public record ScriptInfo(
-        string Path,
-        string ClassName,
-        string BaseType
-    );
-
     public record DetectedUnityPattern(
         string PatternName,
         string ScriptPath,
