@@ -49,12 +49,6 @@ namespace UnityIntelligenceMCP.Resources
                     throw new FileNotFoundException("File Not Found", fullPath);
                 }
 
-                // ResourceContent content = new ResourceContent(stream, typeof(UnityDocumentationData));
-                // return Task.FromResult(new ResourceContent(stream, typeof(UnityDocumentationData)));
-                // return Task.FromResult(new TextResourceContents { 
-                //     Text = File.ReadAllText(fullPath),
-                //     MimeType = "text/plain" 
-                //     });
                 return Task.FromResult(new TextResourceContents { 
                     Text = JsonSerializer.Serialize(new UnityDocumentationData(fullPath)),
                     MimeType = "text/json" 
