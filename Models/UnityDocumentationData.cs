@@ -1,78 +1,125 @@
-using System.Security;
-using ModelContextProtocol.Protocol;
 using HtmlAgilityPack;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+
 namespace UnityIntelligenceMCP.Models;
 public class UnityDocumentationData
 {
-    private record ExtractionConfig(string Selector, Func<string, string> Transform);
-    // This below should extract values to build our document data object
-    private static readonly Dictionary<string, ExtractionConfig> ExtractionRules = new ()
+    #region Extraction Logic
+
+    // XPaths for simple text elements
+    private static readonly Dictionary<string, string> TextExtractionRules = new()
     {
-        ["Title"] = new ("//div[contains(@class, 'content')]/h1",
-        text => text?.Trim()),
-        ["Description"] = new ("//*[contains(@class, 'description') or contains(@class, 'summary')]",
-        text => text?.Trim()),
-        ["Namespace"] = new ("//*[contains(@class, 'namespace')]",
-        text => text?.Trim()),
-        // ["UnityVersion"] = new ("[data-unity-version], .unity-version",
-        // text => text?.Trim()),
-        ["MainContent"] = new ("//div[contains(@class, 'content')]//div[contains(@class, 'section-content')]",
-        text => text?.Trim()),
+        ["Title"] = "//div[contains(@class, 'content')]//h1",
     };
 
-    // Parse Unity documentation structure TODO: Is there a way to parse docs async here?
+    // XPaths to find the header of each section that contains a table of links
+    private static readonly Dictionary<string, string> LinkSectionRules = new()
+    {
+        ["Properties"] = "//h3[text()='Properties']",
+        ["PublicMethods"] = "//h3[text()='Public Methods']",
+        ["StaticMethods"] = "//h3[text()='Static Methods']",
+        ["Messages"] = "//h3[text()='Messages']",
+        ["InheritedProperties"] = "//h3[text()='Inherited Members']/following::h3[text()='Properties'][1]",
+        ["InheritedPublicMethods"] = "//h3[text()='Inherited Members']/following::h3[text()='Public Methods'][1]",
+        ["InheritedStaticMethods"] = "//h3[text()='Inherited Members']/following::h3[text()='Static Methods'][1]",
+        ["InheritedOperators"] = "//h3[text()='Inherited Members']/following::h3[text()='Operators'][1]",
+    };
+
     public UnityDocumentationData(string filePath)
     {
-        string html = File.ReadAllText(filePath);
-        this.FilePath = filePath;
-        this.Title = ExtractByRule(html, "Title");
-        this.Description = ExtractByRule(html, "Description");
-        this.Namespace = ExtractByRule(html, "Namespace");
-        this.MainContent = ExtractByRule(html, "MainContent");
-        // this.CodeExamples = ExtractByRule(html, "Code Examples");
-        // this.Parameters = ExtractByRule(html, "Parameters");
-    }
-    
-    private string ExtractByRule(string html, string ruleName)
-    {
+        var html = File.ReadAllText(filePath);
         var doc = new HtmlDocument();
         doc.LoadHtml(html);
+        var docNode = doc.DocumentNode;
 
-        var config = ExtractionRules[ruleName];
-        var node = doc.DocumentNode.SelectSingleNode(config.Selector);
-        return config.Transform(node?.InnerText);
+        FilePath = filePath;
+
+        // Extract single text values
+        Title = docNode.SelectSingleNode(TextExtractionRules["Title"])?.InnerText.Trim() ?? string.Empty;
+        Description = ExtractDescription(docNode);
+
+        // Extract groups of links
+        Properties = ExtractLinks(docNode, LinkSectionRules["Properties"]);
+        PublicMethods = ExtractLinks(docNode, LinkSectionRules["PublicMethods"]);
+        StaticMethods = ExtractLinks(docNode, LinkSectionRules["StaticMethods"]);
+        Messages = ExtractLinks(docNode, LinkSectionRules["Messages"]);
+        InheritedProperties = ExtractLinks(docNode, LinkSectionRules["InheritedProperties"]);
+        InheritedPublicMethods = ExtractLinks(docNode, LinkSectionRules["InheritedPublicMethods"]);
+        InheritedStaticMethods = ExtractLinks(docNode, LinkSectionRules["InheritedStaticMethods"]);
+        InheritedOperators = ExtractLinks(docNode, LinkSectionRules["InheritedOperators"]);
     }
-    // Core content
-    public string HtmlContent { get; set; }
-    // public string PlainTextContent { get; set; } // Stripped HTML for search/indexing
 
-    // Metadata
-    // public DocumentationMetadata Metadata { get; set; }
-    public DocumentationLink InheritsFrom { get; set; }
-    public DocumentationLink ImplementedIn { get; set; }
+    private string ExtractDescription(HtmlNode docNode)
+    {
+        var descriptionHeader = docNode.SelectSingleNode("//h3[text()='Description']");
+        if (descriptionHeader == null) return string.Empty;
+
+        var sb = new StringBuilder();
+        var currentNode = descriptionHeader.NextSibling;
+        while (currentNode != null && currentNode.Name != "h3")
+        {
+            if (currentNode.NodeType == HtmlNodeType.Element && currentNode.Name == "p")
+            {
+                sb.AppendLine(currentNode.InnerText.Trim());
+            }
+            currentNode = currentNode.NextSibling;
+        }
+        return sb.ToString().Trim();
+    }
+
+    private List<DocumentationLink> ExtractLinks(HtmlNode docNode, string sectionHeaderXPath)
+    {
+        var links = new List<DocumentationLink>();
+        var headerNode = docNode.SelectSingleNode(sectionHeaderXPath);
+        if (headerNode == null) return links;
+
+        var tableNode = headerNode.SelectSingleNode("following-sibling::table[1]");
+        if (tableNode == null) return links;
+
+        var rows = tableNode.SelectNodes(".//tr");
+        if (rows == null) return links;
+
+        foreach (var row in rows)
+        {
+            var linkNode = row.SelectSingleNode("./td[1]//a");
+            var descriptionNode = row.SelectSingleNode("./td[2]");
+
+            if (linkNode != null)
+            {
+                links.Add(new DocumentationLink
+                {
+                    Title = HtmlEntity.DeEntitize(linkNode.InnerText).Trim(),
+                    RelativePath = linkNode.GetAttributeValue("href", string.Empty),
+                    Description = descriptionNode != null ? HtmlEntity.DeEntitize(descriptionNode.InnerText).Trim() : string.Empty
+                });
+            }
+        }
+        return links;
+    }
+
+    #endregion
+
+    #region DTO Properties
+
     public string FilePath { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
-    public string Namespace { get; set; }
-    public string MainContent { get; set; }
-    public string Type { get; set; }
-    public string CodeExamples { get; set; }
-    public string Parameters { get; set; }
-}
 
-// public class DocumentationMetadata
-// {
-//     public string Title { get; set; }
-//     public string Description { get; set; }
-//     // public DocumentationType Type { get; set; } // Class, Method, Property, etc.
-//     public string UnityVersion { get; set; }
-//     public string Namespace { get; set; }
-//     public string Assembly { get; set; }
-//     // public List<string> Tags { get; set; }
-//     public DateTime LastModified { get; set; }
-//     public string RelativePath { get; set; }
-//     // public string CanonicalUrl { get; set; }
-// }
+    public List<DocumentationLink> Properties { get; set; } = new();
+    public List<DocumentationLink> PublicMethods { get; set; } = new();
+    public List<DocumentationLink> StaticMethods { get; set; } = new();
+    public List<DocumentationLink> Messages { get; set; } = new();
+    public List<DocumentationLink> InheritedProperties { get; set; } = new();
+    public List<DocumentationLink> InheritedPublicMethods { get; set; } = new();
+    public List<DocumentationLink> InheritedStaticMethods { get; set; } = new();
+    public List<DocumentationLink> InheritedOperators { get; set; } = new();
+
+    #endregion
+}
 
 public class DocumentationLink
 {
@@ -80,40 +127,3 @@ public class DocumentationLink
     public string RelativePath { get; set; }
     public string Description { get; set; }
 }
-
-// public class BreadcrumbPath
-// {
-//     public List<DocumentationLink> Path { get; set; }
-//     public string CurrentPage { get; set; }
-// }
-
-// public enum DocumentationType
-// {
-//     Class,
-//     Interface,
-//     Struct,
-//     Enum,
-//     Method,
-//     Property,
-//     Field,
-//     Event,
-//     Namespace,
-//     Manual,
-//     Tutorial,
-//     ReleaseNotes
-// }
-
-// Alternative simpler approach for initial implementation
-// public class UnityDocumentationData
-// {
-    // public string MainContent { get; set; }
-    // public string FilePath { get; set; }
-    // public string Description { get; set; }
-    // public List<string> CodeExamples { get; set; }
-    // public string Namespace { get; set; }
-    // public string Title { get; set; }
-    // public List<string> Parameters { get; set; }
-    // public string UnityVersion { get; set; }
-    // public string RelativePath { get; set; }
-    // public Dictionary<string, object> Metadata { get; set; } = new();
-// }
