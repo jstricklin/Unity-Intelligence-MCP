@@ -17,20 +17,17 @@ namespace UnityIntelligenceMCP.Tools
     {
         private readonly UnityProjectAnalyzer _projectAnalyzer;
         private readonly UnityPatternAnalyzer _patternAnalyzer;
-        private readonly UnityComponentRelationshipAnalyzer _componentAnalyzer;
         private readonly PatternMetricsAnalyzer _patternMetricsAnalyzer;
         private readonly ConfigurationService _configurationService;
 
         public AnalysisTools(
             UnityProjectAnalyzer projectAnalyzer,
             UnityPatternAnalyzer patternAnalyzer,
-            UnityComponentRelationshipAnalyzer componentAnalyzer,
             PatternMetricsAnalyzer patternMetricsAnalyzer,
             ConfigurationService configurationService)
         {
             _projectAnalyzer = projectAnalyzer;
             _patternAnalyzer = patternAnalyzer;
-            _componentAnalyzer = componentAnalyzer;
             _patternMetricsAnalyzer = patternMetricsAnalyzer;
             _configurationService = configurationService;
         }
@@ -55,12 +52,13 @@ namespace UnityIntelligenceMCP.Tools
         }
 
         [McpServerTool(Name = "analyze_component_relationships"), Description("Analyzes and returns a graph of MonoBehaviour component interactions.")]
-        public Task<UnityComponentGraph> AnalyzeComponentRelationships(
+        public async Task<UnityComponentGraph> AnalyzeComponentRelationships(
             [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")] SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
-            return _componentAnalyzer.AnalyzeAsync(projectPath, searchScope, cancellationToken);
+            var context = await _projectAnalyzer.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
+            return context.ComponentRelationships;
         }
 
         [McpServerTool(Name = "get_pattern_metrics"), Description("Provides quantitative data on the usage of design patterns throughout the project.")]

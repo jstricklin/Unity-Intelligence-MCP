@@ -34,12 +34,28 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
         public async Task<ProjectContext> AnalyzeProjectAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken = default)
         {
             var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, searchScope, cancellationToken);
-            
-            var scripts = compilation.SyntaxTrees.Select(st => new ScriptInfo(
-                st.FilePath,
-                Path.GetFileNameWithoutExtension(st.FilePath),
-                "MonoBehaviour" // TODO: Replace with actual base type from Roslyn analysis
-            )).ToList();
+            var monoBehaviourSymbol = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
+
+            var scripts = new List<ScriptInfo>();
+            foreach (var syntaxTree in compilation.SyntaxTrees)
+            {
+                var semanticModel = compilation.GetSemanticModel(syntaxTree, true);
+                var classNode = syntaxTree.GetRoot(cancellationToken).DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+                if (classNode == null || semanticModel.GetDeclaredSymbol(classNode, cancellationToken) is not INamedTypeSymbol classSymbol) continue;
+
+                var isMonoBehaviour = IsSubclassOf(classSymbol, monoBehaviourSymbol);
+                // TODO: Populate UnityMessages by analyzing methods
+                var unityAnalysis = new UnityScriptAnalysis(isMonoBehaviour, new List<UnityMessageInfo>());
+
+                scripts.Add(new ScriptInfo(
+                    syntaxTree.FilePath,
+                    classSymbol.Name,
+                    classSymbol.BaseType?.Name ?? "object",
+                    semanticModel,
+                    syntaxTree,
+                    unityAnalysis
+                ));
+            }
             
             // Run pattern detection
             var patterns = new List<DetectedUnityPattern>();
@@ -60,7 +76,7 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
             }
             
             // Analyze component relationships
-            var relationships = _relationshipAnalyzer.AnalyzeMonoBehaviours(compilation, cancellationToken);
+            var relationships = _relationshipAnalyzer.AnalyzeRelationships(scripts);
             
             // Build dependency graph
             var dependencies = await _dependencyGraphAnalyzer.BuildGraphAsync(projectPath, searchScope, compilation);
@@ -72,6 +88,18 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
                 relationships,
                 dependencies
             );
+        }
+
+        private bool IsSubclassOf(INamedTypeSymbol? type, INamedTypeSymbol? baseTypeSymbol)
+        {
+            if (baseTypeSymbol == null) return false;
+            var current = type;
+            while (current != null)
+            {
+                if (SymbolEqualityComparer.Default.Equals(current, baseTypeSymbol)) return true;
+                current = current.BaseType;
+            }
+            return false;
         }
     }
 }

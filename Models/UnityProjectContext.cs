@@ -6,7 +6,8 @@ namespace UnityIntelligenceMCP.Models
         string RootPath,
         IReadOnlyList<ScriptInfo> Scripts,
         IReadOnlyList<DetectedUnityPattern> DetectedPatterns,
-        UnityComponentGraph ComponentRelationships
+        UnityComponentGraph ComponentRelationships,
+        DependencyGraph Dependencies
     );
 
     public record DetectedUnityPattern(
