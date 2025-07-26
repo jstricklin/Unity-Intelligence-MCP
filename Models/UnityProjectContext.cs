@@ -6,8 +6,7 @@ namespace UnityIntelligenceMCP.Models
         string RootPath,
         IReadOnlyList<ScriptInfo> Scripts,
         IReadOnlyList<DetectedUnityPattern> DetectedPatterns,
-        UnityComponentGraph ComponentRelationships,
-        DependencyGraph Dependencies
+        UnityComponentGraph ComponentRelationships
     );
 
     public record ScriptInfo(
@@ -28,16 +27,4 @@ namespace UnityIntelligenceMCP.Models
         string RelationshipType
     );
 
-    public class UnityComponentGraph
-    {
-        public Dictionary<string, List<ComponentRelationship>> Nodes { get; } = new();
-        
-        public void AddNode(string className, List<ComponentRelationship> relationships)
-        {
-            Nodes[className] = relationships;
-        }
-    }
-
-    // Request models for tools
-    public record UnityProjectAnalysisRequest(string ProjectPath);
 }

@@ -11,4 +11,5 @@ namespace UnityIntelligenceMCP.Models
     public record PatternMetricRequest(string ProjectPath);
 
     public record PatternMetrics(Dictionary<string, int> PatternCounts);
+    public record UnityProjectAnalysisRequest(string ProjectPath);
 }
