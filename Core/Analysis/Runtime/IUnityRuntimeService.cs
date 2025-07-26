@@ -3,7 +3,7 @@ using UnityIntelligenceMCP.Models;
 
 namespace UnityIntelligenceMCP.Core.Analysis.Runtime
 {
-    public interface IUnityRuntimeService
+    public interface IUnityRuntimeAnalysisService
     {
         Task<PerformanceData> MonitorPerformanceAsync(PerformanceMonitorRequest request);
         Task<MemoryAnalysis> AnalyzeMemoryAsync(MemoryAnalysisRequest request);

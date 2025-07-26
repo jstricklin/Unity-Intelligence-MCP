@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using UnityIntelligenceMCP.Core.Analysis;
 using UnityIntelligenceMCP.Core.Analysis.Dependencies;
 using UnityIntelligenceMCP.Core.Analysis.Patterns;
 using UnityIntelligenceMCP.Core.Analysis.Project;
@@ -27,7 +28,9 @@ namespace UnityIntelligenceMCP.Extensions
                 .AddSingleton<UnityDocumentationResource>()
                 .AddSingleton<IUnityMessageAnalyzer, UnityMessageAnalyzer>()
                 // A concrete implementation would handle communication with a live Unity instance.
-                .AddSingleton<IUnityRuntimeService, MockUnityRuntimeService>();
+                .AddSingleton<IUnityRuntimeAnalysisService, MockUnityRuntimeService>()
+                // Register the facade for all static analysis services.
+                .AddSingleton<IUnityStaticAnalysisService, UnityStaticAnalysisService>();
         }
     }
 }

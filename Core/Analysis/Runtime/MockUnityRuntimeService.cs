@@ -8,7 +8,7 @@ namespace UnityIntelligenceMCP.Core.Analysis.Runtime
     /// A mock implementation of the runtime service for demonstration and testing.
     /// A real implementation would communicate with a live Unity instance.
     /// </summary>
-    public class MockUnityRuntimeService : IUnityRuntimeService
+    public class MockUnityRuntimeService : IUnityRuntimeAnalysisService
     {
         public Task<PerformanceData> MonitorPerformanceAsync(PerformanceMonitorRequest request)
         {

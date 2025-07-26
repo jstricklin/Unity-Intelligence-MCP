@@ -1,12 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
 using UnityIntelligenceMCP.Configuration;
-using UnityIntelligenceMCP.Core.Analysis.Patterns;
-using UnityIntelligenceMCP.Core.Analysis.Project;
+using UnityIntelligenceMCP.Core.Analysis;
 using UnityIntelligenceMCP.Core.Analysis.Relationships;
 using UnityIntelligenceMCP.Models;
 
@@ -15,24 +13,15 @@ namespace UnityIntelligenceMCP.Tools
     [McpServerToolType]
     public class AnalysisTools
     {
-        private readonly UnityProjectAnalyzer _projectAnalyzer;
-        private readonly UnityPatternAnalyzer _patternAnalyzer;
-        private readonly PatternMetricsAnalyzer _patternMetricsAnalyzer;
+        private readonly IUnityStaticAnalysisService _staticAnalysisService;
         private readonly ConfigurationService _configurationService;
-        private readonly IUnityMessageAnalyzer _messageAnalyzer;
 
         public AnalysisTools(
-            UnityProjectAnalyzer projectAnalyzer,
-            UnityPatternAnalyzer patternAnalyzer,
-            PatternMetricsAnalyzer patternMetricsAnalyzer,
-            ConfigurationService configurationService,
-            IUnityMessageAnalyzer messageAnalyzer)
+            IUnityStaticAnalysisService staticAnalysisService,
+            ConfigurationService configurationService)
         {
-            _projectAnalyzer = projectAnalyzer;
-            _patternAnalyzer = patternAnalyzer;
-            _patternMetricsAnalyzer = patternMetricsAnalyzer;
+            _staticAnalysisService = staticAnalysisService;
             _configurationService = configurationService;
-            _messageAnalyzer = messageAnalyzer;
         }
 
         [McpServerTool(Name = "analyze_unity_project"), Description("Analyzes a Unity project structure, scripts, and diagnostics.")]
@@ -42,7 +31,7 @@ namespace UnityIntelligenceMCP.Tools
             CancellationToken cancellationToken = default)
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
-            return await _projectAnalyzer.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
+            return await _staticAnalysisService.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
         }
 
         [McpServerTool(Name = "find_unity_patterns"), Description("Scans the Unity project for specific design patterns.")]
@@ -54,17 +43,17 @@ namespace UnityIntelligenceMCP.Tools
             CancellationToken cancellationToken = default)
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
-            return await _patternAnalyzer.FindPatternsAsync(projectPath, patternTypes, searchScope, cancellationToken);
+            return await _staticAnalysisService.FindPatternsAsync(projectPath, patternTypes, searchScope, cancellationToken);
         }
 
         [McpServerTool(Name = "analyze_component_relationships"), Description("Analyzes and returns a graph of MonoBehaviour component interactions.")]
         public async Task<UnityComponentGraph> AnalyzeComponentRelationships(
-            [Description("The scope for analysis: 'Assets', 'Packages', or 'AssetsAndPackages'. Defaults to 'Assets'.")]
+            [Description("The scope for analysis: 'Assets', 'Packages', 'or 'AssetsAndPackages'. Defaults to 'Assets'.")]
             SearchScope searchScope = SearchScope.Assets,
             CancellationToken cancellationToken = default)
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
-            var context = await _projectAnalyzer.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
+            var context = await _staticAnalysisService.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
             return context.ComponentRelationships;
         }
 
@@ -75,7 +64,7 @@ namespace UnityIntelligenceMCP.Tools
             CancellationToken cancellationToken = default)
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
-            return await _patternMetricsAnalyzer.GetMetricsAsync(projectPath, searchScope, cancellationToken);
+            return await _staticAnalysisService.GetMetricsAsync(projectPath, searchScope, cancellationToken);
         }
 
         [McpServerTool(Name = "analyze_unity_messages"), Description("Analyzes one or more scripts for Unity message methods (e.g., Awake, Start, Update).")]
@@ -85,7 +74,7 @@ namespace UnityIntelligenceMCP.Tools
             CancellationToken cancellationToken = default)
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
-            return await _messageAnalyzer.AnalyzeMessagesAsync(projectPath, request.ScriptPaths, cancellationToken);
+            return await _staticAnalysisService.AnalyzeMessagesAsync(projectPath, request.ScriptPaths, cancellationToken);
         }
 
     }

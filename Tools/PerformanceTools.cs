@@ -10,10 +10,10 @@ namespace UnityIntelligenceMCP.Tools
     [McpServerToolType]
     public class PerformanceTools
     {
-        private readonly IUnityRuntimeService _runtimeService;
+        private readonly IUnityRuntimeAnalysisService _runtimeService;
         private readonly ConfigurationService _configurationService;
 
-        public PerformanceTools(IUnityRuntimeService runtimeService, ConfigurationService configurationService)
+        public PerformanceTools(IUnityRuntimeAnalysisService runtimeService, ConfigurationService configurationService)
         {
             _runtimeService = runtimeService;
             _configurationService = configurationService;
