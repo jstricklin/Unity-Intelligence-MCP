@@ -31,7 +31,7 @@ namespace UnityIntelligenceMCP.Core.Analysis.Dependencies
         public async Task<DependencyGraph> BuildGraphAsync(string projectPath, SearchScope searchScope, Compilation compilation)
         {
             var graph = new DependencyGraph();
-            var searchPattern = searchScope == SearchScope.Assets ? "Assets" : projectPath;
+            var searchPattern = Path.Combine(projectPath, searchScope == SearchScope.Assets ? "Assets" : "Packages");
 
             // Run asset and script analysis concurrently.
             await AnalyzeAssetToScriptDependenciesAsync(searchPattern, graph);
