@@ -74,11 +74,12 @@ namespace UnityIntelligenceMCP.Core.IO
 
         public string GetDocumentationPath(string projectPath, string docDomain = "ScriptReference")
         {
-            var editorPath = ResolveUnityEditorPath(projectPath);
+            string? editorPath = ResolveUnityEditorPath(projectPath);
+            string errorMsg;
 
             if (string.IsNullOrEmpty(editorPath))
             {
-                var errorMsg = "Could not resolve Unity Editor path. Cannot find documentation.";
+                errorMsg = "Could not resolve Unity Editor path. Cannot find documentation.";
                 Console.Error.WriteLine($"[ERROR] {errorMsg}");
                 throw new DirectoryNotFoundException(errorMsg);
             }
@@ -102,7 +103,7 @@ namespace UnityIntelligenceMCP.Core.IO
                 }
             }
 
-            var errorMsg = $"Unable to find Unity Documentation folder for editor path: {editorPath}";
+            errorMsg = $"Unable to find Unity Documentation folder for editor path: {editorPath}";
             Console.Error.WriteLine($"[ERROR] {errorMsg}");
             throw new DirectoryNotFoundException(errorMsg);
         }
