@@ -16,7 +16,6 @@ namespace UnityIntelligenceMCP.Models
 
     public record UnityMessageRequest
     {
-        [JsonPropertyName("script_paths")]
         public required List<string> ScriptPaths { get; init; }
     }
 }

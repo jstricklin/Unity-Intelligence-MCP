@@ -15,5 +15,4 @@ namespace UnityIntelligenceMCP.Models
 
     public record UnityScriptAnalysis(bool IsMonoBehaviour, List<UnityMessageInfo> UnityMessages);
 
-    public record UnityMessageInfo(string MessageName);
 }
