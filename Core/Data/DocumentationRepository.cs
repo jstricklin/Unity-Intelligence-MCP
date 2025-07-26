@@ -1,4 +1,6 @@
 using Microsoft.Data.Sqlite;
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Models.Documentation;
@@ -82,11 +84,51 @@ namespace UnityIntelligenceMCP.Core.Data
             return docId;
         }
 
-        public Task<ResourceResult> SemanticSearchAsync(float[] embedding, string? sourceType = null, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<SearchResult>> SemanticSearchAsync(float[] embedding, int limit = 10, CancellationToken cancellationToken = default)
         {
-            // Placeholder for future implementation of semantic vector search.
-            Console.Error.WriteLine("[DB] SemanticSearchAsync is not yet implemented.");
-            return Task.FromResult(ResourceResult.Success(new List<object>(), "Not Implemented"));
+            var results = new List<SearchResult>();
+            await using var connection = new SqliteConnection(_database.GetConnectionString());
+            await connection.OpenAsync(cancellationToken);
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT
+                    ce.title,
+                    ce.content,
+                    ce.element_type,
+                    d.title as ClassName,
+                    v.distance
+                FROM vec_elements_index v
+                JOIN content_elements ce ON v.rowid = ce.id
+                JOIN unity_docs d ON ce.doc_id = d.id
+                WHERE vss_search(v.embedding, @embedding)
+                ORDER BY v.distance
+                LIMIT @limit;
+            ";
+            command.Parameters.AddWithValue("@embedding", FloatArrayToByteArray(embedding));
+            command.Parameters.AddWithValue("@limit", limit);
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                results.Add(new SearchResult
+                {
+                    Title = reader.GetString(0),
+                    Content = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    ElementType = reader.GetString(2),
+                    ClassName = reader.GetString(3),
+                    Similarity = 1 - reader.GetFloat(4) // Convert distance to similarity (0=exact, 1=opposite)
+                });
+            }
+            return results;
+        }
+
+        private static byte[]? FloatArrayToByteArray(IReadOnlyCollection<float> floats)
+        {
+            if (floats == null || floats.Count == 0) return null;
+            var byteArray = new byte[floats.Count * sizeof(float)];
+            Buffer.BlockCopy(floats.ToArray(), 0, byteArray, 0, byteArray.Length);
+            return byteArray;
         }
     }
 }
