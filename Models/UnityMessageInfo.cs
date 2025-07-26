@@ -1,27 +1,25 @@
 namespace UnityIntelligenceMCP.Models
 {
-    public record UnityMessageInfo(
-        string MessageName,
-        MethodDetails Method,
-        UnityMessageType Type,
-        bool IsEmpty,
-        bool HasPerformanceImplications
-    );
-
-    public enum UnityMessageType
+    public class UnityMessageInfo
     {
-        Awake,
-        Start,
-        Update,
-        FixedUpdate,
-        LateUpdate,
-        OnEnable,
-        OnDisable,
-        OnDestroy,
-        OnCollision,
-        OnTrigger,
-        OnGUI,
-        OnRender,
-        Other
+        public string MessageName { get; }
+        public MethodDetails Method { get; }
+        public UnityMessageType Type { get; }
+        public bool IsEmpty { get; }
+        public bool HasPerformanceImplications { get; }
+
+        public UnityMessageInfo(
+            string messageName,
+            MethodDetails method,
+            UnityMessageType type,
+            bool isEmpty,
+            bool hasPerformanceImplications)
+        {
+            MessageName = messageName;
+            Method = method;
+            Type = type;
+            IsEmpty = isEmpty;
+            HasPerformanceImplications = hasPerformanceImplications;
+        }
     }
 }
