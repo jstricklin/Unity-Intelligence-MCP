@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Models.Documentation;
@@ -74,7 +75,13 @@ namespace UnityIntelligenceMCP.Core.Data
                 elementCommand.Parameters.AddWithValue("@title", element.Title ?? (object)DBNull.Value);
                 elementCommand.Parameters.AddWithValue("@content", element.Content ?? (object)DBNull.Value);
                 elementCommand.Parameters.AddWithValue("@attributes_json", element.AttributesJson ?? (object)DBNull.Value);
-                elementCommand.Parameters.AddWithValue("@element_embedding", element.ElementEmbedding ?? (object)DBNull.Value);
+                
+                object embeddingParam = DBNull.Value;
+                if (element.ElementEmbedding.HasValue)
+                {
+                    embeddingParam = MemoryMarshal.AsBytes(element.ElementEmbedding.Value.Span).ToArray();
+                }
+                elementCommand.Parameters.AddWithValue("@element_embedding", embeddingParam);
                 await elementCommand.ExecuteNonQueryAsync(cancellationToken);
             }
             

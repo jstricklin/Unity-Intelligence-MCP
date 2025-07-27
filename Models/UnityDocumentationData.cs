@@ -71,7 +71,7 @@ public class UnityDocumentationData : IDocumentationSource
                 ElementType = elementType,
                 Title = link.Title,
                 Content = link.Description,
-                ElementEmbedding = FloatArrayToByteArray(embedding),
+                ElementEmbedding = embedding?.ToArray(),
                 AttributesJson = JsonSerializer.Serialize(new { link.RelativePath })
             });
         }
