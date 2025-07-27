@@ -118,9 +118,11 @@ namespace UnityIntelligenceMCP.Core.Data
 
             -- Vector similarity indices
             CREATE VIRTUAL TABLE vec_elements_index USING vss0(
+                id TEXT PRIMARY KEY
                 embedding(768)
             );
             CREATE VIRTUAL TABLE vec_chunks_index USING vss0(
+                id TEXT PRIMARY KEY
                 embedding(768)
             );
 

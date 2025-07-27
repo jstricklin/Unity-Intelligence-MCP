@@ -22,7 +22,8 @@ namespace UnityIntelligenceMCP.Core.Data
             await using var connection = new SqliteConnection(_database.GetConnectionString());
             await connection.OpenAsync(cancellationToken);
 
-            await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+            // await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+            await using var transaction = connection.BeginTransaction();
 
             // Insert into unity_docs
             var docCommand = connection.CreateCommand();
