@@ -123,6 +123,33 @@ public class UnityDocumentationData : IDocumentationSource
         ["InheritedOperators"] = "//h3[text()='Inherited Members']/following::h3[text()='Operators'][1]",
     };
 
+    private DocumentationLink? ExtractLinkFollowingText(HtmlNode docNode, string anchorText)
+    {
+        // This XPath finds a text node within the main content div that contains the anchor text.
+        var textNode = docNode.SelectSingleNode($"//div[contains(@class, 'content')]//text()[contains(., '{anchorText}')]");
+        if (textNode == null)
+        {
+            return null;
+        }
+
+        // The link is expected to be the next element sibling.
+        var node = textNode.NextSibling;
+        while (node != null && node.NodeType != HtmlNodeType.Element)
+        {
+            node = node.NextSibling;
+        }
+
+        if (node is { Name: "a" })
+        {
+            return new DocumentationLink
+            {
+                Title = HtmlEntity.DeEntitize(node.InnerText).Trim(),
+                RelativePath = node.GetAttributeValue("href", string.Empty)
+            };
+        }
+        return null;
+    }
+
     public UnityDocumentationData(string filePath)
     {
         var html = File.ReadAllText(filePath);
@@ -135,6 +162,8 @@ public class UnityDocumentationData : IDocumentationSource
         // Extract single text values
         Title = docNode.SelectSingleNode(TextExtractionRules["Title"])?.InnerText.Trim() ?? string.Empty;
         Description = ExtractDescription(docNode);
+        InheritsFrom = ExtractLinkFollowingText(docNode, "Inherits from:");
+        ImplementedIn = ExtractLinkFollowingText(docNode, "Implemented in:");
 
         // Extract groups of links
         Properties = ExtractLinks(docNode, LinkSectionRules["Properties"]);
@@ -203,6 +232,8 @@ public class UnityDocumentationData : IDocumentationSource
     public string FilePath { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
+    public DocumentationLink? InheritsFrom { get; set; }
+    public DocumentationLink? ImplementedIn { get; set; }
 
     public List<DocumentationLink> Properties { get; set; } = new();
     public List<DocumentationLink> PublicMethods { get; set; } = new();
