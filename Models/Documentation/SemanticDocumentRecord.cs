@@ -39,11 +39,11 @@ namespace UnityIntelligenceMCP.Models.Documentation
         public string? ImplementedInJson { get; set; }
 
         // The Dimensions parameter should match the output of your embedding service.
-        [VectorStoreVector(Dimensions: 1536)]
+        [VectorStoreVector(Dimensions: 2, DistanceFunction = DistanceFunction.CosineDistance)]
         public byte[]? TitleEmbedding { get; set; }
 
         // The Dimensions parameter should match the output of your embedding service.
-        [VectorStoreVector(Dimensions: 1536)]
+        [VectorStoreVector(Dimensions: 2, DistanceFunction = DistanceFunction.CosineDistance)]
         public byte[]? SummaryEmbedding { get; set; }
 
         public List<DocMetadata> Metadata { get; set; } = new();
