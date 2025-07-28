@@ -7,6 +7,6 @@ namespace UnityIntelligenceMCP.Models
     public interface IDocumentationSource
     {
         string SourceType { get; }
-        Task<UniversalDocumentRecord> ToUniversalRecord(IEmbeddingService embeddingService);
+        Task<SemanticDocumentRecord> ToSemanticRecordAsync(IEmbeddingService embeddingService);
     }
 }

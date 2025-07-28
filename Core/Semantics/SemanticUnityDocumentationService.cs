@@ -17,8 +17,8 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
         public async Task ProcessAndStoreSourceAsync(IDocumentationSource source)
         {
-            var universalRecord = await source.ToUniversalRecord(_embeddingService);
-            await _repository.InsertDocumentAsync(universalRecord);
+            var semanticRecord = await source.ToSemanticRecordAsync(_embeddingService);
+            await _repository.InsertDocumentAsync(semanticRecord);
         }
     }
 }

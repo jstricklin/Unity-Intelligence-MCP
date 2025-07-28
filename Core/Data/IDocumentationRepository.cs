@@ -8,7 +8,7 @@ namespace UnityIntelligenceMCP.Core.Data
 {
     public interface IDocumentationRepository
     {
-        Task<int> InsertDocumentAsync(UniversalDocumentRecord record, CancellationToken cancellationToken = default);
+        Task<int> InsertDocumentAsync(SemanticDocumentRecord record, CancellationToken cancellationToken = default);
         Task<IEnumerable<SearchResult>> SemanticSearchAsync(float[] embedding, int limit = 10, CancellationToken cancellationToken = default);
     }
 }

@@ -17,7 +17,7 @@ namespace UnityIntelligenceMCP.Core.Data
             _database = database;
         }
 
-        public async Task<int> InsertDocumentAsync(UniversalDocumentRecord record, CancellationToken cancellationToken = default)
+        public async Task<int> InsertDocumentAsync(SemanticDocumentRecord record, CancellationToken cancellationToken = default)
         {
             await using var connection = new SqliteConnection(_database.GetConnectionString());
             await connection.OpenAsync(cancellationToken);

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace UnityIntelligenceMCP.Models.Documentation
 {
-    public class UniversalDocumentRecord
+    public class SemanticDocumentRecord
     {
         public string DocKey { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
