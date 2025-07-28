@@ -116,19 +116,17 @@ namespace UnityIntelligenceMCP.Core.Data
                 UNIQUE(source_doc_id, target_doc_id, relationship_type)
             );
 
-            -- Vector similarity indices
-            CREATE VIRTUAL TABLE vec_elements_index (
-                id TEXT PRIMARY KEY,
-                DescriptionEmbedding FLOAT[1536] distance_metric=cosine
-            );
-            CREATE VIRTUAL TABLE vec_chunks_index (
-                id TEXT PRIMARY KEY,
-                DescriptionEmbedding FLOAT[1536] distance_metric=cosine
-            );
+            -- Vector similarity indices. Assumes an embedding dimension of 1536.
+            CREATE VIRTUAL TABLE vec_docs_title ( id INTEGER PRIMARY KEY, vector FLOAT[1536] );
+            CREATE VIRTUAL TABLE vec_docs_summary ( id INTEGER PRIMARY KEY, vector FLOAT[1536] );
+            CREATE VIRTUAL TABLE vec_elements ( id INTEGER PRIMARY KEY, vector FLOAT[1536] );
+            CREATE VIRTUAL TABLE vec_chunks ( id INTEGER PRIMARY KEY, vector FLOAT[1536] );
 
             -- Performance indices
             CREATE INDEX idx_docs_source_type ON unity_docs(source_id, doc_type);
-            CREATE INDEX idx_elements_doc ON content_elements(doc_id, element_type);
+            CREATE INDEX idx_elements_doc_type ON content_elements(doc_id, element_type);
+            CREATE INDEX idx_metadata_doc ON doc_metadata(doc_id);
+            CREATE INDEX idx_chunks_doc ON content_chunks(doc_id);
 
             -- Source-specific views for common queries
             CREATE VIEW scripting_api_docs AS
