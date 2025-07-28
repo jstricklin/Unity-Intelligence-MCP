@@ -9,6 +9,7 @@ using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Models;
 using System.Text.Json;
+using UnityIntelligenceMCP.Utilities;
 
 namespace UnityIntelligenceMCP.Resources
 {
@@ -49,8 +50,11 @@ namespace UnityIntelligenceMCP.Resources
                     throw new FileNotFoundException("File Not Found", fullPath);
                 }
 
+                var parser = new UnityDocumentationParser();
+                UnityDocumentationData docData = parser.Parse(fullPath);
+
                 return Task.FromResult(new TextResourceContents { 
-                    Text = JsonSerializer.Serialize(new UnityDocumentationData(fullPath)),
+                    Text = JsonSerializer.Serialize(parser.Parse(fullPath)),
                     MimeType = "text/json" 
                     });
             }
