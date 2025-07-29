@@ -1,6 +1,6 @@
-using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
+using DuckDB.NET.Data;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using UnityIntelligenceMCP.Models;
@@ -19,7 +19,7 @@ namespace UnityIntelligenceMCP.Core.Data
 
         public async Task<int> InsertDocumentAsync(SemanticDocumentRecord record, CancellationToken cancellationToken = default)
         {
-            await using var connection = new SqliteConnection(_database.GetConnectionString());
+            await using var connection = new DuckDBConnection(_database.GetConnectionString());
             await connection.OpenAsync(cancellationToken);
 
             // await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
@@ -95,7 +95,7 @@ namespace UnityIntelligenceMCP.Core.Data
         public async Task<IEnumerable<SearchResult>> SemanticSearchAsync(float[] embedding, int limit = 10, CancellationToken cancellationToken = default)
         {
             var results = new List<SearchResult>();
-            await using var connection = new SqliteConnection(_database.GetConnectionString());
+            await using var connection = new DuckDBConnection(_database.GetConnectionString());
             await connection.OpenAsync(cancellationToken);
 
             var command = connection.CreateCommand();
