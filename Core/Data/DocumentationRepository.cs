@@ -30,20 +30,20 @@ namespace UnityIntelligenceMCP.Core.Data
             docCommand.Transaction = transaction;
             docCommand.CommandText = @"
                 INSERT INTO unity_docs (source_id, doc_key, title, url, doc_type, category, unity_version, content_hash, title_embedding, summary_embedding)
-                VALUES ((SELECT id FROM doc_sources WHERE source_type = @source_type), @doc_key, @title, @url, @doc_type, @category, @unity_version, @content_hash, @title_embedding, @summary_embedding)
+                VALUES ((SELECT id FROM doc_sources WHERE source_type = $source_type), $doc_key, $title, $url, $doc_type, $category, $unity_version, $content_hash, $title_embedding, $summary_embedding)
                 RETURNING id;
             ";
 
-            docCommand.Parameters.AddWithValue("@source_type", record.Metadata.FirstOrDefault()?.MetadataType ?? "scripting_api");
-            docCommand.Parameters.AddWithValue("@doc_key", record.DocKey);
-            docCommand.Parameters.AddWithValue("@title", record.Title);
-            docCommand.Parameters.AddWithValue("@url", record.Url ?? (object)DBNull.Value);
-            docCommand.Parameters.AddWithValue("@doc_type", record.DocType ?? (object)DBNull.Value);
-            docCommand.Parameters.AddWithValue("@category", record.Category ?? (object)DBNull.Value);
-            docCommand.Parameters.AddWithValue("@unity_version", record.UnityVersion ?? (object)DBNull.Value);
-            docCommand.Parameters.AddWithValue("@content_hash", record.ContentHash ?? (object)DBNull.Value);
-            docCommand.Parameters.AddWithValue("@title_embedding", record.TitleEmbedding ?? (object)DBNull.Value);
-            docCommand.Parameters.AddWithValue("@summary_embedding", record.SummaryEmbedding ?? (object)DBNull.Value);
+            docCommand.Parameters.Add(new DuckDBParameter("source_type", record.Metadata.FirstOrDefault()?.MetadataType ?? "scripting_api"));
+            docCommand.Parameters.Add("doc_key", record.DocKey);
+            docCommand.Parameters.Add("title", record.Title);
+            docCommand.Parameters.Add("url", record.Url ?? (object)DBNull.Value);
+            docCommand.Parameters.Add("doc_type", record.DocType ?? (object)DBNull.Value);
+            docCommand.Parameters.Add("category", record.Category ?? (object)DBNull.Value);
+            docCommand.Parameters.Add("unity_version", record.UnityVersion ?? (object)DBNull.Value);
+            docCommand.Parameters.Add("content_hash", record.ContentHash ?? (object)DBNull.Value);
+            docCommand.Parameters.Add("title_embedding", record.TitleEmbedding ?? (object)DBNull.Value);
+            docCommand.Parameters.Add("summary_embedding", record.SummaryEmbedding ?? (object)DBNull.Value);
             
             var docId = Convert.ToInt32(await docCommand.ExecuteScalarAsync(cancellationToken));
 
@@ -56,9 +56,9 @@ namespace UnityIntelligenceMCP.Core.Data
                     INSERT INTO doc_metadata (doc_id, metadata_type, metadata_json)
                     VALUES (@doc_id, @metadata_type, @metadata_json);
                 ";
-                metaCommand.Parameters.AddWithValue("@doc_id", docId);
-                metaCommand.Parameters.AddWithValue("@metadata_type", meta.MetadataType);
-                metaCommand.Parameters.AddWithValue("@metadata_json", meta.MetadataJson);
+                metaCommand.Parameters.Add("@doc_id", docId);
+                metaCommand.Parameters.Add("@metadata_type", meta.MetadataType);
+                metaCommand.Parameters.Add("@metadata_json", meta.MetadataJson);
                 await metaCommand.ExecuteNonQueryAsync(cancellationToken);
             }
 
@@ -71,18 +71,18 @@ namespace UnityIntelligenceMCP.Core.Data
                     INSERT INTO content_elements (doc_id, element_type, title, content, attributes_json, element_embedding)
                     VALUES (@doc_id, @element_type, @title, @content, @attributes_json, @element_embedding);
                 ";
-                elementCommand.Parameters.AddWithValue("@doc_id", docId);
-                elementCommand.Parameters.AddWithValue("@element_type", element.ElementType);
-                elementCommand.Parameters.AddWithValue("@title", element.Title ?? (object)DBNull.Value);
-                elementCommand.Parameters.AddWithValue("@content", element.Content ?? (object)DBNull.Value);
-                elementCommand.Parameters.AddWithValue("@attributes_json", element.AttributesJson ?? (object)DBNull.Value);
+                elementCommand.Parameters.Add("@doc_id", docId);
+                elementCommand.Parameters.Add("@element_type", element.ElementType);
+                elementCommand.Parameters.Add("@title", element.Title ?? (object)DBNull.Value);
+                elementCommand.Parameters.Add("@content", element.Content ?? (object)DBNull.Value);
+                elementCommand.Parameters.Add("@attributes_json", element.AttributesJson ?? (object)DBNull.Value);
                 
                 object embeddingParam = DBNull.Value;
                 if (element.ElementEmbedding.HasValue)
                 {
                     embeddingParam = MemoryMarshal.AsBytes(element.ElementEmbedding.Value.Span).ToArray();
                 }
-                elementCommand.Parameters.AddWithValue("@element_embedding", embeddingParam);
+                elementCommand.Parameters.Add("@element_embedding", embeddingParam);
                 await elementCommand.ExecuteNonQueryAsync(cancellationToken);
             }
             
@@ -113,8 +113,8 @@ namespace UnityIntelligenceMCP.Core.Data
                 ORDER BY v.distance
                 LIMIT @limit;
             ";
-            command.Parameters.AddWithValue("@embedding", FloatArrayToByteArray(embedding));
-            command.Parameters.AddWithValue("@limit", limit);
+            command.Parameters.Add("@embedding", FloatArrayToByteArray(embedding));
+            command.Parameters.Add("@limit", limit);
 
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))
