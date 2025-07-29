@@ -34,7 +34,7 @@ namespace UnityIntelligenceMCP.Extensions
             services.AddSingleton<IUnityMessageAnalyzer, UnityMessageAnalyzer>();
 
             // New Semantic Search and Documentation Services
-            services.AddSingleton<IDocumentationDatabase, SqliteDocumentationDatabase>();
+            services.AddSingleton<IDocumentationDatabase, DuckDbApplicationDatabase>();
             services.AddSingleton<IDocumentationRepository, DocumentationRepository>();
             services.AddSingleton<IEmbeddingService, PlaceholderEmbeddingService>(); // Using placeholder for now
             services.AddSingleton<DocumentationOrchestrationService>();
