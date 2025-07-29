@@ -1,5 +1,6 @@
 using DuckDB.NET.Data;
 using System;
+using System.Data.Common;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -26,7 +27,7 @@ namespace UnityIntelligenceMCP.Core.Data
             }
 
             Console.Error.WriteLine("[Database] Initializing new DuckDB application database...");
-            await using var connection = new DuckDBConnection(GetConnectionString());
+            await using var connection = new DuckDBConnection($"DataSource = {GetConnectionString()}");
             await connection.OpenAsync();
 
             var command = connection.CreateCommand();
