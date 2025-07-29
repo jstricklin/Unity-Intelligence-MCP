@@ -23,15 +23,12 @@ namespace UnityIntelligenceMCP.Models
             _chunker = chunker;
         }
 
-        public async Task<SemanticDocumentRecord> ToSemanticRecordAsync(IEmbeddingService embeddingService)
+        public Task<SemanticDocumentRecord> ToSemanticRecordAsync()
         {
             var chunks = _chunker.ChunkDocument(_data);
-            var elements = await CreateContentElementsFromChunks(chunks, embeddingService);
+            var elements = CreateContentElementsFromChunks(chunks);
 
-            var titleEmbedding = !string.IsNullOrWhiteSpace(_data.Title) ? await embeddingService.EmbedAsync(_data.Title) : null;
-            var summaryEmbedding = !string.IsNullOrWhiteSpace(_data.Description) ? await embeddingService.EmbedAsync(_data.Description) : null;
-
-            return new SemanticDocumentRecord
+            var record = new SemanticDocumentRecord
             {
                 DocKey = System.IO.Path.GetFileNameWithoutExtension(_data.FilePath),
                 Title = _data.Title,
@@ -40,8 +37,6 @@ namespace UnityIntelligenceMCP.Models
                 Category = "Scripting API",
                 UnityVersion = _data.UnityVersion,
                 ContentHash = ComputeContentHash(),
-                TitleEmbedding = titleEmbedding,
-                SummaryEmbedding = summaryEmbedding,
                 Metadata = new List<DocMetadata>
                 {
                     new()
@@ -52,21 +47,19 @@ namespace UnityIntelligenceMCP.Models
                 },
                 Elements = elements
             };
+            return Task.FromResult(record);
         }
 
-        private async Task<List<ContentElement>> CreateContentElementsFromChunks(List<DocumentChunk> chunks, IEmbeddingService embeddingService)
+        private List<ContentElement> CreateContentElementsFromChunks(List<DocumentChunk> chunks)
         {
             var elements = new List<ContentElement>();
             foreach (var chunk in chunks)
             {
-                var textToEmbed = $"{_data.Title} - {chunk.Title}: {chunk.Text}";
-                var embedding = await embeddingService.EmbedAsync(textToEmbed);
                 elements.Add(new ContentElement
                 {
                     ElementType = chunk.Section,
                     Title = chunk.Title,
                     Content = chunk.Text,
-                    ElementEmbedding = embedding,
                     AttributesJson = JsonSerializer.Serialize(new
                     {
                         chunkIndex = chunk.Index,

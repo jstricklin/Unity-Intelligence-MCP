@@ -41,8 +41,8 @@ namespace UnityIntelligenceMCP.Core.Data
             var docCommand = connection.CreateCommand();
             docCommand.Transaction = transaction;
             docCommand.CommandText = @"
-                INSERT INTO unity_docs (source_id, doc_key, title, url, doc_type, category, unity_version, content_hash, title_embedding, summary_embedding)
-                VALUES ((SELECT id FROM doc_sources WHERE source_type = $source_type), $doc_key, $title, $url, $doc_type, $category, $unity_version, $content_hash, $title_embedding, $summary_embedding)
+                INSERT INTO unity_docs (source_id, doc_key, title, url, doc_type, category, unity_version, content_hash)
+                VALUES ((SELECT id FROM doc_sources WHERE source_type = $source_type), $doc_key, $title, $url, $doc_type, $category, $unity_version, $content_hash)
                 RETURNING id;
             ";
 
@@ -54,8 +54,6 @@ namespace UnityIntelligenceMCP.Core.Data
             docCommand.Parameters.Add(new DuckDBParameter("category", record.Category ?? (object)DBNull.Value));
             docCommand.Parameters.Add(new DuckDBParameter("unity_version", record.UnityVersion ?? (object)DBNull.Value));
             docCommand.Parameters.Add(new DuckDBParameter("content_hash", record.ContentHash ?? (object)DBNull.Value));
-            docCommand.Parameters.Add(new DuckDBParameter("title_embedding", record.TitleEmbedding ?? (object)DBNull.Value));
-            docCommand.Parameters.Add(new DuckDBParameter("summary_embedding", record.SummaryEmbedding ?? (object)DBNull.Value));
             
             var docId = Convert.ToInt32(await docCommand.ExecuteScalarAsync(cancellationToken));
 
@@ -80,21 +78,14 @@ namespace UnityIntelligenceMCP.Core.Data
                 var elementCommand = connection.CreateCommand();
                 elementCommand.Transaction = transaction;
                 elementCommand.CommandText = @"
-                    INSERT INTO content_elements (doc_id, element_type, title, content, attributes_json, element_embedding)
-                    VALUES ($doc_id, $element_type, $title, $content, $attributes_json, $element_embedding);
+                    INSERT INTO content_elements (doc_id, element_type, title, content, attributes_json)
+                    VALUES ($doc_id, $element_type, $title, $content, $attributes_json);
                 ";
                 elementCommand.Parameters.Add(new DuckDBParameter("doc_id", docId));
                 elementCommand.Parameters.Add(new DuckDBParameter("element_type", element.ElementType));
                 elementCommand.Parameters.Add(new DuckDBParameter("title", element.Title ?? (object)DBNull.Value));
                 elementCommand.Parameters.Add(new DuckDBParameter("content", element.Content ?? (object)DBNull.Value));
                 elementCommand.Parameters.Add(new DuckDBParameter("attributes_json", element.AttributesJson ?? (object)DBNull.Value));
-                
-                object embeddingParam = DBNull.Value;
-                if (element.ElementEmbedding.HasValue)
-                {
-                    embeddingParam = MemoryMarshal.AsBytes(element.ElementEmbedding.Value.Span).ToArray();
-                }
-                elementCommand.Parameters.Add(new DuckDBParameter("element_embedding", embeddingParam));
                 await elementCommand.ExecuteNonQueryAsync(cancellationToken);
             }
             
@@ -104,44 +95,6 @@ namespace UnityIntelligenceMCP.Core.Data
             return docId;
         }
 
-        public async Task<IEnumerable<SearchResult>> SemanticSearchAsync(float[] embedding, int limit = 10, CancellationToken cancellationToken = default)
-        {
-            var results = new List<SearchResult>();
-            await using var connection = new DuckDBConnection($"DataSource = {_database.GetConnectionString()}");
-            await connection.OpenAsync(cancellationToken);
-
-            var command = connection.CreateCommand();
-            command.CommandText = @"
-                SELECT
-                    ce.title,
-                    ce.content,
-                    ce.element_type,
-                    d.title as ClassName,
-                    v.distance
-                FROM vec_elements_index v
-                JOIN content_elements ce ON v.rowid = ce.id
-                JOIN unity_docs d ON ce.doc_id = d.id
-                WHERE vss_search(v.embedding, $embedding)
-                ORDER BY v.distance
-                LIMIT $limit;
-            ";
-            command.Parameters.Add(new DuckDBParameter("embedding", FloatArrayToByteArray(embedding)));
-            command.Parameters.Add(new DuckDBParameter("limit", limit));
-
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            while (await reader.ReadAsync(cancellationToken))
-            {
-                results.Add(new SearchResult
-                {
-                    Title = reader.GetString(0),
-                    Content = reader.IsDBNull(1) ? null : reader.GetString(1),
-                    ElementType = reader.GetString(2),
-                    ClassName = reader.GetString(3),
-                    Similarity = 1 - reader.GetFloat(4) // Convert distance to similarity (0=exact, 1=opposite)
-                });
-            }
-            return results;
-        }
 
         public async Task<int> GetDocCountForVersionAsync(string unityVersion, CancellationToken cancellationToken = default)
         {
@@ -168,12 +121,5 @@ namespace UnityIntelligenceMCP.Core.Data
             Console.Error.WriteLine($"[DB] Deleted existing documentation for Unity version {unityVersion}.");
         }
 
-        private static byte[]? FloatArrayToByteArray(IReadOnlyCollection<float> floats)
-        {
-            if (floats == null || floats.Count == 0) return null;
-            var byteArray = new byte[floats.Count * sizeof(float)];
-            Buffer.BlockCopy(floats.ToArray(), 0, byteArray, 0, byteArray.Length);
-            return byteArray;
-        }
     }
 }

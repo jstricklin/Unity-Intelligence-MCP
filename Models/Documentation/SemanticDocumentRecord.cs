@@ -26,9 +26,6 @@ namespace UnityIntelligenceMCP.Models.Documentation
 
         public string? ImplementedInJson { get; set; }
 
-        public ReadOnlyMemory<float>? TitleEmbedding { get; set; }
-        public ReadOnlyMemory<float>? SummaryEmbedding { get; set; }
-
         public List<DocMetadata> Metadata { get; set; } = new();
         public List<ContentElement> Elements { get; set; } = new();
     }

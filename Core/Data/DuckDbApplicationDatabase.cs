@@ -64,8 +64,6 @@ namespace UnityIntelligenceMCP.Core.Data
                 category VARCHAR,
                 unity_version VARCHAR,
                 content_hash VARCHAR,
-                title_embedding BLOB,
-                summary_embedding BLOB,
                 FOREIGN KEY (source_id) REFERENCES doc_sources (id),
                 UNIQUE(source_id, doc_key)
             );
@@ -88,20 +86,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 title VARCHAR,
                 content VARCHAR,
                 attributes_json VARCHAR,
-                element_embedding BLOB,
                 FOREIGN KEY (doc_id) REFERENCES unity_docs (id)
-            );
-
-            -- Granular content chunks for detailed semantic search
-            CREATE TABLE content_chunks (
-                id BIGINT PRIMARY KEY,
-                doc_id BIGINT NOT NULL,
-                element_id BIGINT,
-                content VARCHAR NOT NULL,
-                token_count INTEGER,
-                embedding BLOB,
-                FOREIGN KEY (doc_id) REFERENCES unity_docs (id),
-                FOREIGN KEY (element_id) REFERENCES content_elements (id)
             );
 
             -- Cross-document relationships
@@ -119,7 +104,6 @@ namespace UnityIntelligenceMCP.Core.Data
             CREATE INDEX idx_docs_source_type ON unity_docs(source_id, doc_type);
             CREATE INDEX idx_elements_doc_type ON content_elements(doc_id, element_type);
             CREATE INDEX idx_metadata_doc ON doc_metadata(doc_id);
-            CREATE INDEX idx_chunks_doc ON content_chunks(doc_id);
 
             -- Source-specific views for common queries
             CREATE VIEW scripting_api_docs AS
@@ -129,9 +113,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 d.doc_key as file_path,
                 dm.metadata_json ->> '$.description' as description,
                 dm.metadata_json ->> '$.class_name' as class_name,
-                dm.metadata_json ->> '$.namespace' as namespace,
-                d.title_embedding,
-                d.summary_embedding
+                dm.metadata_json ->> '$.namespace' as namespace
             FROM unity_docs d
             JOIN doc_sources s ON d.source_id = s.id  
             LEFT JOIN doc_metadata dm ON d.id = dm.doc_id AND dm.metadata_type = 'scripting_api'
@@ -145,8 +127,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 ce.element_type,
                 ce.attributes_json ->> '$.is_inherited' as is_inherited,
                 d.title as class_name,
-                dm.metadata_json ->> '$.namespace' as namespace,
-                ce.element_embedding
+                dm.metadata_json ->> '$.namespace' as namespace
             FROM content_elements ce
             JOIN unity_docs d ON ce.doc_id = d.id
             JOIN doc_sources s ON d.source_id = s.id
