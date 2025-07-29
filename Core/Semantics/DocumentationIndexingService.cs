@@ -11,14 +11,14 @@ namespace UnityIntelligenceMCP.Core.Semantics
 {
     public class DocumentationIndexingService
     {
-        private readonly IUnityInstallationService _unityInstallationService;
+        private readonly UnityInstallationService _unityInstallationService;
         private readonly IDocumentationRepository _repository;
         private readonly UnityDocumentationParser _parser;
         private readonly DocumentationOrchestrationService _orchestrationService;
         private readonly IDocumentChunker _chunker;
 
         public DocumentationIndexingService(
-            IUnityInstallationService unityInstallationService,
+            UnityInstallationService unityInstallationService,
             IDocumentationRepository repository,
             UnityDocumentationParser parser,
             DocumentationOrchestrationService orchestrationService,
@@ -61,6 +61,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             }
             else
             {
+
                 var filesOnDisk = Directory.EnumerateFiles(docPath, "*.html", SearchOption.AllDirectories).Count();
                 var docsInDb = await _repository.GetDocCountForVersionAsync(unityVersion);
 

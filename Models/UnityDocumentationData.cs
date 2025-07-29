@@ -8,9 +8,9 @@ namespace UnityIntelligenceMCP.Models
         public string FilePath { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public string UnityVersion { get; set; } = string.Empty;
         public DocumentationLink? InheritsFrom { get; set; }
         public DocumentationLink? ImplementedIn { get; set; }
-
         public List<DocumentationLink> Properties { get; set; } = new();
         public List<DocumentationLink> PublicMethods { get; set; } = new();
         public List<DocumentationLink> StaticMethods { get; set; } = new();
