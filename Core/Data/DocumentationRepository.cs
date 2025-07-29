@@ -143,6 +143,31 @@ namespace UnityIntelligenceMCP.Core.Data
             return results;
         }
 
+        public async Task<int> GetDocCountForVersionAsync(string unityVersion, CancellationToken cancellationToken = default)
+        {
+            await using var connection = new DuckDBConnection(_database.GetConnectionString());
+            await connection.OpenAsync(cancellationToken);
+
+            var command = connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM unity_docs WHERE unity_version = $unity_version;";
+            command.Parameters.Add(new DuckDBParameter("unity_version", unityVersion));
+
+            var result = await command.ExecuteScalarAsync(cancellationToken);
+            return Convert.ToInt32(result);
+        }
+
+        public async Task DeleteDocsByVersionAsync(string unityVersion, CancellationToken cancellationToken = default)
+        {
+            await using var connection = new DuckDBConnection(_database.GetConnectionString());
+            await connection.OpenAsync(cancellationToken);
+
+            var command = connection.CreateCommand();
+            command.CommandText = "DELETE FROM unity_docs WHERE unity_version = $unity_version;";
+            command.Parameters.Add(new DuckDBParameter("unity_version", unityVersion));
+            await command.ExecuteNonQueryAsync(cancellationToken);
+            Console.Error.WriteLine($"[DB] Deleted existing documentation for Unity version {unityVersion}.");
+        }
+
         private static byte[]? FloatArrayToByteArray(IReadOnlyCollection<float> floats)
         {
             if (floats == null || floats.Count == 0) return null;

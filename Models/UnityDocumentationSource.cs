@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -13,90 +13,78 @@ namespace UnityIntelligenceMCP.Models
     public class UnityDocumentationSource : IDocumentationSource
     {
         private readonly UnityDocumentationData _data;
-
-        public UnityDocumentationSource(UnityDocumentationData data)
-        {
-            _data = data;
-        }
+        private readonly IDocumentChunker _chunker;
 
         public string SourceType => "scripting_api";
 
-        public async Task<SemanticDocumentRecord> ToSemanticRecordAsync(IEmbeddingService embeddingService)
+        public UnityDocumentationSource(UnityDocumentationData data, IDocumentChunker chunker)
         {
-            var record = new SemanticDocumentRecord
-            {
-                DocKey = Path.GetFileNameWithoutExtension(_data.FilePath),
-                Title = _data.Title,
-                DocType = "class",
-                Category = "Scripting API",
-                ContentHash = ComputeContentHash()
-            };
-
-            var titleContext = $"Unity Scripting API Class: {_data.Title}";
-            var summaryContext = $"Description for {_data.Title}: {_data.Description}";
-
-            var titleEmbedding = await embeddingService.EmbedAsync(titleContext);
-            var summaryEmbedding = await embeddingService.EmbedAsync(summaryContext);
-
-            record.TitleEmbedding = titleEmbedding;
-            record.SummaryEmbedding = summaryEmbedding;
-
-            var metadata = new DocMetadata
-            {
-                MetadataType = SourceType,
-                MetadataJson = JsonSerializer.Serialize(new
-                {
-                    description = _data.Description,
-                    class_name = _data.Title,
-                    @namespace = _data.Namespace
-                }, new JsonSerializerOptions { WriteIndented = false })
-            };
-            record.Metadata.Add(metadata);
-
-            record.Elements.AddRange(await CreateContentElements(_data.PublicMethods, "public_method", embeddingService));
-            record.Elements.AddRange(await CreateContentElements(_data.Properties, "property", embeddingService));
-            record.Elements.AddRange(await CreateContentElements(_data.StaticMethods, "static_method", embeddingService));
-            record.Elements.AddRange(await CreateContentElements(_data.Messages, "message", embeddingService));
-
-            return record;
+            _data = data;
+            _chunker = chunker;
         }
 
-        private async Task<List<ContentElement>> CreateContentElements(IEnumerable<DocumentationLink> links, string elementType, IEmbeddingService embeddingService)
+        public async Task<SemanticDocumentRecord> ToSemanticRecordAsync(IEmbeddingService embeddingService)
+        {
+            var chunks = _chunker.ChunkDocument(_data);
+            var elements = await CreateContentElementsFromChunks(chunks, embeddingService);
+
+            var titleEmbedding = !string.IsNullOrWhiteSpace(_data.Title) ? await embeddingService.EmbedAsync(_data.Title) : null;
+            var summaryEmbedding = !string.IsNullOrWhiteSpace(_data.Description) ? await embeddingService.EmbedAsync(_data.Description) : null;
+
+            return new SemanticDocumentRecord
+            {
+                DocKey = System.IO.Path.GetFileNameWithoutExtension(_data.FilePath),
+                Title = _data.Title,
+                Url = _data.FilePath,
+                DocType = "class",
+                Category = "Scripting API",
+                UnityVersion = _data.UnityVersion,
+                ContentHash = ComputeContentHash(),
+                TitleEmbedding = titleEmbedding,
+                SummaryEmbedding = summaryEmbedding,
+                Metadata = new List<DocMetadata>
+                {
+                    new()
+                    {
+                        MetadataType = "scripting_api_details",
+                        MetadataJson = JsonSerializer.Serialize(new { inherits = _data.InheritsFrom?.Title })
+                    }
+                },
+                Elements = elements
+            };
+        }
+
+        private async Task<List<ContentElement>> CreateContentElementsFromChunks(List<DocumentChunk> chunks, IEmbeddingService embeddingService)
         {
             var elements = new List<ContentElement>();
-            foreach (var link in links)
+            foreach (var chunk in chunks)
             {
-                var elementContext = $"Unity {elementType.Replace('_', ' ')} '{link.Title}' in class {_data.Title}: {link.Description}";
-                var embedding = await embeddingService.EmbedAsync(elementContext);
-
+                var textToEmbed = $"{_data.Title} - {chunk.Title}: {chunk.Text}";
+                var embedding = await embeddingService.EmbedAsync(textToEmbed);
                 elements.Add(new ContentElement
                 {
-                    ElementType = elementType,
-                    Title = link.Title,
-                    Content = link.Description,
-                    ElementEmbedding = embedding?.ToArray(),
-                    AttributesJson = JsonSerializer.Serialize(new { link.RelativePath })
+                    ElementType = chunk.Section,
+                    Title = chunk.Title,
+                    Content = chunk.Text,
+                    ElementEmbedding = embedding,
+                    AttributesJson = JsonSerializer.Serialize(new
+                    {
+                        chunkIndex = chunk.Index,
+                        startPosition = chunk.StartPosition,
+                        endPosition = chunk.EndPosition
+                    })
                 });
             }
             return elements;
         }
-
+        
         private string ComputeContentHash()
         {
-            var stringBuilder = new StringBuilder();
-            stringBuilder.Append(_data.Title).Append(_data.Description);
-            _data.Properties.ForEach(p => stringBuilder.Append(p.Title).Append(p.Description));
-            _data.PublicMethods.ForEach(p => stringBuilder.Append(p.Title).Append(p.Description));
-
-            return stringBuilder.ToString().GetHashCode().ToString("X");
-        }
-
-        private static byte[]? FloatArrayToByteArray(IReadOnlyCollection<float> floats)
-        {
-            if (floats == null || floats.Count == 0) return null;
-            var byteArray = new byte[floats.Count * sizeof(float)];
-            Buffer.BlockCopy(floats.ToArray(), 0, byteArray, 0, byteArray.Length);
-            return byteArray;
+            using var sha256 = SHA256.Create();
+            // Serialize the entire data object to create a reliable hash.
+            var json = JsonSerializer.Serialize(_data, new JsonSerializerOptions { WriteIndented = false });
+            var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(json));
+            return Convert.ToBase64String(hash);
         }
     }
 }

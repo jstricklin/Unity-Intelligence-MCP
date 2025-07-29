@@ -30,7 +30,7 @@ namespace UnityIntelligenceMCP.Core.IO
         {
             // Strategy 1: Explicit configuration
             var installRoot = _configurationService.UnitySettings.InstallRoot;
-            var projectVersion = GetUnityVersionFromProject(projectPath);
+            var projectVersion = GetProjectVersion(projectPath);
             var directPath = _configurationService.UnitySettings.EditorPath;
 
             if (!string.IsNullOrEmpty(installRoot) && !string.IsNullOrEmpty(projectVersion))
@@ -108,7 +108,7 @@ namespace UnityIntelligenceMCP.Core.IO
             throw new DirectoryNotFoundException(errorMsg);
         }
 
-        private string? GetUnityVersionFromProject(string projectPath)
+        public string? GetProjectVersion(string projectPath)
         {
             try
             {

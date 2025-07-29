@@ -1,72 +1,55 @@
-using UnityIntelligenceMCP.Models;
 using System.Collections.Generic;
-using HtmlAgilityPack;
+using UnityIntelligenceMCP.Models;
 
 public class UnityDocumentChunker : IDocumentChunker
 {
-
-    // private string ExtractByRule(string html, string ruleName)
-    // {
-    //     var doc = new HtmlDocument();
-    //     doc.LoadHtml(html);
-
-    //     var config = ExtractionRules[ruleName];
-    //     var node = doc.DocumentNode.SelectSingleNode(config.Selector);
-    //     return config.Transform(node?.InnerText);
-    // }
-
-
-    // private async Task<UnityDocumentationData> ParseDocumentAsync(string filePath)
-    // {
-    //     var html = await File.ReadAllTextAsync(filePath);
-        
-        // Parse Unity documentation structure
-        // Unity docs have specific patterns we can extract - TODO: add commented out examples
-        // return new UnityDocumentationData
-        // {
-        //     FilePath = filePath,
-        //     Title = ExtractByRule(html, "Title"),
-        //     Description = ExtractByRule(html, "Description"),
-        //     Namespace = ExtractByRule(html, "Namespace"),
-        //     // UnityVersion = ExtractByRule(html, "UnityVersion"),
-        //     MainContent = ExtractByRule(html, "MainContent"),
-        //     // Type = DetermineDocumentationType(html, "Type"),
-        //     CodeExamples = ExtractByRule(html, "Code Examples"),
-        //     Parameters = ExtractByRule(html, "Parameters")
-        // };
-    // }
-
     public List<DocumentChunk> ChunkDocument(UnityDocumentationData doc)
     {
         var chunks = new List<DocumentChunk>();
-        
-        // Chunk by semantic sections
-        chunks.Add(new DocumentChunk 
-        { 
-            // Text = $"{doc.Title}\n{doc.Description}", 
-            Section = "Overview" 
-        });
-        
-        // Each parameter gets its own chunk
-        // foreach (var param in doc.Parameters)
-        // {
-        //     chunks.Add(new DocumentChunk 
-        //     { 
-        //         Text = $"Parameter: {param.Name}\n{param.Description}", 
-        //         Section = "Parameters" 
-        //     });
-        // }
-        
-        // Code examples as separate chunks
-        // foreach (var example in doc.CodeExamples)
-        // {
-        //     chunks.Add(new DocumentChunk 
-        //     { 
-        //         Text = $"Example:\n{example.Code}\n{example.Explanation}", 
-        //         Section = "Examples" 
-        //     });
-        // }
-        
+        int chunkIndex = 0;
+
+        if (!string.IsNullOrWhiteSpace(doc.Description))
+        {
+            chunks.Add(new DocumentChunk
+            {
+                Index = chunkIndex++,
+                Title = "Description",
+                Text = doc.Description,
+                Section = "Overview",
+                StartPosition = 0,
+                EndPosition = doc.Description.Length
+            });
+        }
+
+        chunkIndex = AddLinkChunks(chunks, "Properties", doc.Properties, chunkIndex);
+        chunkIndex = AddLinkChunks(chunks, "Public Methods", doc.PublicMethods, chunkIndex);
+        chunkIndex = AddLinkChunks(chunks, "Static Methods", doc.StaticMethods, chunkIndex);
+        chunkIndex = AddLinkChunks(chunks, "Messages", doc.Messages, chunkIndex);
+        chunkIndex = AddLinkChunks(chunks, "Inherited Properties", doc.InheritedProperties, chunkIndex);
+        chunkIndex = AddLinkChunks(chunks, "Inherited Public Methods", doc.InheritedPublicMethods, chunkIndex);
+        chunkIndex = AddLinkChunks(chunks, "Inherited Static Methods", doc.InheritedStaticMethods, chunkIndex);
+        chunkIndex = AddLinkChunks(chunks, "Inherited Operators", doc.InheritedOperators, chunkIndex);
+
         return chunks;
+    }
+
+    private int AddLinkChunks(List<DocumentChunk> chunks, string section, List<DocumentationLink> links, int currentIndex)
+    {
+        if (links == null || links.Count == 0) return currentIndex;
+
+        foreach (var link in links)
+        {
+            var text = link.Description ?? string.Empty;
+            chunks.Add(new DocumentChunk
+            {
+                Index = currentIndex++,
+                Title = link.Title,
+                Text = text,
+                Section = section,
+                StartPosition = 0,
+                EndPosition = text.Length
+            });
+        }
+        return currentIndex;
     }
 }

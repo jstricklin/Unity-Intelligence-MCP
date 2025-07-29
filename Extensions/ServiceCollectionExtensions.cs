@@ -11,6 +11,9 @@ using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Core.RoslynServices;
 using UnityIntelligenceMCP.Core.Semantics;
 using UnityIntelligenceMCP.Resources;
+using UnityIntelligenceMCP.Configuration;
+using UnityIntelligenceMCP.Utilities;
+using UnityIntelligenceMCP.Models;
 
 namespace UnityIntelligenceMCP.Extensions
 {
@@ -38,16 +41,28 @@ namespace UnityIntelligenceMCP.Extensions
             services.AddSingleton<IDocumentationRepository, DocumentationRepository>();
             services.AddSingleton<IEmbeddingService, PlaceholderEmbeddingService>(); // Using placeholder for now
             services.AddSingleton<DocumentationOrchestrationService>();
+            services.AddSingleton<UnityDocumentationParser>();
+            services.AddSingleton<IDocumentChunker, UnityDocumentChunker>();
+            services.AddSingleton<DocumentationIndexingService>();
 
             return services;
         }
 
-        public static async Task InitializeDatabaseServicesAsync(this IServiceProvider serviceProvider)
+        public static async Task InitializeServicesAsync(this IServiceProvider serviceProvider)
         {
             // Create a scope to resolve scoped services
             using var scope = serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<IApplicationDatabase>();
+            var provider = scope.ServiceProvider;
+
+            // Initialize database
+            var db = provider.GetRequiredService<IApplicationDatabase>();
             await db.InitializeDatabaseAsync();
+            
+            // Index documentation if it's not already present for the current version
+            var configService = provider.GetRequiredService<ConfigurationService>();
+            var indexingService = provider.GetRequiredService<DocumentationIndexingService>();
+            var forceReindex = configService.UnitySettings.ForceDocumentationReindex;
+            await indexingService.IndexDocumentationIfRequiredAsync(configService.GetConfiguredProjectPath(), forceReindex);
         }
     }
 }

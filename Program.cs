@@ -26,6 +26,6 @@ builder.Services.AddUnityAnalysisServices();
 var host = builder.Build();
 
 // Initialize the documentation database
-await host.Services.InitializeDatabaseServicesAsync();
+await host.Services.InitializeServicesAsync();
 
 await host.RunAsync();
