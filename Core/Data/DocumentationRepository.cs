@@ -35,15 +35,15 @@ namespace UnityIntelligenceMCP.Core.Data
             ";
 
             docCommand.Parameters.Add(new DuckDBParameter("source_type", record.Metadata.FirstOrDefault()?.MetadataType ?? "scripting_api"));
-            docCommand.Parameters.Add("doc_key", record.DocKey);
-            docCommand.Parameters.Add("title", record.Title);
-            docCommand.Parameters.Add("url", record.Url ?? (object)DBNull.Value);
-            docCommand.Parameters.Add("doc_type", record.DocType ?? (object)DBNull.Value);
-            docCommand.Parameters.Add("category", record.Category ?? (object)DBNull.Value);
-            docCommand.Parameters.Add("unity_version", record.UnityVersion ?? (object)DBNull.Value);
-            docCommand.Parameters.Add("content_hash", record.ContentHash ?? (object)DBNull.Value);
-            docCommand.Parameters.Add("title_embedding", record.TitleEmbedding ?? (object)DBNull.Value);
-            docCommand.Parameters.Add("summary_embedding", record.SummaryEmbedding ?? (object)DBNull.Value);
+            docCommand.Parameters.Add(new DuckDBParameter("doc_key", record.DocKey));
+            docCommand.Parameters.Add(new DuckDBParameter("title", record.Title));
+            docCommand.Parameters.Add(new DuckDBParameter("url", record.Url ?? (object)DBNull.Value));
+            docCommand.Parameters.Add(new DuckDBParameter("doc_type", record.DocType ?? (object)DBNull.Value));
+            docCommand.Parameters.Add(new DuckDBParameter("category", record.Category ?? (object)DBNull.Value));
+            docCommand.Parameters.Add(new DuckDBParameter("unity_version", record.UnityVersion ?? (object)DBNull.Value));
+            docCommand.Parameters.Add(new DuckDBParameter("content_hash", record.ContentHash ?? (object)DBNull.Value));
+            docCommand.Parameters.Add(new DuckDBParameter("title_embedding", record.TitleEmbedding ?? (object)DBNull.Value));
+            docCommand.Parameters.Add(new DuckDBParameter("summary_embedding", record.SummaryEmbedding ?? (object)DBNull.Value));
             
             var docId = Convert.ToInt32(await docCommand.ExecuteScalarAsync(cancellationToken));
 
@@ -54,11 +54,11 @@ namespace UnityIntelligenceMCP.Core.Data
                 metaCommand.Transaction = transaction;
                 metaCommand.CommandText = @"
                     INSERT INTO doc_metadata (doc_id, metadata_type, metadata_json)
-                    VALUES (@doc_id, @metadata_type, @metadata_json);
+                    VALUES ($doc_id, $metadata_type, $metadata_json);
                 ";
-                metaCommand.Parameters.Add("@doc_id", docId);
-                metaCommand.Parameters.Add("@metadata_type", meta.MetadataType);
-                metaCommand.Parameters.Add("@metadata_json", meta.MetadataJson);
+                metaCommand.Parameters.Add(new DuckDBParameter("doc_id", docId));
+                metaCommand.Parameters.Add(new DuckDBParameter("metadata_type", meta.MetadataType));
+                metaCommand.Parameters.Add(new DuckDBParameter("metadata_json", meta.MetadataJson));
                 await metaCommand.ExecuteNonQueryAsync(cancellationToken);
             }
 
@@ -69,20 +69,20 @@ namespace UnityIntelligenceMCP.Core.Data
                 elementCommand.Transaction = transaction;
                 elementCommand.CommandText = @"
                     INSERT INTO content_elements (doc_id, element_type, title, content, attributes_json, element_embedding)
-                    VALUES (@doc_id, @element_type, @title, @content, @attributes_json, @element_embedding);
+                    VALUES ($doc_id, $element_type, $title, $content, $attributes_json, $element_embedding);
                 ";
-                elementCommand.Parameters.Add("@doc_id", docId);
-                elementCommand.Parameters.Add("@element_type", element.ElementType);
-                elementCommand.Parameters.Add("@title", element.Title ?? (object)DBNull.Value);
-                elementCommand.Parameters.Add("@content", element.Content ?? (object)DBNull.Value);
-                elementCommand.Parameters.Add("@attributes_json", element.AttributesJson ?? (object)DBNull.Value);
+                elementCommand.Parameters.Add(new DuckDBParameter("doc_id", docId));
+                elementCommand.Parameters.Add(new DuckDBParameter("element_type", element.ElementType));
+                elementCommand.Parameters.Add(new DuckDBParameter("title", element.Title ?? (object)DBNull.Value));
+                elementCommand.Parameters.Add(new DuckDBParameter("content", element.Content ?? (object)DBNull.Value));
+                elementCommand.Parameters.Add(new DuckDBParameter("attributes_json", element.AttributesJson ?? (object)DBNull.Value));
                 
                 object embeddingParam = DBNull.Value;
                 if (element.ElementEmbedding.HasValue)
                 {
                     embeddingParam = MemoryMarshal.AsBytes(element.ElementEmbedding.Value.Span).ToArray();
                 }
-                elementCommand.Parameters.Add("@element_embedding", embeddingParam);
+                elementCommand.Parameters.Add(new DuckDBParameter("element_embedding", embeddingParam));
                 await elementCommand.ExecuteNonQueryAsync(cancellationToken);
             }
             
@@ -109,12 +109,12 @@ namespace UnityIntelligenceMCP.Core.Data
                 FROM vec_elements_index v
                 JOIN content_elements ce ON v.rowid = ce.id
                 JOIN unity_docs d ON ce.doc_id = d.id
-                WHERE vss_search(v.embedding, @embedding)
+                WHERE vss_search(v.embedding, $embedding)
                 ORDER BY v.distance
-                LIMIT @limit;
+                LIMIT $limit;
             ";
-            command.Parameters.Add("@embedding", FloatArrayToByteArray(embedding));
-            command.Parameters.Add("@limit", limit);
+            command.Parameters.Add(new DuckDBParameter("embedding", FloatArrayToByteArray(embedding)));
+            command.Parameters.Add(new DuckDBParameter("limit", limit));
 
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))
