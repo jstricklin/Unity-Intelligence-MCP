@@ -31,7 +31,7 @@ namespace UnityIntelligenceMCP.Core.Data
 
         public async Task<int> InsertDocumentAsync(SemanticDocumentRecord record, CancellationToken cancellationToken = default)
         {
-            await using var connection = new DuckDBConnection(_database.GetConnectionString());
+            await using var connection = new DuckDBConnection($"DataSource = {_database.GetConnectionString()}");
             await connection.OpenAsync(cancellationToken);
 
             // await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
@@ -107,7 +107,7 @@ namespace UnityIntelligenceMCP.Core.Data
         public async Task<IEnumerable<SearchResult>> SemanticSearchAsync(float[] embedding, int limit = 10, CancellationToken cancellationToken = default)
         {
             var results = new List<SearchResult>();
-            await using var connection = new DuckDBConnection(_database.GetConnectionString());
+            await using var connection = new DuckDBConnection($"DataSource = {_database.GetConnectionString()}");
             await connection.OpenAsync(cancellationToken);
 
             var command = connection.CreateCommand();
@@ -145,7 +145,7 @@ namespace UnityIntelligenceMCP.Core.Data
 
         public async Task<int> GetDocCountForVersionAsync(string unityVersion, CancellationToken cancellationToken = default)
         {
-            await using var connection = new DuckDBConnection(_database.GetConnectionString());
+            await using var connection = new DuckDBConnection($"DataSource = {_database.GetConnectionString()}");
             await connection.OpenAsync(cancellationToken);
 
             var command = connection.CreateCommand();
@@ -158,7 +158,7 @@ namespace UnityIntelligenceMCP.Core.Data
 
         public async Task DeleteDocsByVersionAsync(string unityVersion, CancellationToken cancellationToken = default)
         {
-            await using var connection = new DuckDBConnection(_database.GetConnectionString());
+            await using var connection = new DuckDBConnection($"DataSource = {_database.GetConnectionString()}");
             await connection.OpenAsync(cancellationToken);
 
             var command = connection.CreateCommand();
