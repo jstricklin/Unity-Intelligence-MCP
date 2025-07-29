@@ -10,9 +10,9 @@ namespace UnityIntelligenceMCP.Core.Data
 {
     public class DocumentationRepository : IDocumentationRepository
     {
-        private readonly IDocumentationDatabase _database;
+        private readonly IApplicationDatabase _database;
 
-        public DocumentationRepository(IDocumentationDatabase database)
+        public DocumentationRepository(IApplicationDatabase database)
         {
             _database = database;
         }

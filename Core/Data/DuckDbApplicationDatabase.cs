@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UnityIntelligenceMCP.Core.Data
 {
-    public class DuckDbApplicationDatabase : IDocumentationDatabase
+    public class DuckDbApplicationDatabase : IApplicationDatabase
     {
         private readonly string _databasePath;
         private static bool _isInitialized = false;

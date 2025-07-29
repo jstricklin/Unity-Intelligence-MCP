@@ -34,7 +34,7 @@ namespace UnityIntelligenceMCP.Extensions
             services.AddSingleton<IUnityMessageAnalyzer, UnityMessageAnalyzer>();
 
             // New Semantic Search and Documentation Services
-            services.AddSingleton<IDocumentationDatabase, DuckDbApplicationDatabase>();
+            services.AddSingleton<IApplicationDatabase, DuckDbApplicationDatabase>();
             services.AddSingleton<IDocumentationRepository, DocumentationRepository>();
             services.AddSingleton<IEmbeddingService, PlaceholderEmbeddingService>(); // Using placeholder for now
             services.AddSingleton<DocumentationOrchestrationService>();
@@ -46,7 +46,7 @@ namespace UnityIntelligenceMCP.Extensions
         {
             // Create a scope to resolve scoped services
             using var scope = serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<IDocumentationDatabase>();
+            var db = scope.ServiceProvider.GetRequiredService<IApplicationDatabase>();
             await db.InitializeDatabaseAsync();
         }
     }
