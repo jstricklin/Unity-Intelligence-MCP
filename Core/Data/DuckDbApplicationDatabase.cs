@@ -76,7 +76,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 doc_id BIGINT NOT NULL,
                 metadata_type VARCHAR NOT NULL,
                 metadata_json VARCHAR NOT NULL,
-                FOREIGN KEY (doc_id) REFERENCES unity_docs (id) ON DELETE CASCADE,
+                FOREIGN KEY (doc_id) REFERENCES unity_docs (id),
                 UNIQUE(doc_id, metadata_type)
             );
 
@@ -89,7 +89,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 content VARCHAR,
                 attributes_json VARCHAR,
                 element_embedding BLOB,
-                FOREIGN KEY (doc_id) REFERENCES unity_docs (id) ON DELETE CASCADE
+                FOREIGN KEY (doc_id) REFERENCES unity_docs (id)
             );
 
             -- Granular content chunks for detailed semantic search
@@ -100,8 +100,8 @@ namespace UnityIntelligenceMCP.Core.Data
                 content VARCHAR NOT NULL,
                 token_count INTEGER,
                 embedding BLOB,
-                FOREIGN KEY (doc_id) REFERENCES unity_docs (id) ON DELETE CASCADE,
-                FOREIGN KEY (element_id) REFERENCES content_elements (id) ON DELETE CASCADE
+                FOREIGN KEY (doc_id) REFERENCES unity_docs (id),
+                FOREIGN KEY (element_id) REFERENCES content_elements (id)
             );
 
             -- Cross-document relationships
@@ -110,8 +110,8 @@ namespace UnityIntelligenceMCP.Core.Data
                 source_doc_id BIGINT NOT NULL,
                 target_doc_id BIGINT NOT NULL,
                 relationship_type VARCHAR NOT NULL,
-                FOREIGN KEY (source_doc_id) REFERENCES unity_docs (id) ON DELETE CASCADE,
-                FOREIGN KEY (target_doc_id) REFERENCES unity_docs (id) ON DELETE CASCADE,
+                FOREIGN KEY (source_doc_id) REFERENCES unity_docs (id),
+                FOREIGN KEY (target_doc_id) REFERENCES unity_docs (id),
                 UNIQUE(source_doc_id, target_doc_id, relationship_type)
             );
 
@@ -127,9 +127,9 @@ namespace UnityIntelligenceMCP.Core.Data
                 d.id,
                 d.title,
                 d.doc_key as file_path,
-                json_extract_string(dm.metadata_json, '$.description') as description,
-                json_extract_string(dm.metadata_json, '$.class_name') as class_name,
-                json_extract_string(dm.metadata_json, '$.namespace') as namespace,
+                dm.metadata_json ->> '$.description' as description,
+                dm.metadata_json ->> '$.class_name' as class_name,
+                dm.metadata_json ->> '$.namespace' as namespace,
                 d.title_embedding,
                 d.summary_embedding
             FROM unity_docs d
@@ -143,9 +143,9 @@ namespace UnityIntelligenceMCP.Core.Data
                 ce.title,
                 ce.content as description,
                 ce.element_type,
-                json_extract_string(ce.attributes_json, '$.is_inherited') as is_inherited,
+                ce.attributes_json ->> '$.is_inherited' as is_inherited,
                 d.title as class_name,
-                json_extract_string(dm.metadata_json, '$.namespace') as namespace,
+                dm.metadata_json ->> '$.namespace' as namespace,
                 ce.element_embedding
             FROM content_elements ce
             JOIN unity_docs d ON ce.doc_id = d.id
