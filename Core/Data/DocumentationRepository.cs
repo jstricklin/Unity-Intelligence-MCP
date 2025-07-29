@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Models.Documentation;
+using UnityIntelligenceMCP.Configuration;
 
 namespace UnityIntelligenceMCP.Core.Data
 {
@@ -16,6 +17,17 @@ namespace UnityIntelligenceMCP.Core.Data
         {
             _database = database;
         }
+
+        // public async Task IndexDocumentationAsync(string projectPath)
+        // {
+        //     var docRoot = ConfigurationService.GetDocumentationPath(projectPath);
+        //     var htmlFiles = Directory.GetFiles(docRoot, "*.html", SearchOption.AllDirectories);
+
+        //     foreach (var filePath in htmlFiles)
+        //     {
+        //         await IndexSingleDocumentAsync(filePath);
+        //     }
+        // }
 
         public async Task<int> InsertDocumentAsync(SemanticDocumentRecord record, CancellationToken cancellationToken = default)
         {
