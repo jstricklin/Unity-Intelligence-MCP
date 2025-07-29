@@ -19,4 +19,8 @@
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.3" />
   </ItemGroup>
 
+  <!-- Copy SQLite extensions to output directory -->
+  <ItemGroup>
+    <None Include="sqlite-extensions\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

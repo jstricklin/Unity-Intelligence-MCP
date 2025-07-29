@@ -40,11 +40,11 @@ namespace UnityIntelligenceMCP.Models.Documentation
 
         // The Dimensions parameter should match the output of your embedding service.
         [VectorStoreVector(Dimensions: 1536, DistanceFunction = DistanceFunction.CosineDistance)]
-        public byte[]? TitleEmbedding { get; set; }
+        public ReadOnlyMemory<float>? TitleEmbedding { get; set; }
 
         // The Dimensions parameter should match the output of your embedding service.
         [VectorStoreVector(Dimensions: 1536, DistanceFunction = DistanceFunction.CosineDistance)]
-        public byte[]? SummaryEmbedding { get; set; }
+        public ReadOnlyMemory<float>? SummaryEmbedding { get; set; }
 
         public List<DocMetadata> Metadata { get; set; } = new();
         public List<ContentElement> Elements { get; set; } = new();

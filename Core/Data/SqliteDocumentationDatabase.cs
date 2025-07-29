@@ -31,6 +31,8 @@ namespace UnityIntelligenceMCP.Core.Data
             await using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
+            SqliteExtensionLoader.LoadVssExtension(connection);
+
             var command = connection.CreateCommand();
             command.CommandText = SchemaV1;
             await command.ExecuteNonQueryAsync();

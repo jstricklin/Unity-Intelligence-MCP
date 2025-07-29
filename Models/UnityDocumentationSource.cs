@@ -38,8 +38,8 @@ namespace UnityIntelligenceMCP.Models
             var titleEmbedding = await embeddingService.EmbedAsync(titleContext);
             var summaryEmbedding = await embeddingService.EmbedAsync(summaryContext);
 
-            record.TitleEmbedding = FloatArrayToByteArray(titleEmbedding);
-            record.SummaryEmbedding = FloatArrayToByteArray(summaryEmbedding);
+            record.TitleEmbedding = titleEmbedding;
+            record.SummaryEmbedding = summaryEmbedding;
 
             var metadata = new DocMetadata
             {
