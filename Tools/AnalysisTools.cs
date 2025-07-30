@@ -6,6 +6,7 @@ using ModelContextProtocol.Server;
 using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Core.Analysis;
 using UnityIntelligenceMCP.Core.Analysis.Relationships;
+using UnityIntelligenceMCP.Core.Semantics;
 using UnityIntelligenceMCP.Models;
 
 namespace UnityIntelligenceMCP.Tools
@@ -15,13 +16,16 @@ namespace UnityIntelligenceMCP.Tools
     {
         private readonly IUnityStaticAnalysisService _staticAnalysisService;
         private readonly ConfigurationService _configurationService;
+        private readonly SemanticSearchService _semanticSearchService;
 
         public AnalysisTools(
             IUnityStaticAnalysisService staticAnalysisService,
-            ConfigurationService configurationService)
+            ConfigurationService configurationService,
+            SemanticSearchService semanticSearchService) // Add this parameter
         {
             _staticAnalysisService = staticAnalysisService;
             _configurationService = configurationService;
+            _semanticSearchService = semanticSearchService; // Add this line
         }
 
         [McpServerTool(Name = "analyze_unity_project"), Description("Analyzes a Unity project structure, scripts, and diagnostics.")]
@@ -75,6 +79,17 @@ namespace UnityIntelligenceMCP.Tools
         {
             var projectPath = _configurationService.GetConfiguredProjectPath();
             return await _staticAnalysisService.AnalyzeMessagesAsync(projectPath, request.ScriptPaths, cancellationToken);
+        }
+
+        [McpServerTool(Name = "semantic_search_docs"), Description("Performs a semantic search on the indexed Unity documentation.")]
+        public async Task<IEnumerable<SearchResult>> SemanticSearch(
+            [Description("The natural language query to search for.")]
+            string query,
+            [Description("The maximum number of results to return.")]
+            int maxResults = 10
+            )
+        {
+            return await _semanticSearchService.SearchAsync(query, maxResults);
         }
 
     }
