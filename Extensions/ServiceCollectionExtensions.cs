@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Core.Analysis;
@@ -39,6 +40,8 @@ namespace UnityIntelligenceMCP.Extensions
             // New Semantic Search and Documentation Services
             services.AddSingleton<IApplicationDatabase, DuckDbApplicationDatabase>();
             services.AddSingleton<IDocumentationRepository, DocumentationRepository>();
+            services.AddSingleton<IDbWorkQueue, DbWorkQueue>();
+            services.AddHostedService<QueuedDbWriterService>();
             services.AddSingleton<IEmbeddingService, PlaceholderEmbeddingService>(); // Using placeholder for now
             services.AddSingleton<DocumentationOrchestrationService>();
             services.AddSingleton<UnityDocumentationParser>();

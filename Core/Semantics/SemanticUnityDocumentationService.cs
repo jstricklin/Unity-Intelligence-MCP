@@ -6,19 +6,19 @@ namespace UnityIntelligenceMCP.Core.Semantics
 {
     public class DocumentationOrchestrationService
     {
-        private readonly IDocumentationRepository _repository;
+        private readonly IDbWorkQueue _workQueue;
         private readonly IEmbeddingService _embeddingService;
 
-        public DocumentationOrchestrationService(IDocumentationRepository repository, IEmbeddingService embeddingService)
+        public DocumentationOrchestrationService(IDbWorkQueue workQueue, IEmbeddingService embeddingService)
         {
-            _repository = repository;
+            _workQueue = workQueue;
             _embeddingService = embeddingService;
         }
 
         public async Task ProcessAndStoreSourceAsync(IDocumentationSource source)
         {
             var semanticRecord = await source.ToSemanticRecordAsync(_embeddingService);
-            await _repository.InsertDocumentAsync(semanticRecord);
+            await _workQueue.EnqueueAsync(semanticRecord);
         }
     }
 }

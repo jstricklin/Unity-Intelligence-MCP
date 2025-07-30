@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using UnityIntelligenceMCP.Core.Data;
 
 namespace UnityIntelligenceMCP.Models.Documentation
 {
-    public class SemanticDocumentRecord
+    public class SemanticDocumentRecord : IDbWorkItem
     {
         public string DocKey { get; set; } = string.Empty;
 
