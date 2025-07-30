@@ -43,8 +43,9 @@ namespace UnityIntelligenceMCP.Core.Data
 
         private const string SchemaV1 = @"
             -- Source registry for different documentation types
+            CREATE SEQUENCE doc_sources_id_seq START 1;
             CREATE TABLE doc_sources (
-                id BIGINT PRIMARY KEY,
+                id BIGINT PRIMARY KEY nextval('doc_sources_id_seq'),
                 source_type VARCHAR NOT NULL UNIQUE,
                 source_name VARCHAR NOT NULL,
                 version VARCHAR,
@@ -135,7 +136,7 @@ namespace UnityIntelligenceMCP.Core.Data
             WHERE s.source_type = 'scripting_api'
             AND ce.element_type IN ('property', 'public_method', 'static_method', 'message');
         ";
-
+// TODO make this variable to user's actual unity version
         private const string InitialData = @"
             INSERT INTO doc_sources (id, source_type, source_name, version, schema_version) VALUES
             (1, 'scripting_api', 'Unity Scripting API', '2023.3', '1.0'),

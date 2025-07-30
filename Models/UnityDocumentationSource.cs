@@ -23,7 +23,7 @@ namespace UnityIntelligenceMCP.Models
             _chunker = chunker;
         }
 
-        public Task<SemanticDocumentRecord> ToSemanticRecordAsync()
+        public Task<SemanticDocumentRecord> ToSemanticRecordAsync(IEmbeddingService _embeddingService)
         {
             var chunks = _chunker.ChunkDocument(_data);
             var elements = CreateContentElementsFromChunks(chunks);
@@ -41,7 +41,7 @@ namespace UnityIntelligenceMCP.Models
                 {
                     new()
                     {
-                        MetadataType = "scripting_api_details",
+                        MetadataType = "scripting_api",
                         MetadataJson = JsonSerializer.Serialize(new { inherits = _data.InheritsFrom?.Title })
                     }
                 },
