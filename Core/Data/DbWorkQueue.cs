@@ -9,10 +9,13 @@ namespace UnityIntelligenceMCP.Core.Data
     {
         private readonly Channel<IDbWorkItem> _queue;
 
+        public ChannelWriter<IDbWorkItem> Writer => _queue.Writer;
+        public ChannelReader<IDbWorkItem> Reader => _queue.Reader;
+
         public DbWorkQueue()
         {
-            // Use an unbounded channel to hold all work items.
-            _queue = Channel.CreateUnbounded<IDbWorkItem>();
+            var options = new UnboundedChannelOptions { SingleReader = true };
+            _queue = Channel.CreateUnbounded<IDbWorkItem>(options);
         }
 
         public async ValueTask EnqueueAsync(IDbWorkItem workItem)
