@@ -45,7 +45,7 @@ namespace UnityIntelligenceMCP.Core.Data
             -- Source registry for different documentation types
             CREATE SEQUENCE doc_sources_id_seq START 1;
             CREATE TABLE doc_sources (
-                id BIGINT PRIMARY KEY nextval('doc_sources_id_seq'),
+                id BIGINT PRIMARY KEY DEFAULT nextval('doc_sources_id_seq'),
                 source_type VARCHAR NOT NULL UNIQUE,
                 source_name VARCHAR NOT NULL,
                 version VARCHAR,
@@ -55,8 +55,9 @@ namespace UnityIntelligenceMCP.Core.Data
             );
 
             -- Universal document container
+            CREATE SEQUENCE unity_docs_id_seq START 1;
             CREATE TABLE unity_docs (
-                id BIGINT PRIMARY KEY,
+                id BIGINT PRIMARY KEY DEFAULT nextval('unity_docs_id_seq'),
                 source_id BIGINT NOT NULL,
                 doc_key VARCHAR NOT NULL,
                 title VARCHAR NOT NULL,
@@ -70,8 +71,9 @@ namespace UnityIntelligenceMCP.Core.Data
             );
 
             -- Source-specific structured data (JSON for flexibility)
+            CREATE SEQUENCE doc_metadata_id_seq START 1;
             CREATE TABLE doc_metadata (
-                id BIGINT PRIMARY KEY,
+                id BIGINT PRIMARY KEY DEFAULT nextval('doc_metadata_id_seq'),
                 doc_id BIGINT NOT NULL,
                 metadata_type VARCHAR NOT NULL,
                 metadata_json VARCHAR NOT NULL,
@@ -80,8 +82,9 @@ namespace UnityIntelligenceMCP.Core.Data
             );
 
             -- Flexible content elements
+            CREATE SEQUENCE content_elements_id_seq START 1;
             CREATE TABLE content_elements (
-                id BIGINT PRIMARY KEY,
+                id BIGINT PRIMARY KEY DEFAULT nextval('content_elements_id_seq'),
                 doc_id BIGINT NOT NULL,
                 element_type VARCHAR NOT NULL,
                 title VARCHAR,
@@ -91,8 +94,9 @@ namespace UnityIntelligenceMCP.Core.Data
             );
 
             -- Cross-document relationships
+            CREATE SEQUENCE doc_relationships_id_seq START 1;
             CREATE TABLE doc_relationships (
-                id BIGINT PRIMARY KEY,
+                id BIGINT PRIMARY KEY DEFAULT nextval('doc_relationships_id_seq'),
                 source_doc_id BIGINT NOT NULL,
                 target_doc_id BIGINT NOT NULL,
                 relationship_type VARCHAR NOT NULL,
