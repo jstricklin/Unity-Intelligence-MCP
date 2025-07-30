@@ -106,16 +106,46 @@ namespace UnityIntelligenceMCP.Core.Data
 
             try
             {
+                async Task<List<long>> GetNextIdsAsync(string sequenceName, int count)
+                {
+                    if (count == 0) return new List<long>();
+                    var ids = new List<long>(count);
+                    var command = connection.CreateCommand();
+                    command.Transaction = transaction;
+                    command.CommandText = $"SELECT nextval('{sequenceName}') FROM generate_series(1, {count})";
+                    using (var reader = await command.ExecuteReaderAsync(cancellationToken))
+                    {
+                        while (await reader.ReadAsync(cancellationToken))
+                        {
+                            ids.Add(reader.GetInt64(0));
+                        }
+                    }
+                    return ids;
+                }
+
                 var sourceIdCommand = connection.CreateCommand();
                 sourceIdCommand.Transaction = transaction;
                 sourceIdCommand.CommandText = "SELECT id FROM doc_sources WHERE source_type = 'scripting_api' LIMIT 1;";
                 var sourceId = Convert.ToInt64(await sourceIdCommand.ExecuteScalarAsync(cancellationToken));
+                
+                var docsCount = records.Count;
+                var metadataCount = records.Sum(r => r.Metadata.Count);
+                var elementsCount = records.Sum(r => r.Elements.Count);
 
+                var docIds = await GetNextIdsAsync("unity_docs_id_seq", docsCount);
+                var metadataIds = await GetNextIdsAsync("doc_metadata_id_seq", metadataCount);
+                var elementIds = await GetNextIdsAsync("content_elements_id_seq", elementsCount);
+
+                var docIdMap = new Dictionary<string, long>();
+                int docIdIndex = 0;
                 using (var appender = connection.CreateAppender("unity_docs"))
                 {
                     foreach (var record in records)
                     {
+                        var newDocId = docIds[docIdIndex];
+                        docIdMap[record.DocKey] = newDocId;
                         appender.CreateRow()
+                            .AppendValue(newDocId)
                             .AppendValue(sourceId)
                             .AppendValue(record.DocKey)
                             .AppendValue(record.Title)
@@ -125,24 +155,11 @@ namespace UnityIntelligenceMCP.Core.Data
                             .AppendValue(record.UnityVersion)
                             .AppendValue(record.ContentHash)
                             .EndRow();
+                        docIdIndex++;
                     }
                 }
 
-                var docKeys = records.Select(r => r.DocKey).ToList();
-                var docIdMap = new Dictionary<string, long>();
-                var getIdsCommand = connection.CreateCommand();
-                getIdsCommand.Transaction = transaction;
-                var formattedDocKeys = string.Join(",", docKeys.Select(k => $"'{k.Replace("'", "''")}'"));
-                getIdsCommand.CommandText = $"SELECT doc_key, id FROM unity_docs WHERE doc_key IN ({formattedDocKeys}) AND unity_version = '{records[0].UnityVersion}'";
-
-                using (var reader = await getIdsCommand.ExecuteReaderAsync(cancellationToken))
-                {
-                    while (await reader.ReadAsync(cancellationToken))
-                    {
-                        docIdMap[reader.GetString(0)] = reader.GetInt64(1);
-                    }
-                }
-
+                int metadataIdIndex = 0;
                 using (var appender = connection.CreateAppender("doc_metadata"))
                 {
                     foreach (var record in records)
@@ -151,6 +168,7 @@ namespace UnityIntelligenceMCP.Core.Data
                         foreach (var meta in record.Metadata)
                         {
                             appender.CreateRow()
+                                .AppendValue(metadataIds[metadataIdIndex++])
                                 .AppendValue(docId)
                                 .AppendValue(meta.MetadataType)
                                 .AppendValue(meta.MetadataJson)
@@ -159,6 +177,7 @@ namespace UnityIntelligenceMCP.Core.Data
                     }
                 }
 
+                int elementIdIndex = 0;
                 using (var appender = connection.CreateAppender("content_elements"))
                 {
                     foreach (var record in records)
@@ -167,6 +186,7 @@ namespace UnityIntelligenceMCP.Core.Data
                         foreach (var element in record.Elements)
                         {
                             appender.CreateRow()
+                                .AppendValue(elementIds[elementIdIndex++])
                                 .AppendValue(docId)
                                 .AppendValue(element.ElementType)
                                 .AppendValue(element.Title)
