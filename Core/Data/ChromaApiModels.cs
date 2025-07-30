@@ -43,7 +43,7 @@ namespace UnityIntelligenceMCP.Core.Data
     
     // For /api/v1/collections/{name}/delete
     public record DeleteRequest(
-        [JsonPropertyName("where")]
+        [property: JsonPropertyName("where")]
         Dictionary<string, object> Where
     );
 }
