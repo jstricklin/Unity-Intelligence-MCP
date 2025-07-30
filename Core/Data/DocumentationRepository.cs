@@ -96,9 +96,9 @@ namespace UnityIntelligenceMCP.Core.Data
             return docId;
         }
 
-        public async Task InsertDocumentsInBulkAsync(IReadOnlyList<SemanticDocumentRecord> records, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<SemanticDocumentRecord>> InsertDocumentsInBulkAsync(IReadOnlyList<SemanticDocumentRecord> records, CancellationToken cancellationToken = default)
         {
-            if (records == null || records.Count == 0) return;
+            if (records == null || records.Count == 0) return records;
 
             await using var connection = new DuckDBConnection($"DataSource = {_database.GetConnectionString()}");
             await connection.OpenAsync(cancellationToken);
@@ -144,6 +144,7 @@ namespace UnityIntelligenceMCP.Core.Data
                     {
                         var newDocId = docIds[docIdIndex];
                         docIdMap[record.DocKey] = newDocId;
+                        record.Metadata.Add(new DocMetadata { MetadataType = "internal_db_id", MetadataJson = newDocId.ToString() });
                         appender.CreateRow()
                             .AppendValue(newDocId)
                             .AppendValue(sourceId)
@@ -185,20 +186,23 @@ namespace UnityIntelligenceMCP.Core.Data
                         if (!docIdMap.TryGetValue(record.DocKey, out var docId)) continue;
                         foreach (var element in record.Elements)
                         {
+                            element.Id = elementIds[elementIdIndex];
                             appender.CreateRow()
-                                .AppendValue(elementIds[elementIdIndex++])
+                                .AppendValue(element.Id)
                                 .AppendValue(docId)
                                 .AppendValue(element.ElementType)
                                 .AppendValue(element.Title)
                                 .AppendValue(element.Content)
                                 .AppendValue(element.AttributesJson)
                                 .EndRow();
+                            elementIdIndex++;
                         }
                     }
                 }
                 
                 await transaction.CommitAsync(cancellationToken);
                 Console.Error.WriteLine($"[DB] Successfully inserted a batch of {records.Count} documents.");
+                return records;
             }
             catch (Exception ex)
             {

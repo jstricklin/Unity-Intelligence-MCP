@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
+using UnityIntelligenceMCP.Core.Semantics;
+using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Models.Documentation;
 
 namespace UnityIntelligenceMCP.Core.Data
@@ -12,12 +14,16 @@ namespace UnityIntelligenceMCP.Core.Data
     {
         private readonly IDbWorkQueue _workQueue;
         private readonly IDocumentationRepository _repository;
+        private readonly IEmbeddingService _embeddingService;
+        private readonly IVectorRepository _vectorRepository;
         private readonly Dictionary<Type, Func<IReadOnlyList<IDbWorkItem>, CancellationToken, Task>> _handlers;
 
-        public QueuedDbWriterService(IDbWorkQueue workQueue, IDocumentationRepository repository)
+        public QueuedDbWriterService(IDbWorkQueue workQueue, IDocumentationRepository repository, IEmbeddingService embeddingService, IVectorRepository vectorRepository)
         {
             _workQueue = workQueue;
             _repository = repository;
+            _embeddingService = embeddingService;
+            _vectorRepository = vectorRepository;
 
             // Map work item types to their specific bulk handling logic.
             _handlers = new Dictionary<Type, Func<IReadOnlyList<IDbWorkItem>, CancellationToken, Task>>
@@ -26,10 +32,41 @@ namespace UnityIntelligenceMCP.Core.Data
             };
         }
 
-        private Task HandleSemanticDocumentRecordsAsync(IReadOnlyList<IDbWorkItem> workItems, CancellationToken cancellationToken)
+        private async Task HandleSemanticDocumentRecordsAsync(IReadOnlyList<IDbWorkItem> workItems, CancellationToken cancellationToken)
         {
-            var records = workItems.Cast<SemanticDocumentRecord>().ToList();
-            return _repository.InsertDocumentsInBulkAsync(records, cancellationToken);
+            var recordsToInsert = workItems.Cast<SemanticDocumentRecord>().ToList();
+            
+            // 1. Insert into DuckDB and get back the records with their new IDs
+            var insertedRecords = await _repository.InsertDocumentsInBulkAsync(recordsToInsert, cancellationToken);
+
+            // 2. Prepare records for ChromaDB
+            var vectorRecords = new List<VectorRecord>();
+            foreach (var record in insertedRecords)
+            {
+                foreach (var element in record.Elements)
+                {
+                    if (string.IsNullOrWhiteSpace(element.Content)) continue;
+
+                    var embedding = await _embeddingService.EmbedAsync(element.Content);
+                    var metadata = new Dictionary<string, object>
+                    {
+                        { "doc_key", record.DocKey },
+                        { "element_type", element.ElementType },
+                        { "title", record.Title },
+                        { "class_name", record.DocType == "class" ? record.Title : string.Empty },
+                        { "content", element.Content },
+                        { "unity_version", record.UnityVersion ?? "unknown" }
+                    };
+                    vectorRecords.Add(new VectorRecord(element.Id.ToString(), embedding, metadata));
+                }
+            }
+            
+            // 3. Index in ChromaDB
+            if(vectorRecords.Any())
+            {
+                await _vectorRepository.AddEmbeddingsAsync(vectorRecords);
+                Console.Error.WriteLine($"[ChromaDB] Indexed {vectorRecords.Count} content elements.");
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

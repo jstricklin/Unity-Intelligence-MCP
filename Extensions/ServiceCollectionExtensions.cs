@@ -48,6 +48,10 @@ namespace UnityIntelligenceMCP.Extensions
             services.AddSingleton<IDocumentChunker, UnityDocumentChunker>();
             services.AddSingleton<DocumentationIndexingService>();
 
+            services.AddSingleton<IVectorRepository, ChromaDbRepository>();
+            services.AddHttpClient<ChromaDbRepository>();
+            services.AddSingleton<SemanticSearchService>();
+
             return services;
         }
 
@@ -57,14 +61,27 @@ namespace UnityIntelligenceMCP.Extensions
             using var scope = serviceProvider.CreateScope();
             var provider = scope.ServiceProvider;
 
-            // Initialize database
+            // Initialize databases
             var db = provider.GetRequiredService<IApplicationDatabase>();
             await db.InitializeDatabaseAsync();
+            var vectorDb = provider.GetRequiredService<IVectorRepository>();
+            await vectorDb.InitializeAsync();
             
             // Index documentation if it's not already present for the current version
             var configService = provider.GetRequiredService<ConfigurationService>();
             var indexingService = provider.GetRequiredService<DocumentationIndexingService>();
             var forceReindex = configService.UnitySettings.ForceDocumentationReindex;
+
+            if (forceReindex == true)
+            {
+                var unityVersion = provider.GetRequiredService<UnityInstallationService>().GetProjectVersion(configService.GetConfiguredProjectPath());
+                if (!string.IsNullOrEmpty(unityVersion))
+                {
+                    // Also delete from vector DB
+                    await vectorDb.DeleteByVersionAsync(unityVersion);
+                }
+            }
+
             await indexingService.IndexDocumentationIfRequiredAsync(configService.GetConfiguredProjectPath(), forceReindex);
         }
     }
