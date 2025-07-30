@@ -20,5 +20,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             var semanticRecord = await source.ToSemanticRecordAsync(_embeddingService);
             await _workQueue.EnqueueAsync(semanticRecord);
         }
+
+        public bool TryCompleteQueue() => _workQueue.Writer.TryComplete();
     }
 }

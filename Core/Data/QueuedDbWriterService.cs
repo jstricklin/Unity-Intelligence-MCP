@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -11,46 +12,64 @@ namespace UnityIntelligenceMCP.Core.Data
     {
         private readonly IDbWorkQueue _workQueue;
         private readonly IDocumentationRepository _repository;
-        private readonly Dictionary<Type, Func<IDbWorkItem, CancellationToken, Task>> _handlers;
+        private readonly Dictionary<Type, Func<IReadOnlyList<IDbWorkItem>, CancellationToken, Task>> _handlers;
 
         public QueuedDbWriterService(IDbWorkQueue workQueue, IDocumentationRepository repository)
         {
             _workQueue = workQueue;
             _repository = repository;
 
-            // Map work item types to their specific handling logic.
-            _handlers = new Dictionary<Type, Func<IDbWorkItem, CancellationToken, Task>>
+            // Map work item types to their specific bulk handling logic.
+            _handlers = new Dictionary<Type, Func<IReadOnlyList<IDbWorkItem>, CancellationToken, Task>>
             {
-                { typeof(SemanticDocumentRecord), HandleSemanticDocumentRecordAsync }
-                // Add other handlers here for new DTO types.
+                { typeof(SemanticDocumentRecord), HandleSemanticDocumentRecordsAsync }
             };
         }
 
-        private Task HandleSemanticDocumentRecordAsync(IDbWorkItem workItem, CancellationToken cancellationToken)
+        private Task HandleSemanticDocumentRecordsAsync(IReadOnlyList<IDbWorkItem> workItems, CancellationToken cancellationToken)
         {
-            var record = (SemanticDocumentRecord)workItem;
-            return _repository.InsertDocumentAsync(record, cancellationToken);
+            var records = workItems.Cast<SemanticDocumentRecord>().ToList();
+            return _repository.InsertDocumentsInBulkAsync(records, cancellationToken);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // Process items from the queue as they become available.
-            await foreach (var workItem in _workQueue.DequeueAllAsync(stoppingToken))
+            while (!stoppingToken.IsCancellationRequested && await _workQueue.Reader.WaitToReadAsync(stoppingToken))
             {
-                try
+                var batch = new List<IDbWorkItem>();
+                // Form a batch of up to 1000 items. Adjust size as needed.
+                while (batch.Count < 1000 && _workQueue.Reader.TryRead(out var item))
                 {
-                    if (_handlers.TryGetValue(workItem.GetType(), out var handler))
+                    batch.Add(item);
+                }
+
+                if (batch.Count > 0)
+                {
+                    await ProcessBatch(batch, stoppingToken);
+                }
+            }
+        }
+        
+        private async Task ProcessBatch(IReadOnlyList<IDbWorkItem> batch, CancellationToken stoppingToken)
+        {
+            var groupedItems = batch.GroupBy(item => item.GetType());
+
+            foreach (var group in groupedItems)
+            {
+                if (_handlers.TryGetValue(group.Key, out var handler))
+                {
+                    try
                     {
-                        await handler(workItem, stoppingToken);
+                        await handler(group.ToList(), stoppingToken);
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Console.Error.WriteLine($"[WARN] No handler registered for DB work item type: {workItem.GetType().Name}");
+                        Console.Error.WriteLine($"[ERROR] Failed to process DB work batch for type {group.Key.Name}: {ex.Message}");
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    Console.Error.WriteLine($"[ERROR] Failed to process DB work item of type {workItem.GetType().Name}: {ex.Message}");
+                    Console.Error.WriteLine($"[WARN] No handler registered for DB work item type: {group.Key.Name}");
                 }
             }
         }

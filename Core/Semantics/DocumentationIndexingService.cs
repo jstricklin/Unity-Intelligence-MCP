@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -87,6 +88,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             if (!shouldIndex) return;
 
             Console.Error.WriteLine($"[INFO] Starting documentation indexing process for Unity version {unityVersion}...");
+            var stopwatch = Stopwatch.StartNew();
             var htmlFiles = Directory.EnumerateFiles(docPath, "*.html", SearchOption.AllDirectories);
 
             var indexingTasks = htmlFiles.Select(async filePath =>
@@ -106,7 +108,15 @@ namespace UnityIntelligenceMCP.Core.Semantics
             });
 
             await Task.WhenAll(indexingTasks);
-            Console.Error.WriteLine($"[INFO] Documentation indexing completed for Unity version {unityVersion}.");
+            
+            // Signal to the queue that no more items will be added.
+            if (_orchestrationService.TryCompleteQueue())
+            {
+                Console.Error.WriteLine("[INFO] All documentation has been enqueued for processing.");
+            }
+
+            stopwatch.Stop();
+            Console.Error.WriteLine($"[INFO] Documentation parsing and enqueuing completed for Unity version {unityVersion} in {stopwatch.Elapsed.TotalSeconds:F2} seconds. Background processing will continue.");
         }
     }
 }

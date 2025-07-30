@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DuckDB.NET.Data;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -93,6 +94,98 @@ namespace UnityIntelligenceMCP.Core.Data
             
             Console.Error.WriteLine($"[DB] Successfully inserted document '{record.Title}' with ID {docId}.");
             return docId;
+        }
+
+        public async Task InsertDocumentsInBulkAsync(IReadOnlyList<SemanticDocumentRecord> records, CancellationToken cancellationToken = default)
+        {
+            if (records == null || records.Count == 0) return;
+
+            await using var connection = new DuckDBConnection($"DataSource = {_database.GetConnectionString()}");
+            await connection.OpenAsync(cancellationToken);
+            await using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                var sourceIdCommand = connection.CreateCommand();
+                sourceIdCommand.Transaction = transaction;
+                sourceIdCommand.CommandText = "SELECT id FROM doc_sources WHERE source_type = 'scripting_api' LIMIT 1;";
+                var sourceId = Convert.ToInt64(await sourceIdCommand.ExecuteScalarAsync(cancellationToken));
+
+                using (var appender = connection.CreateAppender("unity_docs"))
+                {
+                    foreach (var record in records)
+                    {
+                        appender.CreateRow()
+                            .AppendValue(sourceId)
+                            .AppendValue(record.DocKey)
+                            .AppendValue(record.Title)
+                            .AppendValue(record.Url)
+                            .AppendValue(record.DocType)
+                            .AppendValue(record.Category)
+                            .AppendValue(record.UnityVersion)
+                            .AppendValue(record.ContentHash)
+                            .EndRow();
+                    }
+                }
+
+                var docKeys = records.Select(r => r.DocKey).ToList();
+                var docIdMap = new Dictionary<string, long>();
+                var getIdsCommand = connection.CreateCommand();
+                getIdsCommand.Transaction = transaction;
+                var formattedDocKeys = string.Join(",", docKeys.Select(k => $"'{k.Replace("'", "''")}'"));
+                getIdsCommand.CommandText = $"SELECT doc_key, id FROM unity_docs WHERE doc_key IN ({formattedDocKeys}) AND unity_version = '{records[0].UnityVersion}'";
+
+                using (var reader = await getIdsCommand.ExecuteReaderAsync(cancellationToken))
+                {
+                    while (await reader.ReadAsync(cancellationToken))
+                    {
+                        docIdMap[reader.GetString(0)] = reader.GetInt64(1);
+                    }
+                }
+
+                using (var appender = connection.CreateAppender("doc_metadata"))
+                {
+                    foreach (var record in records)
+                    {
+                        if (!docIdMap.TryGetValue(record.DocKey, out var docId)) continue;
+                        foreach (var meta in record.Metadata)
+                        {
+                            appender.CreateRow()
+                                .AppendValue(docId)
+                                .AppendValue(meta.MetadataType)
+                                .AppendValue(meta.MetadataJson)
+                                .EndRow();
+                        }
+                    }
+                }
+
+                using (var appender = connection.CreateAppender("content_elements"))
+                {
+                    foreach (var record in records)
+                    {
+                        if (!docIdMap.TryGetValue(record.DocKey, out var docId)) continue;
+                        foreach (var element in record.Elements)
+                        {
+                            appender.CreateRow()
+                                .AppendValue(docId)
+                                .AppendValue(element.ElementType)
+                                .AppendValue(element.Title)
+                                .AppendValue(element.Content)
+                                .AppendValue(element.AttributesJson)
+                                .EndRow();
+                        }
+                    }
+                }
+                
+                await transaction.CommitAsync(cancellationToken);
+                Console.Error.WriteLine($"[DB] Successfully inserted a batch of {records.Count} documents.");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                Console.Error.WriteLine($"[ERROR] Failed to insert document batch: {ex.Message}");
+                throw;
+            }
         }
 
 
