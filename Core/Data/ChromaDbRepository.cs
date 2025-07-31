@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using ChromaDB.Client;
+using ChromaDB.Client.Models;
 using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Models;
 
@@ -91,13 +92,36 @@ namespace UnityIntelligenceMCP.Core.Data
 
         public async Task DeleteByVersionAsync(string unityVersion)
         {
-            var deleteRequest = new DeleteRequest(new Dictionary<string, object>
+            if (_collectionClient == null)
             {
-                { "unity_version", unityVersion }
-            });
-            var response = await _httpClient.PostAsJsonAsync($"/api/v1/collections/{CollectionName}/delete", deleteRequest);
-            response.EnsureSuccessStatusCode();
-            Console.Error.WriteLine($"[ChromaDB] Deleted embeddings for Unity version {unityVersion}.");
+                Console.Error.WriteLine($"[ERROR] Failed to delete embeddings! ChromaDB not initialized.");
+                return;
+            }
+
+            try
+            {
+                // 1. Create a filter to find documents by version.
+                var whereFilter = Where.Eq("unity_version", unityVersion);
+
+                // 2. Get the entries to find their IDs.
+                var entries = await _collectionClient.Get(where: whereFilter);
+                if (entries == null || !entries.Any())
+                {
+                    Console.Error.WriteLine($"[ChromaDB] No embeddings found for Unity version {unityVersion} to delete.");
+                    return;
+                }
+
+                // 3. Extract the IDs required for the delete operation.
+                var idsToDelete = entries.Select(e => e.Id).ToList();
+
+                // 4. Delete the entries by their specific IDs.
+                await _collectionClient.Delete(idsToDelete);
+                Console.Error.WriteLine($"[ChromaDB] Deleted {idsToDelete.Count} embeddings for Unity version {unityVersion}.");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[ERROR] Failed to delete embeddings by version: {ex.Message}");
+            }
         }
     }
 }
