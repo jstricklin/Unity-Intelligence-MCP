@@ -98,7 +98,7 @@ namespace UnityIntelligenceMCP.Core.Data
 
         public async Task<IReadOnlyList<SemanticDocumentRecord>> InsertDocumentsInBulkAsync(IReadOnlyList<SemanticDocumentRecord> records, CancellationToken cancellationToken = default)
         {
-            if (records == null || records.Count == 0) return records;
+            if (records == null || records.Count == 0) return Array.Empty<SemanticDocumentRecord>();
 
             await using var connection = new DuckDBConnection($"DataSource = {_database.GetConnectionString()}");
             await connection.OpenAsync(cancellationToken);

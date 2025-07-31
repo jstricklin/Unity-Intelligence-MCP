@@ -83,7 +83,7 @@ namespace UnityIntelligenceMCP.Core.Data
                     Content = metadata.GetValueOrDefault("content", string.Empty)?.ToString() ?? string.Empty,
                     ElementType = metadata.GetValueOrDefault("element_type", string.Empty)?.ToString() ?? string.Empty,
                     ClassName = metadata.GetValueOrDefault("class_name", string.Empty)?.ToString() ?? string.Empty,
-                    Similarity = 1 - distance
+                    Similarity = 1 - pair.Distance
                 })
                 .ToList();
         }
