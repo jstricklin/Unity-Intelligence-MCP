@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using ChromaDB.Client;
 using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Models;
 
@@ -11,34 +12,28 @@ namespace UnityIntelligenceMCP.Core.Data
 {
     public class ChromaDbRepository : IVectorRepository
     {
+        // private readonly ChromaClient _client;
+        // private readonly ChromaClient _client;
         private readonly HttpClient _httpClient;
+        private readonly ChromaConfigurationOptions _configOptions;
         private const string CollectionName = "unity_docs";
+        private ChromaCollectionClient? _collectionClient = null;
 
         public ChromaDbRepository(HttpClient httpClient, ConfigurationService configService)
         {
             var chromaUrl = configService.UnitySettings.ChromaDbUrl ?? "http://localhost:8000";
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri(chromaUrl);
+            _configOptions = new ChromaConfigurationOptions(uri: chromaUrl);
         }
 
-        public async Task InitializeAsync()
+        public async Task InitializeChromaDbAsync()
         {
             try
             {
-                var collectionsResponse = await _httpClient.GetAsync("/api/v1/collections");
-                if (collectionsResponse.IsSuccessStatusCode)
-                {
-                    var collections = await collectionsResponse.Content.ReadFromJsonAsync<List<Dictionary<string, object>>>();
-                    if (collections != null && collections.Any(c => c.ContainsKey("name") && c["name"].ToString() == CollectionName))
-                    {
-                        Console.Error.WriteLine($"[ChromaDB] Collection '{CollectionName}' already exists.");
-                        return;
-                    }
-                }
-
                 Console.Error.WriteLine($"[ChromaDB] Creating collection: {CollectionName}");
-                var response = await _httpClient.PostAsJsonAsync("/api/v1/collections", new CreateCollectionRequest(CollectionName));
-                response.EnsureSuccessStatusCode();
+                var client = new ChromaClient(_configOptions, _httpClient);
+                var collection = await client.GetOrCreateCollection(CollectionName);
+                _collectionClient = new ChromaCollectionClient(collection, _configOptions, _httpClient);
             }
             catch (Exception ex)
             {
@@ -48,29 +43,37 @@ namespace UnityIntelligenceMCP.Core.Data
         
         public async Task AddEmbeddingsAsync(IEnumerable<VectorRecord> records)
         {
+            if (_collectionClient == null)
+            {
+                Console.Error.WriteLine($"[ERROR] Failed to add embedding! ChromaDB not initialized.");
+                return;
+            }
             var request = new AddEmbeddingsRequest
             {
                 Ids = records.Select(r => r.Id).ToList(),
-                Embeddings = records.Select(r => r.Vector).ToList(),
                 Metadatas = records.Select(r => r.Metadata).ToList()
             };
-            var response = await _httpClient.PostAsJsonAsync($"/api/v1/collections/{CollectionName}/add", request);
-            response.EnsureSuccessStatusCode();
+            // var response = await _httpClient.PostAsJsonAsync($"/api/v1/collections/{CollectionName}/add", request);
+            // response.EnsureSuccessStatusCode();
+            await _collectionClient.Add(request.Ids, metadatas: request.Metadatas);
         }
 
-        public async Task<IEnumerable<SearchResult>> SearchAsync(float[] queryVector, int topK)
+        public async Task<IEnumerable<SearchResult>> SearchAsync(ReadOnlyMemory<float> queryVector, int topK)
         {
+            if (_collectionClient == null)
+            {
+                Console.Error.WriteLine($"[ERROR] Failed to add embedding! ChromaDB not initialized.");
+                return Enumerable.Empty<SearchResult>();
+            }
             var request = new QueryRequest
             {
-                QueryEmbeddings = new List<float[]> { queryVector },
+                QueryEmbeddings = new List<ReadOnlyMemory<float>> { queryVector },
                 NResults = topK
             };
 
-            var response = await _httpClient.PostAsJsonAsync($"/api/v1/collections/{CollectionName}/query", request);
-            response.EnsureSuccessStatusCode();
 
-            var queryResponse = await response.Content.ReadFromJsonAsync<QueryResponse>();
-            if (queryResponse?.Ids.FirstOrDefault() == null)
+            var queryResponse = await _collectionClient.Query(request.QueryEmbeddings, request.NResults);
+            if (queryResponse?.FirstOrDefault() == null)
             {
                 return Enumerable.Empty<SearchResult>();
             }
