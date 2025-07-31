@@ -97,7 +97,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 title VARCHAR,
                 content VARCHAR,
                 attributes_json VARCHAR,
-                embedding FLOAT[1536]
+                embedding FLOAT[384]
                 FOREIGN KEY (doc_id) REFERENCES unity_docs (id)
             );
 
