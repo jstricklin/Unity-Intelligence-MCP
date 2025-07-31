@@ -4,8 +4,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using ChromaDB.Client;
-using ChromaDB.Client.Models;
 using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Models;
 
@@ -22,7 +22,7 @@ namespace UnityIntelligenceMCP.Core.Data
 
         public ChromaDbRepository(HttpClient httpClient, ConfigurationService configService)
         {
-            var chromaUrl = configService.UnitySettings.ChromaDbUrl ?? "http://localhost:8000";
+            var chromaUrl = configService.UnitySettings.ChromaDbUrl ?? "http://localhost:8000/api/v1/";
             _httpClient = httpClient;
             _configOptions = new ChromaConfigurationOptions(uri: chromaUrl);
         }
@@ -31,9 +31,10 @@ namespace UnityIntelligenceMCP.Core.Data
         {
             try
             {
-                Console.Error.WriteLine($"[ChromaDB] Creating collection: {CollectionName}");
+                Console.Error.WriteLine($"[ChromaDB] Initializing collection: {CollectionName}");
                 var client = new ChromaClient(_configOptions, _httpClient);
                 var collection = await client.GetOrCreateCollection(CollectionName);
+                Console.Error.WriteLine($"[ERROR] Failed to initialize ChromaDB collection: {collection.Name}");
                 _collectionClient = new ChromaCollectionClient(collection, _configOptions, _httpClient);
             }
             catch (Exception ex)
@@ -101,8 +102,7 @@ namespace UnityIntelligenceMCP.Core.Data
             try
             {
                 // 1. Create a filter to find documents by version.
-                var whereFilter = Where.Eq("unity_version", unityVersion);
-
+                var whereFilter = ChromaWhereOperator.In("unity_version", unityVersion);
                 // 2. Get the entries to find their IDs.
                 var entries = await _collectionClient.Get(where: whereFilter);
                 if (entries == null || !entries.Any())

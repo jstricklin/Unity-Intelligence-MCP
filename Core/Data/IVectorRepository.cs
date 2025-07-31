@@ -6,9 +6,9 @@ namespace UnityIntelligenceMCP.Core.Data
 {
     public interface IVectorRepository
     {
-        Task InitializeAsync();
+        Task InitializeChromaDbAsync();
         Task AddEmbeddingsAsync(IEnumerable<VectorRecord> records);
-        Task<IEnumerable<SearchResult>> SearchAsync(float[] queryVector, int topK);
+        Task<IEnumerable<SearchResult>> SearchAsync(ReadOnlyMemory<float> queryVector, int topK);
         Task DeleteByVersionAsync(string unityVersion);
     }
 }

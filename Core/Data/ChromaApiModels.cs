@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace UnityIntelligenceMCP.Core.Data
 {
     // For /api/v1/collections
-    public record CreateCollectionRequest(string Name);
+    // public record CreateCollectionRequest(string Name);
 
     // For /api/v1/collections/{name}/add
     public record AddEmbeddingsRequest
@@ -13,7 +13,7 @@ namespace UnityIntelligenceMCP.Core.Data
         public List<string> Ids { get; init; } = new();
 
         [JsonPropertyName("embeddings")]
-        public List<float[]> Embeddings { get; init; } = new();
+        public List<ReadOnlyMemory<float>> Embeddings { get; init; } = new();
 
         [JsonPropertyName("metadatas")]
         public List<Dictionary<string, object>> Metadatas { get; init; } = new();
@@ -23,23 +23,23 @@ namespace UnityIntelligenceMCP.Core.Data
     public record QueryRequest
     {
         [JsonPropertyName("query_embeddings")]
-        public List<float[]> QueryEmbeddings { get; init; } = new();
+        public List<ReadOnlyMemory<float>> QueryEmbeddings { get; init; } = new();
 
         [JsonPropertyName("n_results")]
         public int NResults { get; init; }
     }
 
-    public record QueryResponse
-    {
-        [JsonPropertyName("ids")]
-        public List<List<string>> Ids { get; init; } = new();
+    // public record QueryResponse
+    // {
+    //     [JsonPropertyName("ids")]
+    //     public List<List<string>> Ids { get; init; } = new();
 
-        [JsonPropertyName("distances")]
-        public List<List<float>> Distances { get; init; } = new();
+    //     [JsonPropertyName("distances")]
+    //     public List<List<float>> Distances { get; init; } = new();
 
-        [JsonPropertyName("metadatas")]
-        public List<List<Dictionary<string, object>>> Metadatas { get; init; } = new();
-    }
+    //     [JsonPropertyName("metadatas")]
+    //     public List<List<Dictionary<string, object>>> Metadatas { get; init; } = new();
+    // }
     
     // For /api/v1/collections/{name}/delete
     public record DeleteRequest(

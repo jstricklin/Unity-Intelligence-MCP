@@ -47,6 +47,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 {
                     if (string.IsNullOrWhiteSpace(element.Content)) continue;
 
+                    // TODO remove embedding from this model since Chroma will handle this
                     var embedding = await _embeddingService.EmbedAsync(element.Content);
                     var metadata = new Dictionary<string, object>
                     {

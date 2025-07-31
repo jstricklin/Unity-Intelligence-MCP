@@ -66,7 +66,7 @@ namespace UnityIntelligenceMCP.Extensions
             var db = provider.GetRequiredService<IApplicationDatabase>();
             await db.InitializeDatabaseAsync();
             var vectorDb = provider.GetRequiredService<IVectorRepository>();
-            await vectorDb.InitializeAsync();
+            await vectorDb.InitializeChromaDbAsync();
             
             // Index documentation if it's not already present for the current version
             var configService = provider.GetRequiredService<ConfigurationService>();
