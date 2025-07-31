@@ -81,11 +81,11 @@ namespace UnityIntelligenceMCP.Core.Data
 
             return resultsForFirstQuery.Select(entry => new SearchResult
             {
-                Title = entry.Metadata.GetValueOrDefault("title", string.Empty)?.ToString() ?? string.Empty,
-                Content = entry.Metadata.GetValueOrDefault("content", string.Empty)?.ToString() ?? string.Empty,
-                ElementType = entry.Metadata.GetValueOrDefault("element_type", string.Empty)?.ToString() ?? string.Empty,
-                ClassName = entry.Metadata.GetValueOrDefault("class_name", string.Empty)?.ToString() ?? string.Empty,
-                Similarity = 1 - (entry.Distance ?? 1.0f)
+                Title = entry.Metadata?.GetValueOrDefault("title", string.Empty)?.ToString() ?? string.Empty,
+                Content = entry.Metadata?.GetValueOrDefault("content", string.Empty)?.ToString() ?? string.Empty,
+                ElementType = entry.Metadata?.GetValueOrDefault("element_type", string.Empty)?.ToString() ?? string.Empty,
+                ClassName = entry.Metadata?.GetValueOrDefault("class_name", string.Empty)?.ToString() ?? string.Empty,
+                Similarity = 1 - entry.Distance
             }).ToList();
         }
 
