@@ -31,6 +31,13 @@ namespace UnityIntelligenceMCP.Core.Data
             await connection.OpenAsync();
 
             var command = connection.CreateCommand();
+
+            // Prep DuckDB with Vector Similarity Search extensions
+            command.CommandText = "INSTALL vss;";
+            await command.ExecuteNonQueryAsync();
+            command.CommandText = "LOAD vss;";
+            await command.ExecuteNonQueryAsync();
+
             command.CommandText = SchemaV1;
             await command.ExecuteNonQueryAsync();
 
