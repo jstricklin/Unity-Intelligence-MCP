@@ -2,6 +2,7 @@ using DuckDB.NET.Data;
 using System;
 using System.Data.Common;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace UnityIntelligenceMCP.Core.Data
@@ -20,38 +21,80 @@ namespace UnityIntelligenceMCP.Core.Data
 
         public async Task InitializeDatabaseAsync(string unityVersion)
         {
-            if (_isInitialized || File.Exists(_databasePath))
-            {
-                _isInitialized = true;
-                return;
-            }
+            if (_isInitialized) return;
 
-            Console.Error.WriteLine("[Database] Initializing new DuckDB application database...");
             await using var connection = new DuckDBConnection($"DataSource = {GetConnectionString()}");
             await connection.OpenAsync();
-
             var command = connection.CreateCommand();
 
-            // Prep DuckDB with Vector Similarity Search extensions
-            command.CommandText = @"INSTALL vss;";
-            await command.ExecuteNonQueryAsync();
-            command.CommandText = @"LOAD vss;";
-            await command.ExecuteNonQueryAsync();
-            command.CommandText = @"SET hnsw_enable_experimental_persistence = true;";
-            await command.ExecuteNonQueryAsync();
+            try
+            {
+                // Install and load VSS
+                command.CommandText = "INSTALL vss;";
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = "LOAD vss;";
+                await command.ExecuteNonQueryAsync();
 
-            command.CommandText = SchemaV1;
-            await command.ExecuteNonQueryAsync();
+                // Verify VSS loaded
+                command.CommandText = @"
+            SELECT COUNT(*) 
+            FROM duckdb_extensions() 
+            WHERE extension_name = 'vss'";
+                var vssCount = (long)await command.ExecuteScalarAsync();
+                if (vssCount == 0)
+                {
+                    throw new InvalidOperationException("VSS extension failed to load");
+                }
 
-            command.CommandText = String.Format(InitialData, unityVersion);
-            await command.ExecuteNonQueryAsync();
-            
-            _isInitialized = true;
-            Console.Error.WriteLine("[Database] Database initialized successfully.");
+                // Enable experimental persistence
+                command.CommandText = "SET hnsw_enable_experimental_persistence = true;";
+                await command.ExecuteNonQueryAsync();
+
+                // Execute base schema in sequence
+                command.CommandText = SchemaBaseTables;
+                await command.ExecuteNonQueryAsync();
+
+                command.CommandText = SchemaStandardIndexes;
+                await command.ExecuteNonQueryAsync();
+
+                command.CommandText = SchemaViews;
+                await command.ExecuteNonQueryAsync();
+
+                // Process HNSW indexes individually
+                var hnswIndexCommands = SchemaHnswIndexes.Split(
+                    new[] { ';' },
+                    StringSplitOptions.RemoveEmptyEntries
+                );
+
+                foreach (var sql in hnswIndexCommands.Where(s => !string.IsNullOrWhiteSpace(s)))
+                {
+                    try
+                    {
+                        command.CommandText = sql;
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[HNSW Index Error] Command: {sql}");
+                        Console.WriteLine($"[HNSW Index Error] {ex.Message}");
+                    }
+                }
+
+                // Insert initial data with actual Unity version
+                command.CommandText = string.Format(InitialData, unityVersion);
+                await command.ExecuteNonQueryAsync();
+
+                _isInitialized = true;
+                Console.Error.WriteLine("[Database] Initialized successfully with VSS support");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[Database Init Failed] {ex}");
+                throw;
+            }
         }
 
-        private const string SchemaV1 = @"
-            -- Source registry for different documentation types
+        private const string SchemaBaseTables = @"
             CREATE SEQUENCE doc_sources_id_seq START 1;
             CREATE TABLE doc_sources (
                 id BIGINT PRIMARY KEY DEFAULT nextval('doc_sources_id_seq'),
@@ -63,7 +106,6 @@ namespace UnityIntelligenceMCP.Core.Data
                 last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
-            -- Universal document container
             CREATE SEQUENCE unity_docs_id_seq START 1;
             CREATE TABLE unity_docs (
                 id BIGINT PRIMARY KEY DEFAULT nextval('unity_docs_id_seq'),
@@ -75,12 +117,11 @@ namespace UnityIntelligenceMCP.Core.Data
                 category VARCHAR,
                 unity_version VARCHAR,
                 content_hash VARCHAR,
-                embedding FLOAT[384],
+                description_embedding FLOAT[384],
                 FOREIGN KEY (source_id) REFERENCES doc_sources (id),
                 UNIQUE(source_id, doc_key)
             );
 
-            -- Source-specific structured data (JSON for flexibility)
             CREATE SEQUENCE doc_metadata_id_seq START 1;
             CREATE TABLE doc_metadata (
                 id BIGINT PRIMARY KEY DEFAULT nextval('doc_metadata_id_seq'),
@@ -91,7 +132,6 @@ namespace UnityIntelligenceMCP.Core.Data
                 UNIQUE(doc_id, metadata_type)
             );
 
-            -- Flexible content elements
             CREATE SEQUENCE content_elements_id_seq START 1;
             CREATE TABLE content_elements (
                 id BIGINT PRIMARY KEY DEFAULT nextval('content_elements_id_seq'),
@@ -104,7 +144,6 @@ namespace UnityIntelligenceMCP.Core.Data
                 FOREIGN KEY (doc_id) REFERENCES unity_docs (id)
             );
 
-            -- Cross-document relationships
             CREATE SEQUENCE doc_relationships_id_seq START 1;
             CREATE TABLE doc_relationships (
                 id BIGINT PRIMARY KEY DEFAULT nextval('doc_relationships_id_seq'),
@@ -115,15 +154,20 @@ namespace UnityIntelligenceMCP.Core.Data
                 FOREIGN KEY (target_doc_id) REFERENCES unity_docs (id),
                 UNIQUE(source_doc_id, target_doc_id, relationship_type)
             );
+        ";
 
-            -- Performance indices
+        private const string SchemaStandardIndexes = @"
             CREATE INDEX idx_docs_source_type ON unity_docs(source_id, doc_type);
             CREATE INDEX idx_elements_doc_type ON content_elements(doc_id, element_type);
             CREATE INDEX idx_metadata_doc ON doc_metadata(doc_id);
-            CREATE INDEX idx_unity_docs_embedding ON unity_docs USING HNSW (embedding);
-            CREATE INDEX idx_content_embedding ON content_elements USING HNSW (embedding);
+        ";
 
-            -- Source-specific views for common queries
+        private const string SchemaHnswIndexes = @"
+            CREATE INDEX idx_unity_docs_embedding ON unity_docs USING HNSW (description_embedding);
+            CREATE INDEX idx_content_elements_embedding ON content_elements USING HNSW (embedding);
+        ";
+
+        private const string SchemaViews = @"
             CREATE VIEW scripting_api_docs AS
             SELECT 
                 d.id,
@@ -153,7 +197,6 @@ namespace UnityIntelligenceMCP.Core.Data
             WHERE s.source_type = 'scripting_api'
             AND ce.element_type IN ('property', 'public_method', 'static_method', 'message');
         ";
-// TODO make this variable to user's actual unity version
         private const string InitialData = @"
             INSERT INTO doc_sources (id, source_type, source_name, version, schema_version) VALUES
             (1, 'scripting_api', 'Unity Scripting API', '{0}', '1.0'),
