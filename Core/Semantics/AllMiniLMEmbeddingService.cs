@@ -9,22 +9,35 @@ namespace UnityIntelligenceMCP.Core.Semantics
     public class AllMiniLMEmbeddingService : IEmbeddingService, IDisposable
     {
         private readonly AllMiniLmL6V2Embedder _embedder;
+        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
 
         public AllMiniLMEmbeddingService()
         {
             _embedder = new AllMiniLmL6V2Embedder();
         }
 
-        public Task<float[]> EmbedAsync(string text)
+        public async Task<float[]> EmbedAsync(string text)
         {
-            var embedding = _embedder.GenerateEmbedding(text).ToArray();
-            return Task.FromResult(embedding);
+            await _lock.WaitAsync();
+            try {
+                var embedding = _embedder.GenerateEmbedding(text).ToArray();
+                return await Task.FromResult(embedding);
+            }
+            finally {
+                _lock.Release();
+            }
         }
 
-        public Task<IEnumerable<float[]>> EmbedAsync(List<string> texts)
+        public async Task<IEnumerable<float[]>> EmbedAsync(List<string> texts)
         {
-            var embeddings = _embedder.GenerateEmbeddings(texts).Select(e => e.ToArray());
-            return Task.FromResult(embeddings);
+            await _lock.WaitAsync();
+            try {
+                var embeddings = _embedder.GenerateEmbeddings(texts).Select(e => e.ToArray());
+                return await Task.FromResult(embeddings);
+            }
+            finally {
+                _lock.Release();
+            }
         }
 
         public void Dispose()

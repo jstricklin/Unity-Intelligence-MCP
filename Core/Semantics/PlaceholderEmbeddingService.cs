@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.Extensions.AI;
 
 namespace UnityIntelligenceMCP.Core.Semantics
 {
@@ -12,6 +13,17 @@ namespace UnityIntelligenceMCP.Core.Semantics
             // In a real implementation, this would call an embedding model.
             var embedding = new float[EmbeddingSize];
             return Task.FromResult(embedding);
+        }
+
+        public Task<IEnumerable<float[]>> EmbedAsync(List<string> texts)
+        {
+            var embedding = new float[EmbeddingSize];
+            IEnumerable<float[]> embeddings = new List<float[]>();
+            foreach (var text in texts)
+            {
+                embeddings = embeddings.Append(embedding);
+            }
+            return Task.FromResult(embeddings);
         }
     }
 }

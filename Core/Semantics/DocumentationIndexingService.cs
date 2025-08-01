@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.AI;
 using UnityIntelligenceMCP.Core.Data;
 using UnityIntelligenceMCP.Core.Data.Contracts;
 using UnityIntelligenceMCP.Core.IO;
@@ -98,10 +99,19 @@ namespace UnityIntelligenceMCP.Core.Semantics
             // Phase 1: Parse all files and collect their chunks
             var allChunksWithPaths = new List<(string FilePath, DocumentChunk Chunk)>();
             Console.Error.WriteLine("[INFO] Phase 1: Parsing and chunking all documents...");
+
+            int fileCount = htmlFiles.Count();
+            int index = 0;
+
             foreach (var filePath in htmlFiles)
             {
                 try
                 {
+                    index++;
+                    if (index % 3000 == 0)
+                    {
+                        Console.Error.WriteLine($"[INFO] Parsing {(int)(((float)index / fileCount) * 100)}% complete.");
+                    }
                     var parsedData = _parser.Parse(filePath);
                     parsedData.UnityVersion = unityVersion;
                     var chunks = _chunker.ChunkDocument(parsedData);
@@ -118,25 +128,50 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
             // Phase 2: Batch embed all chunk texts in a single operation
             Console.Error.WriteLine($"[INFO] Phase 2: Generating embeddings for {allChunksWithPaths.Count} chunks...");
+            int batchSize = 256;
             var chunkTexts = allChunksWithPaths.Select(c => c.Chunk.Text).ToList();
-            if (chunkTexts.Any())
+            index = 0;
+            foreach (var embedding in (await Task.WhenAll(chunkTexts.Chunk(batchSize)
+                .Select(async batch => {
+                    Console.Error.WriteLine($"[INFO] processing batch...");
+                    var descriptions = batch.ToList();
+                    return await _embeddingService.EmbedAsync(descriptions);
+                })
+            )).SelectMany(c => c))
             {
-                var embeddings = (await _embeddingService.EmbedAsync(chunkTexts)).ToList();
-                // Assign embeddings back to their respective chunks
-                for (int i = 0; i < allChunksWithPaths.Count; i++)
-                {
-                    allChunksWithPaths[i].Chunk.Embedding = embeddings[i];
-                }
+                allChunksWithPaths[index].Chunk.Embedding = embedding;
+                index++;
             }
+            // var chunkTexts = allChunksWithPaths.Select(c => c.Chunk.Text).ToList();
+            // if (chunkTexts.Any())
+            // {
+            //     if (index % 10000 == 0)
+            //     {
+            //         Console.Error.WriteLine($"[INFO] Embedding {(int)(((float)index / chunkTexts.Count()) * 100)}% complete.");
+            //     }
+            //     var embeddings = (await _embeddingService.EmbedAsync(chunkTexts)).ToList();
+            //     Console.Error.WriteLine($"[INFO] Embedding check {allChunksWithPaths.Count}.");
+            //     // Assign embeddings back to their respective chunks
+            //     for (int i = 0; i < allChunksWithPaths.Count; i++)
+            //     {
+            //         allChunksWithPaths[i].Chunk.Embedding = embeddings[i];
+            //     }
+            // }
 
             // Phase 3: Group chunks by file and enqueue for database insertion
             Console.Error.WriteLine("[INFO] Phase 3: Enqueuing processed documents for database insertion...");
+            index = 0;
             var chunksGroupedByFile = allChunksWithPaths.GroupBy(c => c.FilePath, c => c.Chunk);
 
             foreach (var docGroup in chunksGroupedByFile)
             {
                 try
                 {
+                    index++;
+                    if (index % 10000 == 0)
+                    {
+                        Console.Error.WriteLine($"[INFO] Enqueueing for Database insertion {(int)(((float)index / chunkTexts.Count()) * 100)}% complete.");
+                    }
                     var parsedData = _parser.Parse(docGroup.Key);
                     parsedData.UnityVersion = unityVersion;
 
