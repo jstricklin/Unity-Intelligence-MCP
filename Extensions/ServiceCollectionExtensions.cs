@@ -8,6 +8,8 @@ using UnityIntelligenceMCP.Core.Analysis.Patterns;
 using UnityIntelligenceMCP.Core.Analysis.Project;
 using UnityIntelligenceMCP.Core.Analysis.Relationships;
 using UnityIntelligenceMCP.Core.Data;
+using UnityIntelligenceMCP.Core.Data.Contracts;
+using UnityIntelligenceMCP.Core.Data.Infrastructure;
 using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Core.RoslynServices;
 using UnityIntelligenceMCP.Core.Semantics;
@@ -39,6 +41,7 @@ namespace UnityIntelligenceMCP.Extensions
 
             // New Semantic Search and Documentation Services
             services.AddSingleton<IApplicationDatabase, DuckDbApplicationDatabase>();
+            services.AddSingleton<IDuckDbConnectionFactory, DuckDbConnectionFactory>();
             services.AddSingleton<IDocumentationRepository, DocumentationRepository>();
             services.AddSingleton<IDbWorkQueue, DbWorkQueue>();
             services.AddHostedService<QueuedDbWriterService>();

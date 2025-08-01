@@ -29,57 +29,30 @@ namespace UnityIntelligenceMCP.Core.Data
 
             try
             {
-                // Install and load VSS
-                command.CommandText = "INSTALL vss;";
+                command.CommandText = "INSTALL vss; LOAD vss;";
                 await command.ExecuteNonQueryAsync();
-                command.CommandText = "LOAD vss;";
-                await command.ExecuteNonQueryAsync();
+                Console.WriteLine("[VSS] Loaded");
 
-                // Verify VSS loaded
-                command.CommandText = @"
-            SELECT COUNT(*) 
-            FROM duckdb_extensions() 
-            WHERE extension_name = 'vss' AND installed = true AND loaded = true;";
-                var vssCount = (long)await command.ExecuteScalarAsync();
-                if (vssCount == 0)
-                {
-                    throw new InvalidOperationException("VSS extension failed to load");
-                }
-
-                // Enable experimental persistence
-                command.CommandText = "SET hnsw_enable_experimental_persistence = true;";
-                await command.ExecuteNonQueryAsync();
-
-                // Execute base schema in sequence
+                // Create tables
                 command.CommandText = SchemaBaseTables;
                 await command.ExecuteNonQueryAsync();
 
+                // Create VSS-validated connection for HNSW indexes
+                await using (var vssConn = await GetVssConnectionAsync())
+                {
+                    await using var vssCmd = vssConn.CreateCommand();
+                    vssCmd.CommandText = SchemaHnswIndexes;
+                    await vssCmd.ExecuteNonQueryAsync();
+                    Console.WriteLine("[HNSW] Created indexes using VSS connection");
+                }
+
+                // Create standard indexes and views
                 command.CommandText = SchemaStandardIndexes;
                 await command.ExecuteNonQueryAsync();
 
                 command.CommandText = SchemaViews;
                 await command.ExecuteNonQueryAsync();
-
-                // Process HNSW indexes individually
-                var hnswIndexCommands = SchemaHnswIndexes.Split(
-                    new[] { ';' },
-                    StringSplitOptions.RemoveEmptyEntries
-                );
-
-                foreach (var sql in hnswIndexCommands.Where(s => !string.IsNullOrWhiteSpace(s)))
-                {
-                    try
-                    {
-                        command.CommandText = sql;
-                        await command.ExecuteNonQueryAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[HNSW Index Error] Command: {sql}");
-                        Console.WriteLine($"[HNSW Index Error] {ex.Message}");
-                    }
-                }
-
+                
                 // Insert initial data with actual Unity version
                 command.CommandText = string.Format(InitialData, unityVersion);
                 await command.ExecuteNonQueryAsync();
@@ -203,5 +176,18 @@ namespace UnityIntelligenceMCP.Core.Data
             (2, 'editor_manual', 'Unity User Manual', '{0}', '1.0'),
             (3, 'tutorial', 'Unity Learn Tutorials', 'current', '1.0');
         ";
+        
+        private async Task<DuckDBConnection> GetVssConnectionAsync()
+        {
+            var connection = new DuckDBConnection($"DataSource = {GetConnectionString()}");
+            await connection.OpenAsync();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+                LOAD vss;
+                SET hnsw_enable_experimental_persistence = true;
+                SET enable_progress_bar = false;";
+            await cmd.ExecuteNonQueryAsync();
+            return connection;
+        }
     }
 }
