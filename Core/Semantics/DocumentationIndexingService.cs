@@ -96,91 +96,68 @@ namespace UnityIntelligenceMCP.Core.Semantics
             var stopwatch = Stopwatch.StartNew();
             var htmlFiles = Directory.EnumerateFiles(docPath, "*.html", SearchOption.AllDirectories);
 
-            // Phase 1: Parse all files and collect their chunks
-            var allChunksWithPaths = new List<(string FilePath, DocumentChunk Chunk)>();
-            Console.Error.WriteLine("[INFO] Phase 1: Parsing and chunking all documents...");
-
-            int fileCount = htmlFiles.Count();
-            int index = 0;
+            // Phase 1: Parse all documents and collect all texts to be embedded.
+            Console.Error.WriteLine("[INFO] Phase 1: Parsing and collecting all texts...");
+            var parsedDocs = new List<UnityDocumentationData>();
+            var allChunkLists = new List<List<DocumentChunk>>();
+            var allTextsToEmbed = new List<string>();
 
             foreach (var filePath in htmlFiles)
             {
                 try
                 {
-                    index++;
-                    if (index % 3000 == 0)
-                    {
-                        Console.Error.WriteLine($"[INFO] Parsing {(int)(((float)index / fileCount) * 100)}% complete.");
-                    }
                     var parsedData = _parser.Parse(filePath);
                     parsedData.UnityVersion = unityVersion;
                     var chunks = _chunker.ChunkDocument(parsedData);
-                    foreach (var chunk in chunks)
-                    {
-                        allChunksWithPaths.Add((filePath, chunk));
-                    }
+
+                    parsedDocs.Add(parsedData);
+                    allChunkLists.Add(chunks);
+                    allTextsToEmbed.Add(parsedData.Description);
+                    allTextsToEmbed.AddRange(chunks.Select(c => c.Text));
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"[ERROR] Failed to parse and chunk {filePath}: {ex.Message}");
+                    Console.Error.WriteLine($"[ERROR] Failed to parse {filePath}: {ex.Message}");
                 }
             }
-
-            // Phase 2: Batch embed all chunk texts in a single operation
-            Console.Error.WriteLine($"[INFO] Phase 2: Generating embeddings for {allChunksWithPaths.Count} chunks...");
-            int batchSize = 256;
-            var chunkTexts = allChunksWithPaths.Select(c => c.Chunk.Text).ToList();
-            index = 0;
-            foreach (var embedding in (await Task.WhenAll(chunkTexts.Chunk(batchSize)
-                .Select(async batch => {
-                    Console.Error.WriteLine($"[INFO] processing batch...");
-                    var descriptions = batch.ToList();
-                    return await _embeddingService.EmbedAsync(descriptions);
-                })
-            )).SelectMany(c => c))
+            
+            // Phase 2: Run a single, consolidated batch embedding operation sequentially.
+            Console.Error.WriteLine($"[INFO] Phase 2: Generating embeddings for {parsedDocs.Count} documents and their chunks ({allTextsToEmbed.Count} total texts)...");
+            var allEmbeddings = new List<float[]>(allTextsToEmbed.Count);
+            if (allTextsToEmbed.Any())
             {
-                allChunksWithPaths[index].Chunk.Embedding = embedding;
-                index++;
+                int batchSize = 256;
+                foreach (var batch in allTextsToEmbed.Chunk(batchSize))
+                {
+                    Console.Error.WriteLine($"[INFO] Processing a batch of {batch.Length} embeddings...");
+                    var embeddingsInBatch = await _embeddingService.EmbedAsync(batch.ToList());
+                    allEmbeddings.AddRange(embeddingsInBatch);
+                }
             }
-            // var chunkTexts = allChunksWithPaths.Select(c => c.Chunk.Text).ToList();
-            // if (chunkTexts.Any())
-            // {
-            //     if (index % 10000 == 0)
-            //     {
-            //         Console.Error.WriteLine($"[INFO] Embedding {(int)(((float)index / chunkTexts.Count()) * 100)}% complete.");
-            //     }
-            //     var embeddings = (await _embeddingService.EmbedAsync(chunkTexts)).ToList();
-            //     Console.Error.WriteLine($"[INFO] Embedding check {allChunksWithPaths.Count}.");
-            //     // Assign embeddings back to their respective chunks
-            //     for (int i = 0; i < allChunksWithPaths.Count; i++)
-            //     {
-            //         allChunksWithPaths[i].Chunk.Embedding = embeddings[i];
-            //     }
-            // }
-
-            // Phase 3: Group chunks by file and enqueue for database insertion
+            
+            // Distribute the generated embeddings back to the original data objects.
+            int embeddingIndex = 0;
+            for (int i = 0; i < parsedDocs.Count; i++)
+            {
+                parsedDocs[i].Embedding = allEmbeddings[embeddingIndex++];
+                foreach (var chunk in allChunkLists[i])
+                {
+                    chunk.Embedding = allEmbeddings[embeddingIndex++];
+                }
+            }
+            
+            // Phase 3: Enqueue documents with pre-computed embeddings.
             Console.Error.WriteLine("[INFO] Phase 3: Enqueuing processed documents for database insertion...");
-            index = 0;
-            var chunksGroupedByFile = allChunksWithPaths.GroupBy(c => c.FilePath, c => c.Chunk);
-
-            foreach (var docGroup in chunksGroupedByFile)
+            for (int i = 0; i < parsedDocs.Count; i++)
             {
                 try
                 {
-                    index++;
-                    if (index % 10000 == 0)
-                    {
-                        Console.Error.WriteLine($"[INFO] Enqueueing for Database insertion {(int)(((float)index / chunkTexts.Count()) * 100)}% complete.");
-                    }
-                    var parsedData = _parser.Parse(docGroup.Key);
-                    parsedData.UnityVersion = unityVersion;
-
-                    var source = new UnityDocumentationSource(parsedData, _chunker, docGroup.ToList());
+                    var source = new UnityDocumentationSource(parsedDocs[i], _chunker, allChunkLists[i]);
                     await _orchestrationService.ProcessAndStoreSourceAsync(source);
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"[ERROR] Failed to create and process source for {docGroup.Key}: {ex.Message}");
+                    Console.Error.WriteLine($"[ERROR] Failed to create and process source for {parsedDocs[i].FilePath}: {ex.Message}");
                 }
             }
             

@@ -19,6 +19,7 @@ namespace UnityIntelligenceMCP.Models.Documentation
         public List<DocumentationLink> InheritedPublicMethods { get; set; } = new();
         public List<DocumentationLink> InheritedStaticMethods { get; set; } = new();
         public List<DocumentationLink> InheritedOperators { get; set; } = new();
+        public float[]? Embedding { get; set; }
     }
 
     public class DocumentationLink

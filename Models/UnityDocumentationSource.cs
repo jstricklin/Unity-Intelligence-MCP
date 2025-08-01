@@ -26,7 +26,7 @@ namespace UnityIntelligenceMCP.Models
             _preEmbeddedChunks = preEmbeddedChunks;
         }
 
-        public async Task<SemanticDocumentRecord> ToSemanticRecordAsync(IEmbeddingService _embeddingService)
+        public Task<SemanticDocumentRecord> ToSemanticRecordAsync(IEmbeddingService _embeddingService)
         {
             // If pre-embedded chunks aren't provided, chunk the document now as a fallback.
             var chunks = _preEmbeddedChunks ?? _chunker.ChunkDocument(_data);
@@ -41,7 +41,7 @@ namespace UnityIntelligenceMCP.Models
                 Category = "Scripting API",
                 UnityVersion = _data.UnityVersion,
                 ContentHash = ComputeContentHash(),
-                Embedding = await _embeddingService.EmbedAsync(_data.Description),
+                Embedding = _data.Embedding, // Use the pre-computed embedding.
                 Metadata = new List<DocMetadata>
                 {
                     new()
@@ -52,7 +52,7 @@ namespace UnityIntelligenceMCP.Models
                 },
                 Elements = elements
             };
-            return record;
+            return Task.FromResult(record);
         }
 
         private List<ContentElement> CreateContentElementsFromChunks(IReadOnlyList<DocumentChunk> chunks)
