@@ -11,7 +11,15 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
     public class DuckDbApplicationDatabase : IApplicationDatabase
     {
         private readonly string _databasePath;
-        private static bool _isInitialized = false;
+        private readonly SemaphoreSlim _schemaLock = new(1, 1);
+        private static readonly HashSet<string> _requiredSchemaObjects = new()
+        {
+            "doc_sources", "unity_docs", "doc_metadata",
+            "content_elements", "doc_relationships",
+            "doc_sources_id_seq", "unity_docs_id_seq",
+            "doc_metadata_id_seq", "content_elements_id_seq",
+            "doc_relationships_id_seq"
+        };
 
         public DuckDbApplicationDatabase(string databasePath = "application.duckdb")
         {
@@ -22,49 +30,23 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 
         public async Task InitializeDatabaseAsync(string unityVersion)
         {
-            if (_isInitialized) return;
-
-            await using var connection = new DuckDBConnection($"DataSource = {GetConnectionString()}");
-            await connection.OpenAsync();
-            var command = connection.CreateCommand();
-
+            await _schemaLock.WaitAsync();
             try
             {
-                command.CommandText = "INSTALL vss; LOAD vss; SET hnsw_enable_experimental_persistence = true;";
-                await command.ExecuteNonQueryAsync();
-                Console.Error.WriteLine("[VSS] Loaded");
-
-                // Create tables
-                command.CommandText = SchemaBaseTables;
-                await command.ExecuteNonQueryAsync();
-
-                // Create VSS-validated connection for HNSW indexes
-                await using (var vssConn = await GetVssConnectionAsync())
+                await using var connection = new DuckDBConnection($"DataSource = {GetConnectionString()}");
+                await connection.OpenAsync();
+                
+                if (await IsSchemaInitializedAsync(connection))
                 {
-                    await using var vssCmd = vssConn.CreateCommand();
-                    vssCmd.CommandText = SchemaHnswIndexes;
-                    await vssCmd.ExecuteNonQueryAsync();
-                    Console.Error.WriteLine("[HNSW] Created indexes using VSS connection");
+                    Console.Error.WriteLine("[Database] Schema is already initialized - skipping initialization");
+                    return;
                 }
 
-                // Create standard indexes and views
-                command.CommandText = SchemaStandardIndexes;
-                await command.ExecuteNonQueryAsync();
-
-                command.CommandText = SchemaViews;
-                await command.ExecuteNonQueryAsync();
-                
-                // Insert initial data with actual Unity version
-                command.CommandText = string.Format(InitialData, unityVersion);
-                await command.ExecuteNonQueryAsync();
-
-                _isInitialized = true;
-                Console.Error.WriteLine("[Database] Initialized successfully with VSS support");
+                await InitializeSchemaTransactionallyAsync(connection, unityVersion);
             }
-            catch (Exception ex)
+            finally
             {
-                Console.Error.WriteLine($"[Database Init Failed] {ex}");
-                throw;
+                _schemaLock.Release();
             }
         }
 
