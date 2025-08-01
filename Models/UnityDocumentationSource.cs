@@ -23,10 +23,10 @@ namespace UnityIntelligenceMCP.Models
             _chunker = chunker;
         }
 
-        public Task<SemanticDocumentRecord> ToSemanticRecordAsync(IEmbeddingService _embeddingService)
+        public async Task<SemanticDocumentRecord> ToSemanticRecordAsync(IEmbeddingService _embeddingService)
         {
             var chunks = _chunker.ChunkDocument(_data);
-            var elements = CreateContentElementsFromChunks(chunks);
+            var elements = CreateContentElementsFromChunks(chunks, _embeddingService);
 
             var record = new SemanticDocumentRecord
             {
@@ -37,20 +37,21 @@ namespace UnityIntelligenceMCP.Models
                 Category = "Scripting API",
                 UnityVersion = _data.UnityVersion,
                 ContentHash = ComputeContentHash(),
+                Embedding = await _embeddingService.EmbedAsync(_data.Description),
                 Metadata = new List<DocMetadata>
-                {
-                    new()
                     {
-                        MetadataType = "scripting_api",
-                        MetadataJson = JsonSerializer.Serialize(new { inherits = _data.InheritsFrom?.Title })
-                    }
-                },
-                Elements = elements
+                        new()
+                        {
+                            MetadataType = "scripting_api",
+                            MetadataJson = JsonSerializer.Serialize(new { inherits = _data.InheritsFrom?.Title })
+                        }
+                    },
+                Elements = await elements
             };
-            return Task.FromResult(record);
+            return await Task.FromResult(record);
         }
 
-        private List<ContentElement> CreateContentElementsFromChunks(List<DocumentChunk> chunks)
+        private async Task<List<ContentElement>> CreateContentElementsFromChunks(List<DocumentChunk> chunks, IEmbeddingService _embeddingService)
         {
             var elements = new List<ContentElement>();
             foreach (var chunk in chunks)
@@ -60,6 +61,7 @@ namespace UnityIntelligenceMCP.Models
                     ElementType = chunk.Section,
                     Title = chunk.Title,
                     Content = chunk.Text,
+                    Embedding = await _embeddingService.EmbedAsync(_data.Description),
                     AttributesJson = JsonSerializer.Serialize(new
                     {
                         chunkIndex = chunk.Index,
@@ -68,7 +70,7 @@ namespace UnityIntelligenceMCP.Models
                     })
                 });
             }
-            return elements;
+            return await Task.FromResult(elements);
         }
         
         private string ComputeContentHash()

@@ -4,7 +4,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
 {
     public class PlaceholderEmbeddingService : IEmbeddingService
     {
-        private const int EmbeddingSize = 768;
+        private const int EmbeddingSize = 384;
 
         public Task<float[]> EmbedAsync(string text)
         {

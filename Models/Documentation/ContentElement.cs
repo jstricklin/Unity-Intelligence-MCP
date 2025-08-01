@@ -7,7 +7,7 @@ namespace UnityIntelligenceMCP.Models.Documentation
         public string ElementType { get; set; } = string.Empty;
         public string? Title { get; set; }
         public string? Content { get; set; }
-        public ReadOnlyMemory<float>? ElementEmbedding { get; set; }
+        public float[]? Embedding { get; set; }
         public string? AttributesJson { get; set; }
     }
 }

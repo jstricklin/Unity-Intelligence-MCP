@@ -31,7 +31,7 @@ namespace UnityIntelligenceMCP.Core.Data
             {
                 command.CommandText = "INSTALL vss; LOAD vss; SET hnsw_enable_experimental_persistence = true;";
                 await command.ExecuteNonQueryAsync();
-                Console.WriteLine("[VSS] Loaded");
+                Console.Error.WriteLine("[VSS] Loaded");
 
                 // Create tables
                 command.CommandText = SchemaBaseTables;
@@ -43,7 +43,7 @@ namespace UnityIntelligenceMCP.Core.Data
                     await using var vssCmd = vssConn.CreateCommand();
                     vssCmd.CommandText = SchemaHnswIndexes;
                     await vssCmd.ExecuteNonQueryAsync();
-                    Console.WriteLine("[HNSW] Created indexes using VSS connection");
+                    Console.Error.WriteLine("[HNSW] Created indexes using VSS connection");
                 }
 
                 // Create standard indexes and views
@@ -90,7 +90,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 category VARCHAR,
                 unity_version VARCHAR,
                 content_hash VARCHAR,
-                description_embedding FLOAT[384],
+                embedding FLOAT[384],
                 FOREIGN KEY (source_id) REFERENCES doc_sources (id),
                 UNIQUE(source_id, doc_key)
             );
@@ -136,7 +136,7 @@ namespace UnityIntelligenceMCP.Core.Data
         ";
 
         private const string SchemaHnswIndexes = @"
-            CREATE INDEX idx_unity_docs_embedding ON unity_docs USING HNSW (description_embedding);
+            CREATE INDEX idx_unity_docs_embedding ON unity_docs USING HNSW (embedding);
             CREATE INDEX idx_content_elements_embedding ON content_elements USING HNSW (embedding);
         ";
 

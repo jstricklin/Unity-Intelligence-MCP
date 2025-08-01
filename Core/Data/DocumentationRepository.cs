@@ -30,8 +30,8 @@ namespace UnityIntelligenceMCP.Core.Data
                 var docCommand = connection.CreateCommand();
                 docCommand.Transaction = transaction;
                 docCommand.CommandText = @"
-                INSERT INTO unity_docs (source_id, doc_key, title, url, doc_type, category, unity_version, content_hash)
-                VALUES ((SELECT id FROM doc_sources WHERE source_type = $source_type), $doc_key, $title, $url, $doc_type, $category, $unity_version, $content_hash)
+                INSERT INTO unity_docs (source_id, doc_key, title, url, doc_type, category, unity_version, content_hash, embedding)
+                VALUES ((SELECT id FROM doc_sources WHERE source_type = $source_type), $doc_key, $title, $url, $doc_type, $category, $unity_version, $content_hash, $embedding)
                 RETURNING id;
             ";
 
@@ -43,6 +43,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 docCommand.Parameters.Add(new DuckDBParameter("category", record.Category ?? (object)DBNull.Value));
                 docCommand.Parameters.Add(new DuckDBParameter("unity_version", record.UnityVersion ?? (object)DBNull.Value));
                 docCommand.Parameters.Add(new DuckDBParameter("content_hash", record.ContentHash ?? (object)DBNull.Value));
+                docCommand.Parameters.Add(new DuckDBParameter("embedding", record.Embedding ?? (object)DBNull.Value));
 
                 var docId = Convert.ToInt32(await docCommand.ExecuteScalarAsync(cancellationToken));
 
@@ -67,14 +68,15 @@ namespace UnityIntelligenceMCP.Core.Data
                     var elementCommand = connection.CreateCommand();
                     elementCommand.Transaction = transaction;
                     elementCommand.CommandText = @"
-                    INSERT INTO content_elements (doc_id, element_type, title, content, attributes_json)
-                    VALUES ($doc_id, $element_type, $title, $content, $attributes_json);
+                    INSERT INTO content_elements (doc_id, element_type, title, content, attributes_json, embedding)
+                    VALUES ($doc_id, $element_type, $title, $content, $attributes_json, $embedding);
                 ";
                     elementCommand.Parameters.Add(new DuckDBParameter("doc_id", docId));
                     elementCommand.Parameters.Add(new DuckDBParameter("element_type", element.ElementType));
                     elementCommand.Parameters.Add(new DuckDBParameter("title", element.Title ?? (object)DBNull.Value));
                     elementCommand.Parameters.Add(new DuckDBParameter("content", element.Content ?? (object)DBNull.Value));
                     elementCommand.Parameters.Add(new DuckDBParameter("attributes_json", element.AttributesJson ?? (object)DBNull.Value));
+                    elementCommand.Parameters.Add(new DuckDBParameter("embedding", record.Embedding ?? (object)DBNull.Value));
                     await elementCommand.ExecuteNonQueryAsync(cancellationToken);
                 }
 
@@ -142,6 +144,7 @@ namespace UnityIntelligenceMCP.Core.Data
                                 .AppendValue(record.Category)
                                 .AppendValue(record.UnityVersion)
                                 .AppendValue(record.ContentHash)
+                                .AppendValue(record.Embedding)
                                 .EndRow();
                             docIdIndex++;
                         }
@@ -180,6 +183,7 @@ namespace UnityIntelligenceMCP.Core.Data
                                     .AppendValue(element.Title)
                                     .AppendValue(element.Content)
                                     .AppendValue(element.AttributesJson)
+                                    .AppendValue(record.Embedding)
                                     .EndRow();
                             }
                         }
