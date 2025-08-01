@@ -5,6 +5,6 @@ namespace UnityIntelligenceMCP.Core.Data
     public interface IApplicationDatabase
     {
         string GetConnectionString();
-        Task InitializeDatabaseAsync();
+        Task InitializeDatabaseAsync(string unityVersion);
     }
 }
