@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Core.Data;
+using UnityIntelligenceMCP.Core.Data.Contracts;
 using UnityIntelligenceMCP.Models;
 
 namespace UnityIntelligenceMCP.Core.Semantics

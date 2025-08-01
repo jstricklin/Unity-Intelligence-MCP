@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Core.Semantics;
 using UnityIntelligenceMCP.Models.Documentation;
+using UnityIntelligenceMCP.Models.Database;
 
 namespace UnityIntelligenceMCP.Models
 {

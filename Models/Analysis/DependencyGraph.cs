@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace UnityIntelligenceMCP.Models
+namespace UnityIntelligenceMCP.Models.Analysis
 {
     /// <summary>
     /// Represents the structural dependency graph of a Unity project,

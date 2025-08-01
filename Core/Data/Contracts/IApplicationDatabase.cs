@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace UnityIntelligenceMCP.Core.Data
+namespace UnityIntelligenceMCP.Core.Data.Contracts
 {
     public interface IApplicationDatabase
     {

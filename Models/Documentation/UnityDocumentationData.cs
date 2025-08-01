@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace UnityIntelligenceMCP.Models
+namespace UnityIntelligenceMCP.Models.Documentation
 {
     public class UnityDocumentationData
     {

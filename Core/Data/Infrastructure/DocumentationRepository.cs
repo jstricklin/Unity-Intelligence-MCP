@@ -8,8 +8,9 @@ using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Models.Documentation;
 using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Core.Data.Contracts;
+using UnityIntelligenceMCP.Models.Database;
 
-namespace UnityIntelligenceMCP.Core.Data
+namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 {
     public class DocumentationRepository : IDocumentationRepository
     {

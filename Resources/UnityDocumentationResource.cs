@@ -10,6 +10,7 @@ using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Models;
 using System.Text.Json;
 using UnityIntelligenceMCP.Utilities;
+using UnityIntelligenceMCP.Models.Documentation;
 
 namespace UnityIntelligenceMCP.Resources
 {

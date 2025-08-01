@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
+using UnityIntelligenceMCP.Core.Data.Contracts;
+using UnityIntelligenceMCP.Models.Database;
 using UnityIntelligenceMCP.Models.Documentation;
 
-namespace UnityIntelligenceMCP.Core.Data
+namespace UnityIntelligenceMCP.Core.Data.Services
 {
     public class QueuedDbWriterService : BackgroundService
     {

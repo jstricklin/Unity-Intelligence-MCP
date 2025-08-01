@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Core.Data;
+using UnityIntelligenceMCP.Core.Data.Contracts;
 using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Utilities;

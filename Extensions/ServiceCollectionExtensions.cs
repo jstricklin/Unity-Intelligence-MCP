@@ -7,7 +7,6 @@ using UnityIntelligenceMCP.Core.Analysis.Dependencies;
 using UnityIntelligenceMCP.Core.Analysis.Patterns;
 using UnityIntelligenceMCP.Core.Analysis.Project;
 using UnityIntelligenceMCP.Core.Analysis.Relationships;
-using UnityIntelligenceMCP.Core.Data;
 using UnityIntelligenceMCP.Core.Data.Contracts;
 using UnityIntelligenceMCP.Core.Data.Infrastructure;
 using UnityIntelligenceMCP.Core.IO;
@@ -17,6 +16,7 @@ using UnityIntelligenceMCP.Resources;
 using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Utilities;
 using UnityIntelligenceMCP.Models;
+using UnityIntelligenceMCP.Core.Data.Services;
 
 namespace UnityIntelligenceMCP.Extensions
 {

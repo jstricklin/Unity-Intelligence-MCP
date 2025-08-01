@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityIntelligenceMCP.Models.Analysis;
 
 namespace UnityIntelligenceMCP.Models
 {

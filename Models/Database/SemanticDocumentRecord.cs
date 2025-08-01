@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using UnityIntelligenceMCP.Core.Data;
+using UnityIntelligenceMCP.Core.Data.Contracts;
 
-namespace UnityIntelligenceMCP.Models.Documentation
+namespace UnityIntelligenceMCP.Models.Database
 {
     public class SemanticDocumentRecord : IDbWorkItem
     {

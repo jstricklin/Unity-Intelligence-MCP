@@ -4,8 +4,9 @@ using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using UnityIntelligenceMCP.Core.Data.Contracts;
 
-namespace UnityIntelligenceMCP.Core.Data
+namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 {
     public class DuckDbApplicationDatabase : IApplicationDatabase
     {

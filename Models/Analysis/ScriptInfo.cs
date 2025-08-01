@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace UnityIntelligenceMCP.Models
+namespace UnityIntelligenceMCP.Models.Analysis
 {
     public record ScriptInfo(
         string Path,

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityIntelligenceMCP.Models;
+using UnityIntelligenceMCP.Models.Documentation;
 
 namespace UnityIntelligenceMCP.Utilities
 {

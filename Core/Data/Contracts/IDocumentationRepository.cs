@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Models;
+using UnityIntelligenceMCP.Models.Database;
 using UnityIntelligenceMCP.Models.Documentation;
 
-namespace UnityIntelligenceMCP.Core.Data
+namespace UnityIntelligenceMCP.Core.Data.Contracts
 {
     public interface IDocumentationRepository
     {

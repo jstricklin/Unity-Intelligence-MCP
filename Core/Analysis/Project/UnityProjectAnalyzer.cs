@@ -10,6 +10,7 @@ using UnityIntelligenceMCP.Core.Analysis.Dependencies;
 using UnityIntelligenceMCP.Core.Analysis.Patterns;
 using UnityIntelligenceMCP.Core.Analysis.Relationships;
 using UnityIntelligenceMCP.Core.RoslynServices;
+using UnityIntelligenceMCP.Models.Analysis;
 
 namespace UnityIntelligenceMCP.Core.Analysis.Project
 {

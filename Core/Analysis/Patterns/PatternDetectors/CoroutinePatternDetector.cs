@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections;
+using UnityIntelligenceMCP.Models.Analysis;
 
 namespace UnityIntelligenceMCP.Core.Analysis.Patterns.PatternDetectors
 {

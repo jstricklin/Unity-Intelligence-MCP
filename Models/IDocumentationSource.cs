@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Core.Semantics;
+using UnityIntelligenceMCP.Models.Database;
 using UnityIntelligenceMCP.Models.Documentation;
 
 namespace UnityIntelligenceMCP.Models

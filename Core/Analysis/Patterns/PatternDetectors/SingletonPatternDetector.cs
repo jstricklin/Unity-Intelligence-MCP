@@ -1,6 +1,7 @@
 using UnityIntelligenceMCP.Models;
 using System.Threading.Tasks;
 using System.Threading;
+using UnityIntelligenceMCP.Models.Analysis;
 
 namespace UnityIntelligenceMCP.Core.Analysis.Patterns.PatternDetectors
 {

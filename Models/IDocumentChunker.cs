@@ -1,3 +1,5 @@
+using UnityIntelligenceMCP.Models.Documentation;
+
 namespace UnityIntelligenceMCP.Models
 {
     public interface IDocumentChunker 

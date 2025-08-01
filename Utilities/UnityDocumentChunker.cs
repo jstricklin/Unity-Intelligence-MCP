@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityIntelligenceMCP.Models;
+using UnityIntelligenceMCP.Models.Documentation;
 
 public class UnityDocumentChunker : IDocumentChunker
 {

@@ -1,4 +1,4 @@
-namespace UnityIntelligenceMCP.Models;
+namespace UnityIntelligenceMCP.Models.Resources;
 public class ResourceResult
 {
     public bool IsSuccess { get; }

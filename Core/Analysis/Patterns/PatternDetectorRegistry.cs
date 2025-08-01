@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Core.Analysis.Patterns.PatternDetectors;
+using UnityIntelligenceMCP.Models.Analysis;
 
 namespace UnityIntelligenceMCP.Core.Analysis.Patterns
 {

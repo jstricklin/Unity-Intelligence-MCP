@@ -1,4 +1,4 @@
-namespace UnityIntelligenceMCP.Models.Documentation
+namespace UnityIntelligenceMCP.Models.Database
 {
     public class DocMetadata
     {
