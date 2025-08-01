@@ -18,19 +18,22 @@ namespace UnityIntelligenceMCP.Core.Semantics
         private readonly UnityDocumentationParser _parser;
         private readonly DocumentationOrchestrationService _orchestrationService;
         private readonly IDocumentChunker _chunker;
+        private readonly IEmbeddingService _embeddingService;
 
         public DocumentationIndexingService(
             UnityInstallationService unityInstallationService,
             IDocumentationRepository repository,
             UnityDocumentationParser parser,
             DocumentationOrchestrationService orchestrationService,
-            IDocumentChunker chunker)
+            IDocumentChunker chunker,
+            IEmbeddingService embeddingService)
         {
             _unityInstallationService = unityInstallationService;
             _repository = repository;
             _parser = parser;
             _orchestrationService = orchestrationService;
             _chunker = chunker;
+            _embeddingService = embeddingService;
         }
 
         public async Task IndexDocumentationIfRequiredAsync(string projectPath, bool? forceReindex)
@@ -92,23 +95,59 @@ namespace UnityIntelligenceMCP.Core.Semantics
             var stopwatch = Stopwatch.StartNew();
             var htmlFiles = Directory.EnumerateFiles(docPath, "*.html", SearchOption.AllDirectories);
 
-            var indexingTasks = htmlFiles.Select(async filePath =>
+            // Phase 1: Parse all files and collect their chunks
+            var allChunksWithPaths = new List<(string FilePath, DocumentChunk Chunk)>();
+            Console.Error.WriteLine("[INFO] Phase 1: Parsing and chunking all documents...");
+            foreach (var filePath in htmlFiles)
             {
                 try
                 {
                     var parsedData = _parser.Parse(filePath);
                     parsedData.UnityVersion = unityVersion;
+                    var chunks = _chunker.ChunkDocument(parsedData);
+                    foreach (var chunk in chunks)
+                    {
+                        allChunksWithPaths.Add((filePath, chunk));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"[ERROR] Failed to parse and chunk {filePath}: {ex.Message}");
+                }
+            }
 
-                    var source = new UnityDocumentationSource(parsedData, _chunker);
+            // Phase 2: Batch embed all chunk texts in a single operation
+            Console.Error.WriteLine($"[INFO] Phase 2: Generating embeddings for {allChunksWithPaths.Count} chunks...");
+            var chunkTexts = allChunksWithPaths.Select(c => c.Chunk.Text).ToList();
+            if (chunkTexts.Any())
+            {
+                var embeddings = (await _embeddingService.EmbedAsync(chunkTexts)).ToList();
+                // Assign embeddings back to their respective chunks
+                for (int i = 0; i < allChunksWithPaths.Count; i++)
+                {
+                    allChunksWithPaths[i].Chunk.Embedding = embeddings[i];
+                }
+            }
+
+            // Phase 3: Group chunks by file and enqueue for database insertion
+            Console.Error.WriteLine("[INFO] Phase 3: Enqueuing processed documents for database insertion...");
+            var chunksGroupedByFile = allChunksWithPaths.GroupBy(c => c.FilePath, c => c.Chunk);
+
+            foreach (var docGroup in chunksGroupedByFile)
+            {
+                try
+                {
+                    var parsedData = _parser.Parse(docGroup.Key);
+                    parsedData.UnityVersion = unityVersion;
+
+                    var source = new UnityDocumentationSource(parsedData, _chunker, docGroup.ToList());
                     await _orchestrationService.ProcessAndStoreSourceAsync(source);
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"[ERROR] Failed to process document {filePath}: {ex.Message}");
+                    Console.Error.WriteLine($"[ERROR] Failed to create and process source for {docGroup.Key}: {ex.Message}");
                 }
-            });
-
-            await Task.WhenAll(indexingTasks);
+            }
             
             // Signal to the queue that no more items will be added.
             if (_orchestrationService.TryCompleteQueue())

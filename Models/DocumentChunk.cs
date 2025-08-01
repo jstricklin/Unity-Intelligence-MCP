@@ -8,6 +8,7 @@ namespace UnityIntelligenceMCP.Models
         public string Section { get; set; } = string.Empty;
         public int StartPosition { get; set; }
         public int EndPosition { get; set; }
+        public float[]? Embedding { get; set; }
     }
 
 }

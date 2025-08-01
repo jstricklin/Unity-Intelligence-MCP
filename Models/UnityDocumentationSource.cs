@@ -15,19 +15,22 @@ namespace UnityIntelligenceMCP.Models
     {
         private readonly UnityDocumentationData _data;
         private readonly IDocumentChunker _chunker;
+        private readonly IEnumerable<DocumentChunk>? _preEmbeddedChunks;
 
         public string SourceType => "scripting_api";
 
-        public UnityDocumentationSource(UnityDocumentationData data, IDocumentChunker chunker)
+        public UnityDocumentationSource(UnityDocumentationData data, IDocumentChunker chunker, IEnumerable<DocumentChunk>? preEmbeddedChunks = null)
         {
             _data = data;
             _chunker = chunker;
+            _preEmbeddedChunks = preEmbeddedChunks;
         }
 
         public async Task<SemanticDocumentRecord> ToSemanticRecordAsync(IEmbeddingService _embeddingService)
         {
-            var chunks = _chunker.ChunkDocument(_data);
-            var elements = CreateContentElementsFromChunks(chunks, _embeddingService);
+            // If pre-embedded chunks aren't provided, chunk the document now as a fallback.
+            var chunks = _preEmbeddedChunks ?? _chunker.ChunkDocument(_data);
+            var elements = CreateContentElementsFromChunks(chunks.ToList());
 
             var record = new SemanticDocumentRecord
             {
@@ -40,29 +43,30 @@ namespace UnityIntelligenceMCP.Models
                 ContentHash = ComputeContentHash(),
                 Embedding = await _embeddingService.EmbedAsync(_data.Description),
                 Metadata = new List<DocMetadata>
+                {
+                    new()
                     {
-                        new()
-                        {
-                            MetadataType = "scripting_api",
-                            MetadataJson = JsonSerializer.Serialize(new { inherits = _data.InheritsFrom?.Title })
-                        }
-                    },
-                Elements = await elements
+                        MetadataType = "scripting_api",
+                        MetadataJson = JsonSerializer.Serialize(new { inherits = _data.InheritsFrom?.Title })
+                    }
+                },
+                Elements = elements
             };
-            return await Task.FromResult(record);
+            return record;
         }
 
-        private async Task<List<ContentElement>> CreateContentElementsFromChunks(List<DocumentChunk> chunks, IEmbeddingService _embeddingService)
+        private List<ContentElement> CreateContentElementsFromChunks(IReadOnlyList<DocumentChunk> chunks)
         {
-            var elements = new List<ContentElement>();
+            var elements = new List<ContentElement>(chunks.Count);
             foreach (var chunk in chunks)
             {
+                // This assumes that the chunk's Embedding property has been populated beforehand.
                 elements.Add(new ContentElement
                 {
                     ElementType = chunk.Section,
                     Title = chunk.Title,
                     Content = chunk.Text,
-                    Embedding = await _embeddingService.EmbedAsync(_data.Description),
+                    Embedding = chunk.Embedding, // Directly use the pre-computed embedding
                     AttributesJson = JsonSerializer.Serialize(new
                     {
                         chunkIndex = chunk.Index,
@@ -71,7 +75,7 @@ namespace UnityIntelligenceMCP.Models
                     })
                 });
             }
-            return await Task.FromResult(elements);
+            return elements;
         }
         
         private string ComputeContentHash()
