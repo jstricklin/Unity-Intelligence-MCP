@@ -19,7 +19,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
         public async Task<DuckDBConnection> GetConnectionAsync()
         {
             var connId = Interlocked.Increment(ref _connectionCounter);
-            Console.WriteLine($"[Conn #{connId}] Opening connection...");
+            Console.Error.WriteLine($"[Conn #{connId}] Opening connection...");
             var connection = new DuckDBConnection($"DataSource = {_appDb.GetConnectionString()}");
             await connection.OpenAsync();
             
@@ -27,10 +27,8 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             try
             {
                 cmd.CommandText = @"
-                    RESET ALL;
-                    LOAD vss;
-                    SET hnsw_enable_experimental_persistence = true;
-                    DEBUG FORCE CHECKPOINT;";
+                    LOAD vss;";
+                // DEBUG FORCE CHECKPOINT;";
                 await cmd.ExecuteNonQueryAsync();
                 
                 // Test HNSW => creates/removes temporary index (verifies functionality)
@@ -45,7 +43,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 await cmd.ExecuteNonQueryAsync();
             }
             
-            Console.WriteLine($"[Conn #{connId}] VSS loaded and validated");
+            Console.Error.WriteLine($"[Conn #{connId}] VSS loaded and validated");
             return connection;
         }
 

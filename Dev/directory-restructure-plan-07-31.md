@@ -56,3 +56,21 @@ Models/
 
 5. `UnityIntelligenceMCP.Models.Resources` (new)
    - For: ResourceResult.cs
+
+mkdir -p Core/Data/Contracts Core/Data/Infrastructure Core/Data/Services;
+mkdir -p Models/Database Models/Analysis Models/Documentation Models/Resources;
+mv Core/Data/IApplicationDatabase.cs Core/Data/Contracts/IApplicationDatabase.cs;
+mv Core/Data/IDbWorkQueue.cs Core/Data/Contracts/IDbWorkQueue.cs;
+mv Core/Data/IDbWorkItem.cs Core/Data/Contracts/IDbWorkItem.cs;
+mv Core/Data/IDocumentationRepository.cs Core/Data/Contracts/IDocumentationRepository.cs;
+mv Core/Data/DuckDbApplicationDatabase.cs Core/Data/Infrastructure/DuckDbApplicationDatabase.cs;
+mv Core/Data/DocumentationRepository.cs Core/Data/Infrastructure/DocumentationRepository.cs;
+mv Core/Data/DbWorkQueue.cs Core/Data/Infrastructure/DbWorkQueue.cs;
+mv Core/Data/QueuedDbWriterService.cs Core/Data/Services/QueuedDbWriterService.cs;
+mv Models/Documentation/ContentElement.cs Models/Database/ContentElement.cs;
+mv Models/Documentation/DocMetadata.cs Models/Database/DocMetadata.cs;
+mv Models/Documentation/SemanticDocumentRecord.cs Models/Database/SemanticDocumentRecord.cs;
+mv Models/DependencyGraph.cs Models/Analysis/DependencyGraph.cs;
+mv Models/ScriptInfo.cs Models/Analysis/ScriptInfo.cs;
+mv Models/UnityDocumentationData.cs Models/Documentation/UnityDocumentationData.cs;
+mv Models/ResourceResult.cs Models/Resources/ResourceResult.cs;

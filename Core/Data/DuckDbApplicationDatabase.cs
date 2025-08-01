@@ -29,7 +29,7 @@ namespace UnityIntelligenceMCP.Core.Data
 
             try
             {
-                command.CommandText = "INSTALL vss; LOAD vss;";
+                command.CommandText = "INSTALL vss; LOAD vss; SET hnsw_enable_experimental_persistence = true;";
                 await command.ExecuteNonQueryAsync();
                 Console.WriteLine("[VSS] Loaded");
 
