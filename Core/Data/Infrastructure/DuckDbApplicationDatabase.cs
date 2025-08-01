@@ -160,18 +160,18 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             (3, 'tutorial', 'Unity Learn Tutorials', 'current', '1.0');
         ";
         
-        private async Task<DuckDBConnection> GetVssConnectionAsync()
-        {
-            var connection = new DuckDBConnection($"DataSource = {GetConnectionString()}");
-            await connection.OpenAsync();
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = @"
-                LOAD vss;
-                SET hnsw_enable_experimental_persistence = true;
-                SET enable_progress_bar = false;";
-            await cmd.ExecuteNonQueryAsync();
-            return connection;
-        }
+        // private async Task<DuckDBConnection> GetVssConnectionAsync()
+        // {
+        //     var connection = new DuckDBConnection($"DataSource = {GetConnectionString()}");
+        //     await connection.OpenAsync();
+        //     using var cmd = connection.CreateCommand();
+        //     cmd.CommandText = @"
+        //         LOAD vss;
+        //         SET hnsw_enable_experimental_persistence = true;
+        //         SET enable_progress_bar = false;";
+        //     await cmd.ExecuteNonQueryAsync();
+        //     return connection;
+        // }
         private async Task<bool> IsSchemaInitializedAsync(DuckDBConnection connection)
         {
             // TODO: prepare better initialization fix 
@@ -227,11 +227,11 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 await command.ExecuteNonQueryAsync();
 
                 // Create HNSW indexes using VSS connection
-                await using var vssConn = await GetVssConnectionAsync();
-                await using var vssCmd = vssConn.CreateCommand();
-                vssCmd.CommandText = SchemaHnswIndexes;
-                await vssCmd.ExecuteNonQueryAsync();
-                Console.Error.WriteLine("[HNSW] Created indexes using VSS connection");
+                // await using var vssConn = await GetVssConnectionAsync();
+                // await using var vssCmd = connection.CreateCommand();
+                command.CommandText = SchemaHnswIndexes;
+                await command.ExecuteNonQueryAsync();
+                Console.Error.WriteLine("[HNSW] Created indexes");
 
                 // Create standard indexes and views
                 command.CommandText = SchemaStandardIndexes;
