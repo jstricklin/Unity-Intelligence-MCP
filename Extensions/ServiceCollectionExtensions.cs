@@ -56,16 +56,19 @@ namespace UnityIntelligenceMCP.Extensions
             // Create a scope to resolve scoped services
             using var scope = serviceProvider.CreateScope();
             var provider = scope.ServiceProvider;
+            var configService = provider.GetRequiredService<ConfigurationService>();
+            var projectPath = configService.GetConfiguredProjectPath();
+            var unityService = provider.GetRequiredService<UnityInstallationService>();
+            var unityVersion = unityService.GetProjectVersion(projectPath) ?? "unknown";
 
             // Initialize database
             var db = provider.GetRequiredService<IApplicationDatabase>();
-            await db.InitializeDatabaseAsync();
+            await db.InitializeDatabaseAsync(unityVersion);
             
             // Index documentation if it's not already present for the current version
-            var configService = provider.GetRequiredService<ConfigurationService>();
             var indexingService = provider.GetRequiredService<DocumentationIndexingService>();
             var forceReindex = configService.UnitySettings.ForceDocumentationReindex;
-            await indexingService.IndexDocumentationIfRequiredAsync(configService.GetConfiguredProjectPath(), forceReindex);
+            await indexingService.IndexDocumentationIfRequiredAsync(projectPath, forceReindex);
         }
     }
 }

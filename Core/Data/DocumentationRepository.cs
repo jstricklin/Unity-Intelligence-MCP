@@ -19,17 +19,6 @@ namespace UnityIntelligenceMCP.Core.Data
             _database = database;
         }
 
-        // public async Task IndexDocumentationAsync(string projectPath)
-        // {
-        //     var docRoot = ConfigurationService.GetDocumentationPath(projectPath);
-        //     var htmlFiles = Directory.GetFiles(docRoot, "*.html", SearchOption.AllDirectories);
-
-        //     foreach (var filePath in htmlFiles)
-        //     {
-        //         await IndexSingleDocumentAsync(filePath);
-        //     }
-        // }
-
         public async Task<int> InsertDocumentAsync(SemanticDocumentRecord record, CancellationToken cancellationToken = default)
         {
             await using var connection = new DuckDBConnection($"DataSource = {_database.GetConnectionString()}");

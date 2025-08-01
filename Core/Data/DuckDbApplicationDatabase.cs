@@ -39,7 +39,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 command.CommandText = @"
             SELECT COUNT(*) 
             FROM duckdb_extensions() 
-            WHERE extension_name = 'vss'";
+            WHERE extension_name = 'vss' AND installed = true AND loaded = true;";
                 var vssCount = (long)await command.ExecuteScalarAsync();
                 if (vssCount == 0)
                 {
