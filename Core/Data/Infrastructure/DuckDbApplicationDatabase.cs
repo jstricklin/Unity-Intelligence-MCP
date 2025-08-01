@@ -12,14 +12,14 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
     {
         private readonly string _databasePath;
         private readonly SemaphoreSlim _schemaLock = new(1, 1);
-        private static readonly HashSet<string> _requiredSchemaObjects = new()
-        {
-            "doc_sources", "unity_docs", "doc_metadata",
-            "content_elements", "doc_relationships",
-            "doc_sources_id_seq", "unity_docs_id_seq",
-            "doc_metadata_id_seq", "content_elements_id_seq",
-            "doc_relationships_id_seq"
-        };
+        // private static readonly HashSet<string> _requiredSchemaObjects = new()
+        // {
+        //     "doc_sources", "unity_docs", "doc_metadata",
+        //     "content_elements", "doc_relationships",
+        //     "doc_sources_id_seq", "unity_docs_id_seq",
+        //     "doc_metadata_id_seq", "content_elements_id_seq",
+        //     "doc_relationships_id_seq"
+        // };
 
         public DuckDbApplicationDatabase(string databasePath = "application.duckdb")
         {
@@ -174,34 +174,40 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
         }
         private async Task<bool> IsSchemaInitializedAsync(DuckDBConnection connection)
         {
+            // TODO: prepare better initialization fix 
+            // var command = connection.CreateCommand();
+            // // Split objects into tables and sequences
+            // var tables = _requiredSchemaObjects.Where(o => !o.EndsWith("_seq")).ToList();
+            // var sequences = _requiredSchemaObjects.Where(o => o.EndsWith("_seq")).ToList();
+
+            // // Check existence of tables and sequences
+            // command.CommandText = $@"
+            //     SELECT 
+            //         (SELECT COUNT(*) = {tables.Count} FROM information_schema.tables WHERE table_name IN ({GenerateSqlList(tables)})) AND
+            //         (SELECT COUNT(*) = {sequences.Count} FROM information_schema.sequences WHERE sequence_name IN ({GenerateSqlList(sequences)}))
+            // ";
+
+            // try
+            // {
+            //     var result = await command.ExecuteScalarAsync();
+            //     return Convert.ToBoolean(result);
+            // }
+            // catch
+            // {
+            //     // Schema is not initialized if query fails
+            //     return false;
+            // }
             var command = connection.CreateCommand();
-            // Split objects into tables and sequences
-            var tables = _requiredSchemaObjects.Where(o => !o.EndsWith("_seq")).ToList();
-            var sequences = _requiredSchemaObjects.Where(o => o.EndsWith("_seq")).ToList();
-
-            // Check existence of tables and sequences
-            command.CommandText = $@"
-                SELECT 
-                    (SELECT COUNT(*) = {tables.Count} FROM information_schema.tables WHERE table_name IN ({GenerateSqlList(tables)})) AND
-                    (SELECT COUNT(*) = {sequences.Count} FROM information_schema.sequences WHERE sequence_name IN ({GenerateSqlList(sequences)}))
-            ";
-
-            try
-            {
-                var result = await command.ExecuteScalarAsync();
-                return Convert.ToBoolean(result);
-            }
-            catch
-            {
-                // Schema is not initialized if query fails
-                return false;
-            }
+            command.CommandText = @"SELECT COUNT(*) FROM information_schema.tables WHERE table_name =
+            'doc_sources'";
+            var count = (long?)await command.ExecuteScalarAsync();
+            return count > 0;
         }
 
-        private string GenerateSqlList(IEnumerable<string> items)
-        {
-            return string.Join(", ", items.Select(n => $"'{n}'"));
-        }
+        // private string GenerateSqlList(IEnumerable<string> items)
+        // {
+        //     return string.Join(", ", items.Select(n => $"'{n}'"));
+        // }
 
         private async Task InitializeSchemaTransactionallyAsync(DuckDBConnection connection, string unityVersion)
         {
