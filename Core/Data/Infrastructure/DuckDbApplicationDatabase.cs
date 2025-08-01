@@ -190,5 +190,87 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             await cmd.ExecuteNonQueryAsync();
             return connection;
         }
+        private async Task<bool> IsSchemaInitializedAsync(DuckDBConnection connection)
+        {
+            var command = connection.CreateCommand();
+            // Split objects into tables and sequences
+            var tables = _requiredSchemaObjects.Where(o => !o.EndsWith("_seq")).ToList();
+            var sequences = _requiredSchemaObjects.Where(o => o.EndsWith("_seq")).ToList();
+
+            // Check existence of tables and sequences
+            command.CommandText = $@"
+                SELECT 
+                    (SELECT COUNT(*) = {tables.Count} FROM information_schema.tables WHERE table_name IN ({GenerateSqlList(tables)})) AND
+                    (SELECT COUNT(*) = {sequences.Count} FROM information_schema.sequences WHERE sequence_name IN ({GenerateSqlList(sequences)}))
+            ";
+
+            try
+            {
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToBoolean(result);
+            }
+            catch
+            {
+                // Schema is not initialized if query fails
+                return false;
+            }
+        }
+
+        private string GenerateSqlList(IEnumerable<string> items)
+        {
+            return string.Join(", ", items.Select(n => $"'{n}'"));
+        }
+
+        private async Task InitializeSchemaTransactionallyAsync(DuckDBConnection connection, string unityVersion)
+        {
+            await using var transaction = await connection.BeginTransactionAsync();
+            var command = connection.CreateCommand();
+            command.Transaction = transaction;
+
+            try
+            {
+                // Run initialization scripts
+                command.CommandText = "INSTALL vss; LOAD vss; SET hnsw_enable_experimental_persistence = true;";
+                await command.ExecuteNonQueryAsync();
+                Console.Error.WriteLine("[VSS] Loaded");
+
+                // Create tables, sequences with identity
+                command.CommandText = SchemaBaseTables;
+                await command.ExecuteNonQueryAsync();
+
+                // Create HNSW indexes using VSS connection
+                await using var vssConn = await GetVssConnectionAsync();
+                await using var vssCmd = vssConn.CreateCommand();
+                vssCmd.CommandText = SchemaHnswIndexes;
+                await vssCmd.ExecuteNonQueryAsync();
+                Console.Error.WriteLine("[HNSW] Created indexes using VSS connection");
+
+                // Create standard indexes and views
+                command.CommandText = SchemaStandardIndexes;
+                await command.ExecuteNonQueryAsync();
+
+                command.CommandText = SchemaViews;
+                await command.ExecuteNonQueryAsync();
+                
+                // Insert initial data with actual Unity version
+                command.CommandText = string.Format(InitialData, unityVersion);
+                await command.ExecuteNonQueryAsync();
+
+                // Add schema info
+                command.CommandText = "CREATE TABLE IF NOT EXISTS mcp_schema_info (schema_version INT DEFAULT 1)";
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = "INSERT INTO mcp_schema_info (schema_version) VALUES (1)";
+                await command.ExecuteNonQueryAsync();
+
+                await transaction.CommitAsync();
+                Console.Error.WriteLine("[Database] Complete");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                Console.Error.WriteLine($"[Database] Initialization failed: {ex}");
+                throw;
+            }
+        }
     }
 }
