@@ -37,6 +37,8 @@ namespace UnityIntelligenceMCP.Core.Data
             await command.ExecuteNonQueryAsync();
             command.CommandText = "LOAD vss;";
             await command.ExecuteNonQueryAsync();
+            command.CommandText = "SET hnsw_enable_experimental_persistence = true;";
+            await command.ExecuteNonQueryAsync();
 
             command.CommandText = SchemaV1;
             await command.ExecuteNonQueryAsync();
@@ -73,6 +75,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 category VARCHAR,
                 unity_version VARCHAR,
                 content_hash VARCHAR,
+                embedding FLOAT[384]
                 FOREIGN KEY (source_id) REFERENCES doc_sources (id),
                 UNIQUE(source_id, doc_key)
             );
@@ -97,7 +100,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 title VARCHAR,
                 content VARCHAR,
                 attributes_json VARCHAR,
-                embedding FLOAT[384]
+                embedding FLOAT[384],
                 FOREIGN KEY (doc_id) REFERENCES unity_docs (id)
             );
 
@@ -117,6 +120,7 @@ namespace UnityIntelligenceMCP.Core.Data
             CREATE INDEX idx_docs_source_type ON unity_docs(source_id, doc_type);
             CREATE INDEX idx_elements_doc_type ON content_elements(doc_id, element_type);
             CREATE INDEX idx_metadata_doc ON doc_metadata(doc_id);
+            CREATE INDEX idx_description_embedding ON unity_docs USING HNSW (embedding);
             CREATE INDEX idx_content_embedding ON content_elements USING HNSW (embedding);
 
             -- Source-specific views for common queries

@@ -10,7 +10,7 @@ namespace UnityIntelligenceMCP.Models.Documentation
         public string Title { get; set; } = string.Empty;
         
         public string? Description { get; set; }
-
+        public ReadOnlyMemory<float>? DescriptionEmbedding { get; set; }
         public string? Namespace { get; set; }
 
         public string? Url { get; set; }
@@ -26,7 +26,6 @@ namespace UnityIntelligenceMCP.Models.Documentation
         public string? InheritsFromJson { get; set; }
 
         public string? ImplementedInJson { get; set; }
-
         public List<DocMetadata> Metadata { get; set; } = new();
         public List<ContentElement> Elements { get; set; } = new();
     }
