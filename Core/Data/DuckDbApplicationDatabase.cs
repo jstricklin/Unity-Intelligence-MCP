@@ -120,7 +120,7 @@ namespace UnityIntelligenceMCP.Core.Data
             CREATE INDEX idx_docs_source_type ON unity_docs(source_id, doc_type);
             CREATE INDEX idx_elements_doc_type ON content_elements(doc_id, element_type);
             CREATE INDEX idx_metadata_doc ON doc_metadata(doc_id);
-            CREATE INDEX idx_description_embedding ON unity_docs USING HNSW (embedding);
+            CREATE INDEX idx_unity_docs_embedding ON unity_docs USING HNSW (embedding);
             CREATE INDEX idx_content_embedding ON content_elements USING HNSW (embedding);
 
             -- Source-specific views for common queries
