@@ -18,7 +18,7 @@ namespace UnityIntelligenceMCP.Core.Data
 
         public string GetConnectionString() => _databasePath;
 
-        public async Task InitializeDatabaseAsync()
+        public async Task InitializeDatabaseAsync(string unityVersion)
         {
             if (_isInitialized || File.Exists(_databasePath))
             {
@@ -33,17 +33,17 @@ namespace UnityIntelligenceMCP.Core.Data
             var command = connection.CreateCommand();
 
             // Prep DuckDB with Vector Similarity Search extensions
-            command.CommandText = "INSTALL vss;";
+            command.CommandText = @"INSTALL vss;";
             await command.ExecuteNonQueryAsync();
-            command.CommandText = "LOAD vss;";
+            command.CommandText = @"LOAD vss;";
             await command.ExecuteNonQueryAsync();
-            command.CommandText = "SET hnsw_enable_experimental_persistence = true;";
+            command.CommandText = @"SET hnsw_enable_experimental_persistence = true;";
             await command.ExecuteNonQueryAsync();
 
             command.CommandText = SchemaV1;
             await command.ExecuteNonQueryAsync();
 
-            command.CommandText = InitialData;
+            command.CommandText = String.Format(InitialData, unityVersion);
             await command.ExecuteNonQueryAsync();
             
             _isInitialized = true;
@@ -75,7 +75,7 @@ namespace UnityIntelligenceMCP.Core.Data
                 category VARCHAR,
                 unity_version VARCHAR,
                 content_hash VARCHAR,
-                embedding FLOAT[384]
+                embedding FLOAT[384],
                 FOREIGN KEY (source_id) REFERENCES doc_sources (id),
                 UNIQUE(source_id, doc_key)
             );
@@ -156,8 +156,8 @@ namespace UnityIntelligenceMCP.Core.Data
 // TODO make this variable to user's actual unity version
         private const string InitialData = @"
             INSERT INTO doc_sources (id, source_type, source_name, version, schema_version) VALUES
-            (1, 'scripting_api', 'Unity Scripting API', '2023.3', '1.0'),
-            (2, 'editor_manual', 'Unity User Manual', '2023.3', '1.0'),
+            (1, 'scripting_api', 'Unity Scripting API', '{0}', '1.0'),
+            (2, 'editor_manual', 'Unity User Manual', '{0}', '1.0'),
             (3, 'tutorial', 'Unity Learn Tutorials', 'current', '1.0');
         ";
     }
