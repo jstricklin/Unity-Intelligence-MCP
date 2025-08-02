@@ -8,6 +8,7 @@ using UnityIntelligenceMCP.Core.Data;
 using UnityIntelligenceMCP.Core.Data.Contracts;
 using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Models;
+using UnityIntelligenceMCP.Models.Documentation;
 using UnityIntelligenceMCP.Utilities;
 
 namespace UnityIntelligenceMCP.Core.Semantics
@@ -127,11 +128,29 @@ namespace UnityIntelligenceMCP.Core.Semantics
             if (allTextsToEmbed.Any())
             {
                 int batchSize = 256;
+                int batchNum = 0;
+                var batchStopwatch = new Stopwatch();
+
+                long _baselineMemory = GC.GetTotalMemory(true);
+                // Console.Error.WriteLine($"[DEBUG] Baseline memory: {_baselineMemory / 1024 / 1024} MB");
+
                 foreach (var batch in allTextsToEmbed.Chunk(batchSize))
                 {
-                    Console.Error.WriteLine($"[INFO] Processing a batch of {batch.Length} embeddings...");
+                    // var memoryBefore = GC.GetTotalMemory(false);
+                    // if (memoryBefore > 500 * 1024 * 1024) // If over 500MB
+                    // {
+                    //     Console.Error.WriteLine($"[WARN] High memory usage detected: {memoryBefore / 1024 / 1024} MB. Forcing GC...");
+                    //     GC.Collect();
+                    //     GC.WaitForPendingFinalizers();
+                    //     GC.Collect();
+                    // }
+                    batchNum++;
+                    Console.Error.WriteLine($"[INFO] Processing a batch {batchNum} of {batch.Length} embeddings...");
+                    batchStopwatch.Restart();
                     var embeddingsInBatch = await _embeddingService.EmbedAsync(batch.ToList());
                     allEmbeddings.AddRange(embeddingsInBatch);
+                    batchStopwatch.Stop();
+                    Console.Error.WriteLine($"[INFO] Finished batch {batchNum} in {batchStopwatch.Elapsed.TotalSeconds:F2} seconds.");
                 }
             }
             
