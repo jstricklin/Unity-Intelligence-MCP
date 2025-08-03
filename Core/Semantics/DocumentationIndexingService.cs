@@ -155,7 +155,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             var allEmbeddings = new List<float[]>(allTextsToEmbed.Count);
             if (allTextsToEmbed.Any())
             {
-                int batchSize = 1024;
+                int batchSize = 512;
                 int batchNum = 0;
                 var batchStopwatch = new Stopwatch();
                 foreach (var batch in allTextsToEmbed.Chunk(batchSize))
