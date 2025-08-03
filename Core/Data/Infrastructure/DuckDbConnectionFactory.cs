@@ -26,7 +26,12 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 try
                 {
                     var connection = new DuckDBConnection($"DataSource={_dbPath}");
-                    connection.Open();
+                    await connection.OpenAsync();
+                    
+                    using var cmd = connection.CreateCommand();
+                    cmd.CommandText = @"
+                        LOAD vss;";
+                    await cmd.ExecuteNonQueryAsync();
                     return connection;
                 }
                 catch (DuckDBException ex) when (IsLockedDatabaseError(ex))
