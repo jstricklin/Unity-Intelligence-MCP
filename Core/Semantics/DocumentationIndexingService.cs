@@ -156,24 +156,62 @@ namespace UnityIntelligenceMCP.Core.Semantics
             if (allTextsToEmbed.Any())
             {
                 int batchSize = 512;
-                int batchNum = 0;
-                var batchStopwatch = new Stopwatch();
-                int totalBatches = (int)MathF.Ceiling((float)(allTextsToEmbed.Count() / batchSize));
-                double timeToEmbed = 0.0;
-                double timeEst = 0.0;
-                foreach (var batch in allTextsToEmbed.Chunk(batchSize))
+                var batches = allTextsToEmbed.Chunk(batchSize).ToList();
+                int totalBatches = batches.Count;
+                int maxConcurrency = Environment.ProcessorCount;
+                var semaphore = new System.Threading.SemaphoreSlim(maxConcurrency);
+                var embeddingsByBatch = new List<float[]>[totalBatches];
+                var aggregateStopwatch = Stopwatch.StartNew();
+
+                Console.Error.WriteLine($"[INFO] Using parallel processing with {maxConcurrency} concurrent batches");
+
+                // Ensure processing tasks are tracked separately
+                var processingTasks = new List<Task>(totalBatches);
+                
+                for (int i = 0; i < batches.Count; i++)
                 {
-                    batchNum++;
-                    if (batchNum > 1)
-                        timeEst = (timeToEmbed / (batchNum - 1)) * (totalBatches - batchNum + 1);
-                    Console.Error.WriteLine($"[PROGRESS] Batch {batchNum}/{totalBatches} ({(double)batchNum/totalBatches*100:F1}%) | Estimated time left: {(timeEst > 0.0 ? TimeSpan.FromSeconds(timeEst).ToString(@"hh\:mm\:ss") : "Calculating...")}");
-                    batchStopwatch.Restart();
-                    var embeddingsInBatch = await _embeddingService.EmbedAsync(batch.ToList());
-                    allEmbeddings.AddRange(embeddingsInBatch);
-                    batchStopwatch.Stop();
-                    timeToEmbed += batchStopwatch.Elapsed.TotalSeconds;
-                    Console.Error.WriteLine($"[INFO] Finished batch {batchNum} in {batchStopwatch.Elapsed.TotalSeconds:F2} seconds.");
+                    int batchIndex = i; // Capture current index for closure
+                    var batch = batches[i];
+                    
+                    processingTasks.Add(Task.Run(async () => 
+                    {
+                        await semaphore.WaitAsync();
+                        try
+                        {
+                            var batchStopwatch = Stopwatch.StartNew();
+                            var embeddings = await _embeddingService.EmbedAsync(batch.ToList());
+                            batchStopwatch.Stop();
+
+                            embeddingsByBatch[batchIndex] = embeddings.ToList();
+                            
+                            lock (embeddingsByBatch)
+                            {
+                                Console.Error.WriteLine($"[PROGRESS] Batch {batchIndex + 1}/{totalBatches} "
+                                    + $"({batch.Count} texts) completed in "
+                                    + $"{batchStopwatch.Elapsed.TotalSeconds:F2}s");
+                            }
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+                    }));
                 }
+
+                await Task.WhenAll(processingTasks);
+                
+                // Combine results in original batch order
+                foreach (var batchResult in embeddingsByBatch)
+                {
+                    if (batchResult != null)
+                    {
+                        allEmbeddings.AddRange(batchResult);
+                    }
+                }
+                
+                aggregateStopwatch.Stop();
+                Console.Error.WriteLine($"[INFO] Total embedding time: {aggregateStopwatch.Elapsed.TotalSeconds:F2}s, "
+                    + $"{allTextsToEmbed.Count / aggregateStopwatch.Elapsed.TotalSeconds:F2} texts/sec");
             }
             
             // Distribute embeddings...
