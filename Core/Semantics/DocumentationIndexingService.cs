@@ -23,6 +23,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
         private readonly DocumentationOrchestrationService _orchestrationService;
         private readonly IDocumentChunker _chunker;
         private readonly IEmbeddingService _embeddingService;
+        private readonly IDuckDbConnectionFactory _connectionFactory;
 
         public DocumentationIndexingService(
             UnityInstallationService unityInstallationService,
@@ -30,7 +31,8 @@ namespace UnityIntelligenceMCP.Core.Semantics
             UnityDocumentationParser parser,
             DocumentationOrchestrationService orchestrationService,
             IDocumentChunker chunker,
-            IEmbeddingService embeddingService)
+            IEmbeddingService embeddingService,
+            IDuckDbConnectionFactory connectionFactory)
         {
             _unityInstallationService = unityInstallationService;
             _repository = repository;
@@ -38,6 +40,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             _orchestrationService = orchestrationService;
             _chunker = chunker;
             _embeddingService = embeddingService;
+            _connectionFactory = connectionFactory;
         }
         public async Task IndexDocumentationIfRequiredAsync(string projectPath, bool? forceReindex)
         {
@@ -100,6 +103,14 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
         private async Task ProcessDocumentationInBackground(string unityVersion, List<string> htmlFiles)
         {
+            // Add recovery before processing
+            await _connectionFactory.ExecuteWithConnectionAsync(async connection =>
+            {
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = "CHECKPOINT";
+                await cmd.ExecuteNonQueryAsync();
+            });
+
             Console.Error.WriteLine($"[PROCESS] Starting documentation for {unityVersion}");
             var sw = Stopwatch.StartNew();
             

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Core.Analysis;
@@ -41,7 +42,11 @@ namespace UnityIntelligenceMCP.Extensions
 
             // New Semantic Search and Documentation Services
             services.AddSingleton<IApplicationDatabase, DuckDbApplicationDatabase>();
-            services.AddSingleton<IDuckDbConnectionFactory, DuckDbConnectionFactory>();
+            services.AddSingleton<IDuckDbConnectionFactory>(sp =>
+                new DuckDbConnectionFactory(
+                    sp.GetRequiredService<IApplicationDatabase>().GetConnectionString(),
+                    sp.GetRequiredService<ILogger<DuckDbConnectionFactory>>()
+                ));
             services.AddSingleton<IDocumentationRepository, DocumentationRepository>();
             services.AddSingleton<IDbWorkQueue, DbWorkQueue>();
             services.AddHostedService<QueuedDbWriterService>();

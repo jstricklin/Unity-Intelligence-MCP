@@ -1,6 +1,7 @@
 using DuckDB.NET.Data;
 using System;
 using System.Data.Common;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             await _schemaLock.WaitAsync();
             try
             {
+                await TryRecoverDatabase();
                 await using var connection = new DuckDBConnection($"DataSource = {GetConnectionString()}");
                 await connection.OpenAsync();
                 
@@ -265,6 +267,38 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 Console.Error.WriteLine($"[Database] Initialization failed: {ex}");
                 throw;
             }
+        }
+
+        private async Task TryRecoverDatabase()
+        {
+            try
+            {
+                using var tempConn = new DuckDBConnection($"DataSource={GetConnectionString()}");
+                tempConn.Open();
+                using var cmd = tempConn.CreateCommand();
+                cmd.CommandText = "CHECKPOINT";
+                cmd.ExecuteNonQuery();
+            }
+            catch (DuckDBException ex)
+            {
+                Debug.WriteLine($"Pre-init recovery failed: {ex.Message}");
+                await ForceWalCleanup();
+            }
+        }
+
+        private async Task ForceWalCleanup()
+        {
+            var dbPath = GetConnectionString();
+            var files = new[] { dbPath + ".wal", dbPath + ".tmp", dbPath + ".lock" };
+            foreach (var file in files)
+            {
+                try 
+                { 
+                    if (File.Exists(file)) File.Delete(file); 
+                }
+                catch { /* Ignore */ }
+            }
+            await Task.Delay(100);
         }
     }
 }
