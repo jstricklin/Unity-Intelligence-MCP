@@ -222,8 +222,8 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             // Update progress
                             var current = Interlocked.Increment(ref processedCount);
                             // Console.Error.WriteLine($"[PROGRESS] {current}/{totalFiles} files processed");
-                            if (((float)current / totalFiles) * 100 % 3 == 0)
-                                Console.Error.WriteLine($"[PROGRESS] {(int)(((float)current/totalFiles) * 100)}% of files processed for DB entry.");
+                            if (((float)current / totalFiles) * 100 % 2 == 0)
+                                Console.Error.WriteLine($"[PROGRESS] {(int)(((float)current/totalFiles) * 100)}% out of {totalFiles} total files prepared for insert.");
                         }
                         catch (Exception ex)
                         {
@@ -246,7 +246,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 });
             
             sw.Stop();
-            Console.Error.WriteLine($"[COMPLETE] Indexing finished in {sw.Elapsed.TotalSeconds}s");
+            Console.Error.WriteLine($"[COMPLETE] Indexing finished in {TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds).ToString(@"hh\:mm\:ss")}s");
         }
 
         private IEnumerable<IEnumerable<TSource>> BatchFiles<TSource>(IEnumerable<TSource> source, int batchSize)
