@@ -37,7 +37,6 @@ namespace UnityIntelligenceMCP.Core.Semantics
             _chunker = chunker;
             _embeddingService = embeddingService;
         }
-
         public async Task IndexDocumentationIfRequiredAsync(string projectPath, bool? forceReindex)
         {
             var unityVersion = _unityInstallationService.GetProjectVersion(projectPath);
@@ -187,7 +186,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             lock (embeddingsByBatch)
                             {
                                 Console.Error.WriteLine($"[PROGRESS] Batch {batchIndex + 1}/{totalBatches} "
-                                    + $"({batch.Count} texts) completed in "
+                                    + $"({batch.Length} texts) completed in "
                                     + $"{batchStopwatch.Elapsed.TotalSeconds:F2}s");
                             }
                         }
