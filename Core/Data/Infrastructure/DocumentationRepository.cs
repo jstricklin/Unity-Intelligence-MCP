@@ -329,5 +329,36 @@ CREATE TABLE IF NOT EXISTS doc_processing_state (
                 await cmd.ExecuteNonQueryAsync();
             });
         }
+
+        public async Task ResetTrackingStateAsync(string unityVersion)
+        {
+            await _connectionFactory.ExecuteWithConnectionAsync(async connection =>
+            {
+                var cmd = connection.CreateCommand();
+                cmd.CommandText = @"
+                    UPDATE doc_processing_state
+                    SET state = 'Pending'
+                    WHERE unity_version = $version
+                ";
+                cmd.Parameters.Add(new DuckDBParameter("version", unityVersion));
+                await cmd.ExecuteNonQueryAsync();
+            });
+        }
+
+        public async Task RemoveOrphanedTrackingAsync(string unityVersion, IEnumerable<string> orphanedPaths)
+        {
+            await _connectionFactory.ExecuteWithConnectionAsync(async connection =>
+            {
+                var cmd = connection.CreateCommand();
+                cmd.CommandText = @"
+                    DELETE FROM doc_processing_state
+                    WHERE unity_version = $version
+                    AND file_path = ANY($paths)
+                ";
+                cmd.Parameters.Add(new DuckDBParameter("version", unityVersion));
+                cmd.Parameters.Add(new DuckDBParameter("paths", orphanedPaths.ToArray()));
+                await cmd.ExecuteNonQueryAsync();
+            });
+        }
     }
 }

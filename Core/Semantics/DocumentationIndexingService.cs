@@ -78,6 +78,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             if (shouldIndex && forceReindex == true)
             {
                 await _repository.DeleteDocsByVersionAsync(unityVersion);
+                await _repository.ResetTrackingStateAsync(unityVersion);
             }
 
             if (shouldIndex)
@@ -102,23 +103,55 @@ namespace UnityIntelligenceMCP.Core.Semantics
             Console.Error.WriteLine($"[PROCESS] Starting documentation for {unityVersion}");
             var sw = Stopwatch.StartNew();
             
-            // Initialize tracking
+            // Load existing tracking data FIRST
+            var trackingData = await _repository.GetDocumentTrackingAsync(unityVersion);
+            
+            // Initialize tracking with smart state detection
             var fileStatuses = new List<FileStatus>();
+            var pathToHash = new Dictionary<string, string>();
+            
             foreach (var file in htmlFiles)
             {
+                var hash = await FileHasher.ComputeSHA256Async(file);
+                pathToHash[file] = hash;
+                
+                var state = DocumentState.Pending;
+                if (trackingData.TryGetValue(file, out var status))
+                {
+                    // Preserve processed files that haven't changed
+                    if (status.State == DocumentState.Processed && status.ContentHash == hash)
+                    {
+                        state = DocumentState.Processed;
+                    }
+                    // Keep failed state for unchanged files
+                    else if (status.State == DocumentState.Failed && status.ContentHash == hash)
+                    {
+                        state = DocumentState.Failed;
+                    }
+                }
+                
                 fileStatuses.Add(new FileStatus {
                     FilePath = file,
-                    ContentHash = await FileHasher.ComputeSHA256Async(file),
-                    State = DocumentState.Pending
+                    ContentHash = hash,
+                    State = state
                 });
             }
+            
+            // Cleanup orphaned tracking entries
+            var orphans = trackingData.Keys.Except(htmlFiles).ToList();
+            if (orphans.Any())
+            {
+                Console.Error.WriteLine($"[CLEANUP] Removing {orphans.Count} orphaned tracking entries");
+                await _repository.RemoveOrphanedTrackingAsync(unityVersion, orphans);
+            }
+            
+            // Initialize/update tracking
             await _repository.InitializeDocumentTrackingAsync(unityVersion, fileStatuses);
             
-            // Get pending files
-            var trackingData = await _repository.GetDocumentTrackingAsync(unityVersion);
+            // Get pending files (only those not successfully processed)
+            var currentTracking = await _repository.GetDocumentTrackingAsync(unityVersion);
             var pendingFiles = htmlFiles.Where(f => 
-                !trackingData.ContainsKey(f) || 
-                trackingData[f].State != DocumentState.Processed
+                currentTracking[f].State != DocumentState.Processed
             ).ToList();
             
             if (!pendingFiles.Any())
@@ -166,7 +199,13 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             }
                             
                             var source = new UnityDocumentationSource(parsedData, _chunker, chunks);
-                            batchRecords.Add(await source.ToSemanticRecordAsync(_embeddingService));
+                            var record = await source.ToSemanticRecordAsync(_embeddingService);
+                            
+                            // ADD THESE LINES
+                            record.SourceFilePath = filePath;
+                            record.ContentHash = pathToHash[filePath];
+                            
+                            batchRecords.Add(record);
                             processedInBatch.Add(filePath);
                             
                             // Update progress
@@ -193,8 +232,6 @@ namespace UnityIntelligenceMCP.Core.Semantics
                     }
                 });
             
-            // Cleanup
-            await _repository.RemoveDeprecatedDocumentsAsync(unityVersion);
             sw.Stop();
             Console.Error.WriteLine($"[COMPLETE] Indexing finished in {sw.Elapsed.TotalSeconds}s");
         }

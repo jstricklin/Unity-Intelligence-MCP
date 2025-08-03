@@ -19,5 +19,7 @@ namespace UnityIntelligenceMCP.Core.Data.Contracts
         Task MarkDocumentProcessedAsync(string filePath, string unityVersion);
         Task MarkDocumentFailedAsync(string filePath, string unityVersion);
         Task RemoveDeprecatedDocumentsAsync(string unityVersion);
+        Task ResetTrackingStateAsync(string unityVersion);
+        Task RemoveOrphanedTrackingAsync(string unityVersion, IEnumerable<string> orphanedPaths);
     }
 }
