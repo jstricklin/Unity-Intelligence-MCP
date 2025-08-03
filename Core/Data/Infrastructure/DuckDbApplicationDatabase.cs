@@ -12,15 +12,6 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
     {
         private readonly string _databasePath;
         private readonly SemaphoreSlim _schemaLock = new(1, 1);
-        // private static readonly HashSet<string> _requiredSchemaObjects = new()
-        // {
-        //     "doc_sources", "unity_docs", "doc_metadata",
-        //     "content_elements", "doc_relationships",
-        //     "doc_sources_id_seq", "unity_docs_id_seq",
-        //     "doc_metadata_id_seq", "content_elements_id_seq",
-        //     "doc_relationships_id_seq"
-        // };
-
         public DuckDbApplicationDatabase(string databasePath = "application.duckdb")
         {
             _databasePath = Path.Combine(AppContext.BaseDirectory, databasePath);
@@ -153,6 +144,16 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             WHERE s.source_type = 'scripting_api'
             AND ce.element_type IN ('property', 'public_method', 'static_method', 'message');
         ";
+        private const string ProcessingTable = @"
+        CREATE TABLE IF NOT EXISTS doc_processing_state (
+            file_path VARCHAR PRIMARY KEY,
+            unity_version VARCHAR NOT NULL,
+            content_hash VARCHAR NOT NULL,
+            state VARCHAR(20) NOT NULL,
+            last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        ";
+
         private const string InitialData = @"
             INSERT INTO doc_sources (id, source_type, source_name, version, schema_version) VALUES
             (1, 'scripting_api', 'Unity Scripting API', '{0}', '1.0'),
@@ -221,6 +222,11 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 command.CommandText = "INSTALL vss; LOAD vss; SET hnsw_enable_experimental_persistence = true;";
                 await command.ExecuteNonQueryAsync();
                 Console.Error.WriteLine("[VSS] Loaded");
+
+                // Create resource document index table
+                command.CommandText = ProcessingTable;
+                await command.ExecuteNonQueryAsync();
+                
 
                 // Create tables, sequences with identity
                 command.CommandText = SchemaBaseTables;

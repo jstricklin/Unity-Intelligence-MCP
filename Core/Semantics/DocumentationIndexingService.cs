@@ -161,7 +161,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             }
             
             // Configure parallel processing
-            const int FilesPerBatch = 6;  
+            const int FilesPerBatch = 1024;  
             int MaxParallelism = Environment.ProcessorCount;
             var options = new ParallelOptions { MaxDegreeOfParallelism = MaxParallelism };
             int processedCount = 0;
@@ -210,7 +210,9 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             
                             // Update progress
                             var current = Interlocked.Increment(ref processedCount);
-                            Console.Error.WriteLine($"[PROGRESS] {current}/{totalFiles} files processed");
+                            // Console.Error.WriteLine($"[PROGRESS] {current}/{totalFiles} files processed");
+                            if (((float)current / totalFiles) * 100 % 3 == 0)
+                                Console.Error.WriteLine($"[PROGRESS] {(int)(((float)current/totalFiles) * 100)}% of files processed for DB entry.");
                         }
                         catch (Exception ex)
                         {

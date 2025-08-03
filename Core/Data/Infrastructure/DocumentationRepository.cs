@@ -14,15 +14,6 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 {
     public class DocumentationRepository : IDocumentationRepository
     {
-        private const string CreateProcessingTable = @"
-CREATE TABLE IF NOT EXISTS doc_processing_state (
-    file_path VARCHAR PRIMARY KEY,
-    unity_version VARCHAR NOT NULL,
-    content_hash VARCHAR NOT NULL,
-    state VARCHAR(20) NOT NULL,
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-";
 
         private readonly IDuckDbConnectionFactory _connectionFactory;
 
@@ -242,11 +233,6 @@ CREATE TABLE IF NOT EXISTS doc_processing_state (
         {
             await _connectionFactory.ExecuteWithConnectionAsync(async connection =>
             {
-                // Create table if needed
-                var createCmd = connection.CreateCommand();
-                createCmd.CommandText = CreateProcessingTable;
-                await createCmd.ExecuteNonQueryAsync();
-                
                 // Initialize records
                 foreach (var status in fileStatuses)
                 {

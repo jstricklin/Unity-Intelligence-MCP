@@ -19,31 +19,15 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
         public async Task<DuckDBConnection> GetConnectionAsync()
         {
             var connId = Interlocked.Increment(ref _connectionCounter);
-            Console.Error.WriteLine($"[Conn #{connId}] Opening connection...");
+            // Console.Error.WriteLine($"[Conn #{connId}] Opening connection...");
             var connection = new DuckDBConnection($"DataSource = {_appDb.GetConnectionString()}");
             await connection.OpenAsync();
             
             using var cmd = connection.CreateCommand();
-            try
-            {
-                cmd.CommandText = @"
-                    LOAD vss;";
-                // DEBUG FORCE CHECKPOINT;";
-                await cmd.ExecuteNonQueryAsync();
-                
-                // Test HNSW => creates/removes temporary index (verifies functionality)
-                cmd.CommandText = "CREATE TEMPORary TABLE IF NOT EXISTS _vss_test (v FLOAT[3]);";
-                await cmd.ExecuteNonQueryAsync();
-                cmd.CommandText = "CREATE INDEX _tmp_vss_idx ON _vss_test USING HNSW (v);";
-                await cmd.ExecuteNonQueryAsync();
-            }
-            finally
-            {
-                cmd.CommandText = "DROP TABLE IF EXISTS _vss_test;";
-                await cmd.ExecuteNonQueryAsync();
-            }
-            
-            Console.Error.WriteLine($"[Conn #{connId}] VSS loaded and validated");
+            cmd.CommandText = @"
+                LOAD vss;";
+            await cmd.ExecuteNonQueryAsync();
+            // Console.Error.WriteLine($"[Conn #{connId}] VSS loaded and validated");
             return connection;
         }
 
