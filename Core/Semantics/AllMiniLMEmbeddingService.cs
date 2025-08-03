@@ -32,9 +32,6 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
         public async Task<IEnumerable<float[]>> EmbedAsync(List<string> texts)
         {
-            if (_embedder != null)
-                Dispose();
-            _embedder = new AllMiniLmL6V2Embedder();
             await _lock.WaitAsync();
             try
             {
@@ -42,21 +39,15 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 var embeddings = _embedder.GenerateEmbeddings(texts).Select(e => e.ToArray());
                 return await Task.FromResult(embeddings);
             }
-            catch (OperationCanceledException)
-            {
-                Console.Error.WriteLine("[ERROR] Embedding operation timed out - likely hung in native code");
-                return Enumerable.Empty<float[]>();
-                // throw;
-            }
             catch (Exception e)
             {
                 Console.Error.WriteLine("[EMBEDDING ERROR] " + e.ToString());
-                return Enumerable.Empty<float[]>();
+                // return Enumerable.Empty<float[]>();
+                throw;
             }
             finally
             {
                 _lock.Release();
-                Dispose();
             }
         }
 

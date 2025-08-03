@@ -155,13 +155,9 @@ namespace UnityIntelligenceMCP.Core.Semantics
             var allEmbeddings = new List<float[]>(allTextsToEmbed.Count);
             if (allTextsToEmbed.Any())
             {
-                int batchSize = 256;
+                int batchSize = 1024;
                 int batchNum = 0;
                 var batchStopwatch = new Stopwatch();
-
-                long _baselineMemory = GC.GetTotalMemory(true);
-                // Console.Error.WriteLine($"[DEBUG] Baseline memory: {_baselineMemory / 1024 / 1024} MB");
-
                 foreach (var batch in allTextsToEmbed.Chunk(batchSize))
                 {
                     batchNum++;
