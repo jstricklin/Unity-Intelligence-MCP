@@ -1,59 +1,79 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AllMiniLmL6V2Sharp;
-using ModelContextProtocol.Protocol;
 
 namespace UnityIntelligenceMCP.Core.Semantics
 {
     public class AllMiniLMEmbeddingService : IEmbeddingService, IDisposable
     {
-        private AllMiniLmL6V2Embedder _embedder;
-        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+        private readonly ConcurrentBag<AllMiniLmL6V2Embedder> _embedderPool = new();
+        private readonly SemaphoreSlim _poolSemaphore;
+        private readonly int _maxEmbedders;
+        private bool _disposed;
 
-        public AllMiniLMEmbeddingService()
+        public AllMiniLMEmbeddingService(int maxEmbedders = 4)
         {
-            _embedder = new AllMiniLmL6V2Embedder();
+            _maxEmbedders = Math.Max(1, maxEmbedders);
+            _poolSemaphore = new SemaphoreSlim(_maxEmbedders, _maxEmbedders);
+            
+            // Pre-initialize embedders to avoid cold-start delays
+            for (int i = 0; i < _maxEmbedders; i++)
+            {
+                _embedderPool.Add(CreateEmbedderInstance());
+            }
         }
 
         public async Task<float[]> EmbedAsync(string text)
         {
-            await _lock.WaitAsync();
-            try {
-                var embedding = _embedder.GenerateEmbedding(text).ToArray();
-                return await Task.FromResult(embedding);
-            }
-            finally {
-                _lock.Release();
-            }
+            // For single items, still use batch API to leverage pool
+            var results = await EmbedAsync(new List<string> { text });
+            return results.First();
         }
 
         public async Task<IEnumerable<float[]>> EmbedAsync(List<string> texts)
         {
-            await _lock.WaitAsync();
+            await _poolSemaphore.WaitAsync();
             try
             {
-                Console.Error.WriteLine($"[DEBUG] Generating embeddings...");
-                var embeddings = _embedder.GenerateEmbeddings(texts).Select(e => e.ToArray());
-                return await Task.FromResult(embeddings);
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine("[EMBEDDING ERROR] " + e.ToString());
-                // return Enumerable.Empty<float[]>();
-                throw;
+                if (!_embedderPool.TryTake(out var embedder))
+                {
+                    embedder = CreateEmbedderInstance();
+                }
+
+                try
+                {
+                    return embedder.GenerateEmbeddings(texts).Select(e => e.ToArray()).ToList();
+                }
+                finally
+                {
+                    _embedderPool.Add(embedder);
+                }
             }
             finally
             {
-                _lock.Release();
+                _poolSemaphore.Release();
             }
+        }
+
+        private AllMiniLmL6V2Embedder CreateEmbedderInstance()
+        {
+            return new AllMiniLmL6V2Embedder();
         }
 
         public void Dispose()
         {
-            _embedder?.Dispose();
+            if (_disposed) return;
+            _disposed = true;
+
+            foreach (var embedder in _embedderPool)
+            {
+                embedder?.Dispose();
+            }
+            _poolSemaphore?.Dispose();
         }
     }
 }
