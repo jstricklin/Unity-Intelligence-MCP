@@ -158,14 +158,20 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 int batchSize = 512;
                 int batchNum = 0;
                 var batchStopwatch = new Stopwatch();
+                int totalBatches = (int)MathF.Ceiling((float)(allTextsToEmbed.Count() / batchSize));
+                double timeToEmbed = 0.0;
+                double timeEst = 0.0;
                 foreach (var batch in allTextsToEmbed.Chunk(batchSize))
                 {
                     batchNum++;
-                    Console.Error.WriteLine($"[INFO] Processing a batch {batchNum} of {batch.Length} embeddings...");
+                    if (batchNum > 1)
+                        timeEst = (timeToEmbed / (batchNum - 1)) * (totalBatches - batchNum + 1);
+                    Console.Error.WriteLine($"[PROGRESS] Batch {batchNum}/{totalBatches} ({(double)batchNum/totalBatches*100:F1}%) | Estimated time left: {(timeEst > 0.0 ? TimeSpan.FromSeconds(timeEst).ToString(@"hh\:mm\:ss") : "Calculating...")}");
                     batchStopwatch.Restart();
                     var embeddingsInBatch = await _embeddingService.EmbedAsync(batch.ToList());
                     allEmbeddings.AddRange(embeddingsInBatch);
                     batchStopwatch.Stop();
+                    timeToEmbed += batchStopwatch.Elapsed.TotalSeconds;
                     Console.Error.WriteLine($"[INFO] Finished batch {batchNum} in {batchStopwatch.Elapsed.TotalSeconds:F2} seconds.");
                 }
             }
