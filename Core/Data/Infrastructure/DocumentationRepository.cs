@@ -14,6 +14,16 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 {
     public class DocumentationRepository : IDocumentationRepository
     {
+        private const string CreateProcessingTable = @"
+CREATE TABLE IF NOT EXISTS doc_processing_state (
+    file_path VARCHAR PRIMARY KEY,
+    unity_version VARCHAR NOT NULL,
+    content_hash VARCHAR NOT NULL,
+    state VARCHAR(20) NOT NULL,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+";
+
         private readonly IDuckDbConnectionFactory _connectionFactory;
 
         public DocumentationRepository(IDuckDbConnectionFactory connectionFactory)
@@ -228,5 +238,96 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             });
         }
 
+        public async Task InitializeDocumentTrackingAsync(string unityVersion, IEnumerable<FileStatus> fileStatuses)
+        {
+            await _connectionFactory.ExecuteWithConnectionAsync(async connection =>
+            {
+                // Create table if needed
+                var createCmd = connection.CreateCommand();
+                createCmd.CommandText = CreateProcessingTable;
+                await createCmd.ExecuteNonQueryAsync();
+                
+                // Initialize records
+                foreach (var status in fileStatuses)
+                {
+                    var cmd = connection.CreateCommand();
+                    cmd.CommandText = @"
+                        INSERT INTO doc_processing_state (file_path, unity_version, content_hash, state)
+                        VALUES ($path, $version, $hash, $state)
+                        ON CONFLICT (file_path) DO UPDATE SET
+                            content_hash = EXCLUDED.content_hash,
+                            state = EXCLUDED.state
+                    ";
+                    cmd.Parameters.AddRange(new[] {
+                        new DuckDBParameter("path", status.FilePath),
+                        new DuckDBParameter("version", unityVersion),
+                        new DuckDBParameter("hash", status.ContentHash),
+                        new DuckDBParameter("state", status.State.ToString())
+                    });
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            });
+        }
+
+        public async Task<Dictionary<string, FileStatus>> GetDocumentTrackingAsync(string unityVersion)
+        {
+            return await _connectionFactory.ExecuteWithConnectionAsync(async connection =>
+            {
+                var cmd = connection.CreateCommand();
+                cmd.CommandText = "SELECT file_path, content_hash, state FROM doc_processing_state WHERE unity_version = $version";
+                cmd.Parameters.Add(new DuckDBParameter("version", unityVersion));
+                
+                var results = new Dictionary<string, FileStatus>();
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    results[reader.GetString(0)] = new FileStatus {
+                        FilePath = reader.GetString(0),
+                        ContentHash = reader.GetString(1),
+                        State = Enum.Parse<DocumentState>(reader.GetString(2))
+                    };
+                }
+                return results;
+            });
+        }
+
+        public async Task MarkDocumentProcessingAsync(string filePath, string unityVersion)
+            => await UpdateState(filePath, unityVersion, DocumentState.Processing);
+
+        public async Task MarkDocumentProcessedAsync(string filePath, string unityVersion)
+            => await UpdateState(filePath, unityVersion, DocumentState.Processed);
+
+        public async Task MarkDocumentFailedAsync(string filePath, string unityVersion)
+            => await UpdateState(filePath, unityVersion, DocumentState.Failed);
+
+        private async Task UpdateState(string filePath, string unityVersion, DocumentState state)
+        {
+            await _connectionFactory.ExecuteWithConnectionAsync(async connection =>
+            {
+                var cmd = connection.CreateCommand();
+                cmd.CommandText = @"
+                    UPDATE doc_processing_state
+                    SET state = $state
+                    WHERE file_path = $path AND unity_version = $version
+                ";
+                cmd.Parameters.AddRange(new[] {
+                    new DuckDBParameter("state", state.ToString()),
+                    new DuckDBParameter("path", filePath),
+                    new DuckDBParameter("version", unityVersion)
+                });
+                await cmd.ExecuteNonQueryAsync();
+            });
+        }
+
+        public async Task RemoveDeprecatedDocumentsAsync(string unityVersion)
+        {
+            await _connectionFactory.ExecuteWithConnectionAsync(async connection =>
+            {
+                var cmd = connection.CreateCommand();
+                cmd.CommandText = "DELETE FROM doc_processing_state WHERE state = 'Deprecated' AND unity_version = $version";
+                cmd.Parameters.Add(new DuckDBParameter("version", unityVersion));
+                await cmd.ExecuteNonQueryAsync();
+            });
+        }
     }
 }

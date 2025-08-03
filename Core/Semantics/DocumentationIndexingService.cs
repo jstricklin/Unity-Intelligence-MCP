@@ -5,9 +5,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
 using UnityIntelligenceMCP.Core.Data;
+using System.Threading;
 using UnityIntelligenceMCP.Core.Data.Contracts;
 using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Models;
+using UnityIntelligenceMCP.Models.Database;
 using UnityIntelligenceMCP.Models.Documentation;
 using UnityIntelligenceMCP.Utilities;
 
@@ -68,185 +70,156 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 Console.Error.WriteLine($"[ERROR] Documentation directory not found: {ex.Message}");
                 return;
             }
-            var filesOnDisk = htmlFiles.Count;
+            // Determine if indexing is needed based on file count
+            bool shouldIndex = forceReindex == true || 
+                await _repository.GetDocCountForVersionAsync(unityVersion) != htmlFiles.Count;
             
-            bool shouldIndex = false;
-
-            if (forceReindex == true)
+            // Only remove existing entries if forcing reindex
+            if (shouldIndex && forceReindex == true)
             {
-                Console.Error.WriteLine($"[INFO] Force re-indexing enabled. Deleting existing documentation for Unity version {unityVersion}...");
                 await _repository.DeleteDocsByVersionAsync(unityVersion);
-                shouldIndex = true;
             }
-            else
-            {
-                var docsInDb = await _repository.GetDocCountForVersionAsync(unityVersion);
 
-                if (filesOnDisk != docsInDb)
+            if (shouldIndex)
+            {
+                _ = Task.Run(async () => 
                 {
-                    Console.Error.WriteLine($"[INFO] Documentation mismatch detected (Disk: {filesOnDisk}, DB: {docsInDb}). Re-indexing required for version {unityVersion}.");
-                    if (docsInDb > 0)
+                    try 
                     {
-                        await _repository.DeleteDocsByVersionAsync(unityVersion);
+                        await ProcessDocumentationInBackground(unityVersion, htmlFiles);
                     }
-                    shouldIndex = true;
-                }
-                else if (filesOnDisk == 0 && docsInDb == 0)
-                {
-                    Console.Error.WriteLine($"[WARN] No documentation files found at '{docPath}'. Cannot perform indexing.");
-                }
-                else
-                {
-                    Console.Error.WriteLine($"[INFO] Documentation for Unity version {unityVersion} is up to date ({docsInDb} documents). Skipping indexing.");
-                }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"[FATAL] Indexing failed: {ex}");
+                    }
+                });
+                Console.Error.WriteLine("[INFO] Documentation indexing started in background");
             }
-
-            if (!shouldIndex) return;
-            
-            // Start background processing
-            _ = Task.Run(async () =>
-            {
-                try 
-                {
-                    await ProcessDocumentationInBackground(unityVersion, htmlFiles);
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"[ERROR] Background processing failed: {ex}");
-                }
-            });
-            
-            Console.Error.WriteLine("[INFO] Documentation indexing started in background");
         }
 
         private async Task ProcessDocumentationInBackground(string unityVersion, List<string> htmlFiles)
         {
-            Console.Error.WriteLine($"[INFO] Starting documentation indexing process for Unity version {unityVersion}...");
-            var stopwatch = Stopwatch.StartNew();
+            Console.Error.WriteLine($"[PROCESS] Starting documentation for {unityVersion}");
+            var sw = Stopwatch.StartNew();
             
-            // Phase 1: Parsing and collecting all texts...
-            Console.Error.WriteLine("[INFO] Phase 1: Parsing and collecting all texts...");
-            var parsedDocs = new List<UnityDocumentationData>();
-            var allChunkLists = new List<List<DocumentChunk>>();
-            var allTextsToEmbed = new List<string>();
-
-            foreach (var filePath in htmlFiles)
+            // Initialize tracking
+            var fileStatuses = new List<FileStatus>();
+            foreach (var file in htmlFiles)
             {
-                try
-                {
-                    var parsedData = _parser.Parse(filePath);
-                    parsedData.UnityVersion = unityVersion;
-                    var chunks = _chunker.ChunkDocument(parsedData);
-
-                    parsedDocs.Add(parsedData);
-                    allChunkLists.Add(chunks);
-                    allTextsToEmbed.Add(parsedData.Description);
-                    allTextsToEmbed.AddRange(chunks.Select(c => c.Text));
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"[ERROR] Failed to parse {filePath}: {ex.Message}");
-                }
+                fileStatuses.Add(new FileStatus {
+                    FilePath = file,
+                    ContentHash = await FileHasher.ComputeSHA256Async(file),
+                    State = DocumentState.Pending
+                });
+            }
+            await _repository.InitializeDocumentTrackingAsync(unityVersion, fileStatuses);
+            
+            // Get pending files
+            var trackingData = await _repository.GetDocumentTrackingAsync(unityVersion);
+            var pendingFiles = htmlFiles.Where(f => 
+                !trackingData.ContainsKey(f) || 
+                trackingData[f].State != DocumentState.Processed
+            ).ToList();
+            
+            if (!pendingFiles.Any())
+            {
+                Console.Error.WriteLine("[INFO] No pending documents - indexing complete");
+                return;
             }
             
-            // Phase 2: Generating embeddings...
-            Console.Error.WriteLine($"[INFO] Phase 2: Generating embeddings for {parsedDocs.Count} documents and their chunks ({allTextsToEmbed.Count} total texts)...");
-            var allEmbeddings = new List<float[]>(allTextsToEmbed.Count);
-            if (allTextsToEmbed.Any())
-            {
-                int batchSize = 512;
-                var batches = allTextsToEmbed.Chunk(batchSize).ToList();
-                int totalBatches = batches.Count;
-                int maxConcurrency = Environment.ProcessorCount;
-                var semaphore = new System.Threading.SemaphoreSlim(maxConcurrency);
-                var embeddingsByBatch = new List<float[]>[totalBatches];
-                var aggregateStopwatch = Stopwatch.StartNew();
+            // Configure parallel processing
+            const int FilesPerBatch = 6;  // Optimal for DuckDB performance
+            const int MaxParallelism = Environment.ProcessorCount;
+            var options = new ParallelOptions { MaxDegreeOfParallelism = MaxParallelism };
+            int processedCount = 0;
+            int totalFiles = pendingFiles.Count;
 
-                Console.Error.WriteLine($"[INFO] Using parallel processing with {maxConcurrency} concurrent batches");
-
-                // Ensure processing tasks are tracked separately
-                var processingTasks = new List<Task>(totalBatches);
-                
-                for (int i = 0; i < batches.Count; i++)
+            await Parallel.ForEachAsync(
+                BatchFiles(pendingFiles, FilesPerBatch),
+                options,
+                async (fileBatch, token) =>
                 {
-                    int batchIndex = i; // Capture current index for closure
-                    var batch = batches[i];
+                    var batchRecords = new List<SemanticDocumentRecord>();
+                    var processedInBatch = new List<string>();
                     
-                    processingTasks.Add(Task.Run(async () => 
+                    foreach (var filePath in fileBatch)
                     {
-                        await semaphore.WaitAsync();
                         try
                         {
-                            var batchStopwatch = Stopwatch.StartNew();
-                            var embeddings = await _embeddingService.EmbedAsync(batch.ToList());
-                            batchStopwatch.Stop();
-
-                            embeddingsByBatch[batchIndex] = embeddings.ToList();
+                            await _repository.MarkDocumentProcessingAsync(filePath, unityVersion);
                             
-                            lock (embeddingsByBatch)
+                            var parsedData = _parser.Parse(filePath);
+                            parsedData.UnityVersion = unityVersion;
+                            
+                            var chunks = _chunker.ChunkDocument(parsedData);
+                            var texts = new List<string> { parsedData.Description }
+                                .Concat(chunks.Select(c => c.Text))
+                                .ToList();
+                            
+                            // Get embeddings in one batch per document
+                            var embeddings = await _embeddingService.EmbedAsync(texts);
+                            
+                            parsedData.Embedding = embeddings.ElementAt(0);
+                            for (int i = 0; i < chunks.Count; i++)
                             {
-                                Console.Error.WriteLine($"[PROGRESS] Batch {batchIndex + 1}/{totalBatches} "
-                                    + $"({batch.Length} texts) completed in "
-                                    + $"{batchStopwatch.Elapsed.TotalSeconds:F2}s");
+                                chunks[i].Embedding = embeddings.ElementAt(i + 1);
                             }
+                            
+                            var source = new UnityDocumentationSource(parsedData, _chunker, chunks);
+                            batchRecords.Add(await source.ToSemanticRecordAsync(_embeddingService));
+                            processedInBatch.Add(filePath);
+                            
+                            // Update progress
+                            var current = Interlocked.Increment(ref processedCount);
+                            Console.Error.WriteLine($"[PROGRESS] {current}/{totalFiles} files processed");
                         }
-                        finally
+                        catch (Exception ex)
                         {
-                            semaphore.Release();
+                            Console.Error.WriteLine($"[ERROR] {Path.GetFileName(filePath)}: {ex.Message}");
+                            await _repository.MarkDocumentFailedAsync(filePath, unityVersion);
                         }
-                    }));
-                }
-
-                await Task.WhenAll(processingTasks);
-                
-                // Combine results in original batch order
-                foreach (var batchResult in embeddingsByBatch)
-                {
-                    if (batchResult != null)
-                    {
-                        allEmbeddings.AddRange(batchResult);
                     }
-                }
-                
-                aggregateStopwatch.Stop();
-                Console.Error.WriteLine($"[INFO] Total embedding time: {aggregateStopwatch.Elapsed.TotalSeconds:F2}s, "
-                    + $"{allTextsToEmbed.Count / aggregateStopwatch.Elapsed.TotalSeconds:F2} texts/sec");
-            }
+                    
+                    // Batch insert to database
+                    if (batchRecords.Count > 0)
+                    {
+                        await _repository.InsertDocumentsInBulkAsync(batchRecords);
+                        
+                        // Batch mark as processed
+                        foreach (var filePath in processedInBatch)
+                        {
+                            await _repository.MarkDocumentProcessedAsync(filePath, unityVersion);
+                        }
+                    }
+                });
             
-            // Distribute embeddings...
-            int embeddingIndex = 0;
-            for (int i = 0; i < parsedDocs.Count; i++)
-            {
-                parsedDocs[i].Embedding = allEmbeddings[embeddingIndex++];
-                foreach (var chunk in allChunkLists[i])
-                {
-                    chunk.Embedding = allEmbeddings[embeddingIndex++];
-                }
-            }
-            
-            // Phase 3: Enqueuing processed documents...
-            Console.Error.WriteLine("[INFO] Phase 3: Enqueuing processed documents for database insertion...");
-            for (int i = 0; i < parsedDocs.Count; i++)
-            {
-                try
-                {
-                    var source = new UnityDocumentationSource(parsedDocs[i], _chunker, allChunkLists[i]);
-                    await _orchestrationService.ProcessAndStoreSourceAsync(source);
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"[ERROR] Failed to create and process source for {parsedDocs[i].FilePath}: {ex.Message}");
-                }
-            }
-            
-            // Signal queue completion
-            if (_orchestrationService.TryCompleteQueue())
-            {
-                Console.Error.WriteLine("[INFO] All documentation has been enqueued for processing.");
-            }
+            // Cleanup
+            await _repository.RemoveDeprecatedDocumentsAsync(unityVersion);
+            sw.Stop();
+            Console.Error.WriteLine($"[COMPLETE] Indexing finished in {sw.Elapsed.TotalSeconds}s");
+        }
 
-            stopwatch.Stop();
-            Console.Error.WriteLine($"[INFO] Documentation parsing and enqueuing completed for Unity version {unityVersion} in {stopwatch.Elapsed.TotalSeconds:F2} seconds. Background processing will continue.");
+        private IEnumerable<IEnumerable<TSource>> BatchFiles<TSource>(IEnumerable<TSource> source, int batchSize)
+        {
+            TSource[] bucket = null;
+            var count = 0;
+            
+            foreach (var item in source)
+            {
+                bucket ??= new TSource[batchSize];
+                bucket[count++] = item;
+                
+                if (count != batchSize) 
+                    continue;
+                
+                yield return bucket;
+                
+                bucket = null;
+                count = 0;
+            }
+            
+            if (bucket != null && count > 0)
+                yield return bucket.Take(count);
         }
     }
 }

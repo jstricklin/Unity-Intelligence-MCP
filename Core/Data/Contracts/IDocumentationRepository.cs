@@ -13,5 +13,11 @@ namespace UnityIntelligenceMCP.Core.Data.Contracts
         Task InsertDocumentsInBulkAsync(IReadOnlyList<SemanticDocumentRecord> records, CancellationToken cancellationToken = default);
         Task<int> GetDocCountForVersionAsync(string unityVersion, CancellationToken cancellationToken = default);
         Task DeleteDocsByVersionAsync(string unityVersion, CancellationToken cancellationToken = default);
+        Task InitializeDocumentTrackingAsync(string unityVersion, IEnumerable<FileStatus> fileStatuses);
+        Task<Dictionary<string, FileStatus>> GetDocumentTrackingAsync(string unityVersion);
+        Task MarkDocumentProcessingAsync(string filePath, string unityVersion);
+        Task MarkDocumentProcessedAsync(string filePath, string unityVersion);
+        Task MarkDocumentFailedAsync(string filePath, string unityVersion);
+        Task RemoveDeprecatedDocumentsAsync(string unityVersion);
     }
 }
