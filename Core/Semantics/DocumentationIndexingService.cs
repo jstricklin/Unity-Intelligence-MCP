@@ -58,6 +58,19 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 return;
             }
 
+            // Materialize file list immediately
+            List<string> htmlFiles;
+            try
+            {
+                htmlFiles = Directory.EnumerateFiles(docPath, "*.html", SearchOption.AllDirectories).ToList();
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                Console.Error.WriteLine($"[ERROR] Documentation directory not found: {ex.Message}");
+                return;
+            }
+            var filesOnDisk = htmlFiles.Count;
+            
             bool shouldIndex = false;
 
             if (forceReindex == true)
@@ -68,8 +81,6 @@ namespace UnityIntelligenceMCP.Core.Semantics
             }
             else
             {
-
-                var filesOnDisk = Directory.EnumerateFiles(docPath, "*.html", SearchOption.AllDirectories).Count();
                 var docsInDb = await _repository.GetDocCountForVersionAsync(unityVersion);
 
                 if (filesOnDisk != docsInDb)
@@ -92,12 +103,29 @@ namespace UnityIntelligenceMCP.Core.Semantics
             }
 
             if (!shouldIndex) return;
+            
+            // Start background processing
+            _ = Task.Run(async () =>
+            {
+                try 
+                {
+                    await ProcessDocumentationInBackground(unityVersion, htmlFiles);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"[ERROR] Background processing failed: {ex}");
+                }
+            });
+            
+            Console.Error.WriteLine("[INFO] Documentation indexing started in background");
+        }
 
+        private async Task ProcessDocumentationInBackground(string unityVersion, List<string> htmlFiles)
+        {
             Console.Error.WriteLine($"[INFO] Starting documentation indexing process for Unity version {unityVersion}...");
             var stopwatch = Stopwatch.StartNew();
-            var htmlFiles = Directory.EnumerateFiles(docPath, "*.html", SearchOption.AllDirectories);
-
-            // Phase 1: Parse all documents and collect all texts to be embedded.
+            
+            // Phase 1: Parsing and collecting all texts...
             Console.Error.WriteLine("[INFO] Phase 1: Parsing and collecting all texts...");
             var parsedDocs = new List<UnityDocumentationData>();
             var allChunkLists = new List<List<DocumentChunk>>();
@@ -122,7 +150,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 }
             }
             
-            // Phase 2: Run a single, consolidated batch embedding operation sequentially.
+            // Phase 2: Generating embeddings...
             Console.Error.WriteLine($"[INFO] Phase 2: Generating embeddings for {parsedDocs.Count} documents and their chunks ({allTextsToEmbed.Count} total texts)...");
             var allEmbeddings = new List<float[]>(allTextsToEmbed.Count);
             if (allTextsToEmbed.Any())
@@ -136,14 +164,6 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
                 foreach (var batch in allTextsToEmbed.Chunk(batchSize))
                 {
-                    // var memoryBefore = GC.GetTotalMemory(false);
-                    // if (memoryBefore > 500 * 1024 * 1024) // If over 500MB
-                    // {
-                    //     Console.Error.WriteLine($"[WARN] High memory usage detected: {memoryBefore / 1024 / 1024} MB. Forcing GC...");
-                    //     GC.Collect();
-                    //     GC.WaitForPendingFinalizers();
-                    //     GC.Collect();
-                    // }
                     batchNum++;
                     Console.Error.WriteLine($"[INFO] Processing a batch {batchNum} of {batch.Length} embeddings...");
                     batchStopwatch.Restart();
@@ -154,7 +174,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 }
             }
             
-            // Distribute the generated embeddings back to the original data objects.
+            // Distribute embeddings...
             int embeddingIndex = 0;
             for (int i = 0; i < parsedDocs.Count; i++)
             {
@@ -165,7 +185,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 }
             }
             
-            // Phase 3: Enqueue documents with pre-computed embeddings.
+            // Phase 3: Enqueuing processed documents...
             Console.Error.WriteLine("[INFO] Phase 3: Enqueuing processed documents for database insertion...");
             for (int i = 0; i < parsedDocs.Count; i++)
             {
@@ -180,7 +200,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 }
             }
             
-            // Signal to the queue that no more items will be added.
+            // Signal queue completion
             if (_orchestrationService.TryCompleteQueue())
             {
                 Console.Error.WriteLine("[INFO] All documentation has been enqueued for processing.");
