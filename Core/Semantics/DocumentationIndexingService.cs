@@ -128,8 +128,8 @@ namespace UnityIntelligenceMCP.Core.Semantics
             }
             
             // Configure parallel processing
-            const int FilesPerBatch = 6;  // Optimal for DuckDB performance
-            const int MaxParallelism = Environment.ProcessorCount;
+            const int FilesPerBatch = 6;  
+            int MaxParallelism = Environment.ProcessorCount;
             var options = new ParallelOptions { MaxDegreeOfParallelism = MaxParallelism };
             int processedCount = 0;
             int totalFiles = pendingFiles.Count;
@@ -201,7 +201,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
         private IEnumerable<IEnumerable<TSource>> BatchFiles<TSource>(IEnumerable<TSource> source, int batchSize)
         {
-            TSource[] bucket = null;
+            TSource[]? bucket = null;
             var count = 0;
             
             foreach (var item in source)

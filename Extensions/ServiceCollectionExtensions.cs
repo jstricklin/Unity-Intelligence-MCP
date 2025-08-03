@@ -47,7 +47,7 @@ namespace UnityIntelligenceMCP.Extensions
             services.AddHostedService<QueuedDbWriterService>();
             // services.AddSingleton<IEmbeddingService, PlaceholderEmbeddingService>(); // Using placeholder for now
             services.AddSingleton<IEmbeddingService>(sp => 
-                new AllMiniLMEmbeddingService(Environment.ProcessorCount));
+                new AllMiniLMEmbeddingService(Environment.ProcessorCount / 2));
             services.AddSingleton<DocumentationOrchestrationService>();
             services.AddSingleton<UnityDocumentationParser>();
             services.AddSingleton<IDocumentChunker, UnityDocumentChunker>();
