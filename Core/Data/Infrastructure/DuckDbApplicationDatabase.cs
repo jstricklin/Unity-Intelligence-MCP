@@ -106,13 +106,17 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
         ";
 
         private const string SchemaStandardIndexes = @"
-            CREATE INDEX idx_docs_source_type ON unity_docs(source_id, doc_type);
             CREATE INDEX idx_elements_doc_type ON content_elements(doc_id, element_type);
             CREATE INDEX idx_metadata_doc ON doc_metadata(doc_id);
         ";
 
         private const string SchemaHnswIndexes = @"
-            CREATE INDEX idx_unity_docs_embedding ON unity_docs USING HNSW (embedding);
+            CREATE INDEX idx_unity_docs_embedding ON unity_docs USING HNSW (embedding)
+            WITH (
+                metric = cosine,
+                dimensions = 384
+            );
+            CREATE INDEX idx_docs_source_type ON unity_docs(source_id, doc_type);
             CREATE INDEX idx_content_elements_embedding ON content_elements USING HNSW (embedding);
         ";
 
