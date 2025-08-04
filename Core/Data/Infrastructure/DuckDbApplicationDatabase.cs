@@ -45,7 +45,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 
         private const string SchemaBaseTables = @"
             CREATE SEQUENCE doc_sources_id_seq START 1;
-            CREATE TABLE doc_sources (
+            CREATE TABLE IF NOT EXISTS doc_sources (
                 id BIGINT PRIMARY KEY DEFAULT nextval('doc_sources_id_seq'),
                 source_type VARCHAR NOT NULL UNIQUE,
                 source_name VARCHAR NOT NULL,
@@ -56,7 +56,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             );
 
             CREATE SEQUENCE unity_docs_id_seq START 1;
-            CREATE TABLE unity_docs (
+            CREATE TABLE IF NOT EXISTS unity_docs (
                 id BIGINT PRIMARY KEY DEFAULT nextval('unity_docs_id_seq'),
                 source_id BIGINT NOT NULL,
                 doc_key VARCHAR NOT NULL,
@@ -72,7 +72,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             );
 
             CREATE SEQUENCE doc_metadata_id_seq START 1;
-            CREATE TABLE doc_metadata (
+            CREATE TABLE IF NOT EXISTS doc_metadata (
                 id BIGINT PRIMARY KEY DEFAULT nextval('doc_metadata_id_seq'),
                 doc_id BIGINT NOT NULL,
                 metadata_type VARCHAR NOT NULL,
@@ -82,7 +82,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             );
 
             CREATE SEQUENCE content_elements_id_seq START 1;
-            CREATE TABLE content_elements (
+            CREATE TABLE IF NOT EXISTS content_elements (
                 id BIGINT PRIMARY KEY DEFAULT nextval('content_elements_id_seq'),
                 doc_id BIGINT NOT NULL,
                 element_type VARCHAR NOT NULL,
@@ -94,7 +94,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             );
 
             CREATE SEQUENCE doc_relationships_id_seq START 1;
-            CREATE TABLE doc_relationships (
+            CREATE TABLE IF NOT EXISTS doc_relationships (
                 id BIGINT PRIMARY KEY DEFAULT nextval('doc_relationships_id_seq'),
                 source_doc_id BIGINT NOT NULL,
                 target_doc_id BIGINT NOT NULL,
