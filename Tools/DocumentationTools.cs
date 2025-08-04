@@ -18,10 +18,7 @@ namespace UnityIntelligenceMCP.Tools
             _searchService = searchService;
         }
 
-        [McpServerTool(
-            Name = "semantic_docs_search", 
-            Description = "Finds relevant Unity Engine documentation using semantic search"
-        )]
+        [McpServerTool(Name = "semantic_docs_search"), Description("Finds relevant Unity Engine documentation using semantic search.")]
         public async Task<IEnumerable<SemanticSearchResult>> SearchDocumentation(
             [Description("Natural language query for Unity-related documentation")]
             string query,

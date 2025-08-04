@@ -51,10 +51,11 @@ namespace UnityIntelligenceMCP.Core.Semantics
                     ORDER BY RelevanceScore DESC
                     LIMIT @limit;";
 
-                    cmd.Parameters
-                        .Add(new DuckDBParameter("query", vector))
-                        .Add(new DuckDBParameter("limit", limit))
-                        .Add(new DuckDBParameter("sourceType", sourceType));
+                    cmd.Parameters.AddRange(new[] { 
+                        new DuckDBParameter("query", vector),
+                        new DuckDBParameter("limit", limit),
+                        new DuckDBParameter("sourceType", sourceType)
+                    });
 
                     var results = new List<SemanticSearchResult>();
                     using var reader = await cmd.ExecuteReaderAsync();
@@ -62,11 +63,11 @@ namespace UnityIntelligenceMCP.Core.Semantics
                     while (await reader.ReadAsync())
                     {
                         results.Add(new SemanticSearchResult(
-                            DocId: reader.GetInt64(0),
-                            Title: reader.GetString(1),
-                            Url: reader.GetString(2),
-                            Source: reader.GetString(3),
-                            RelevanceScore: reader.GetDouble(4)
+                            docId: reader.GetInt64(0),
+                            title: reader.GetString(1),
+                            url: reader.GetString(2),
+                            source: reader.GetString(3),
+                            relevanceScore: reader.GetDouble(4)
                         ));
                     }
                     return results;
