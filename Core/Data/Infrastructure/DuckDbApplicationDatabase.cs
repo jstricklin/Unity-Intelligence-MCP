@@ -3,7 +3,6 @@ using System;
 using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Core.Data.Contracts;
 
@@ -11,10 +10,15 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 {
     public class DuckDbApplicationDatabase : IApplicationDatabase
     {
+        private readonly IDuckDbConnectionFactory _connectionFactory;
         private readonly string _databasePath;
         private readonly SemaphoreSlim _schemaLock = new(1, 1);
-        public DuckDbApplicationDatabase(string databasePath = "application.duckdb")
+
+        public DuckDbApplicationDatabase(
+            IDuckDbConnectionFactory connectionFactory,
+            string databasePath = "application.duckdb")
         {
+            _connectionFactory = connectionFactory;
             _databasePath = Path.Combine(AppContext.BaseDirectory, databasePath);
         }
 
@@ -26,9 +30,10 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             try
             {
                 await TryRecoverDatabase();
-                await using var connection = new DuckDBConnection($"DataSource = {GetConnectionString()}");
-                await connection.OpenAsync();
-                
+            
+                // Get connection through factory
+                await using var connection = await _connectionFactory.GetConnectionAsync();
+            
                 if (await IsSchemaInitializedAsync(connection))
                 {
                     Console.Error.WriteLine("[Database] Schema is already initialized - skipping initialization");
@@ -224,12 +229,8 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 
             try
             {
-                // Run initialization scripts
-                command.CommandText = "LOAD vss; SET hnsw_enable_experimental_persistence = true;";
-                await command.ExecuteNonQueryAsync();
-                Console.Error.WriteLine("[VSS] Loaded");
-
-                // Create resource document index table
+                // Remove VSS loading - factory handles this
+                // Processing table
                 command.CommandText = ProcessingTable;
                 await command.ExecuteNonQueryAsync();
                 
@@ -277,11 +278,12 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
         {
             try
             {
-                using var tempConn = new DuckDBConnection($"DataSource={GetConnectionString()}");
-                tempConn.Open();
-                using var cmd = tempConn.CreateCommand();
-                cmd.CommandText = "CHECKPOINT";
-                cmd.ExecuteNonQuery();
+                await _connectionFactory.ExecuteWithConnectionAsync(async connection => 
+                {
+                    using var cmd = connection.CreateCommand();
+                    cmd.CommandText = "CHECKPOINT";
+                    await cmd.ExecuteNonQueryAsync();
+                });
             }
             catch (DuckDBException ex)
             {
