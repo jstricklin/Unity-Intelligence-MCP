@@ -4,6 +4,7 @@ namespace UnityIntelligenceMCP.Models
     {
         public string? UnityVersion { get; set; }
         public string Status { get; set; } = "Unknown";
+        public int Percent { get; set; }
         public int ProcessedCount { get; set; }
         public int TotalCount { get; set; }
         public bool IsReady => Status == "Complete";

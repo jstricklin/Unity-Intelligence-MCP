@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
+using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Core.Semantics;
 using UnityIntelligenceMCP.Models;
 
@@ -12,10 +13,22 @@ namespace UnityIntelligenceMCP.Tools
     public class DocumentationTools
     {
         private readonly ISemanticSearchService _searchService;
+        private readonly DocumentationIndexingService _indexingService;
+        private readonly ConfigurationService _configurationService;
 
-        public DocumentationTools(ISemanticSearchService searchService)
+        public DocumentationTools(ISemanticSearchService searchService, DocumentationIndexingService indexer, ConfigurationService configurationService)
         {
             _searchService = searchService;
+            _indexingService = indexer;
+            _configurationService = configurationService;
+        }
+
+        [McpServerTool(Name = "get_asset_indexing_status"), Description("Get current status of documentation database indexing.")]
+        public async Task<IndexingStatus> SearchDocumentation(
+            CancellationToken cancellationToken = default)
+        {
+            var projectPath = _configurationService.GetConfiguredProjectPath();
+            return await _indexingService.GetIndexingStatusAsync(projectPath);
         }
 
         [McpServerTool(Name = "semantic_docs_search"), Description("Finds relevant Unity Engine documentation using semantic search.")]

@@ -85,9 +85,10 @@ namespace UnityIntelligenceMCP.Core.Semantics
             {
                 UnityVersion = unityVersion,
                 Status = status,
+                Percent = (int)(((float)processedCount / totalCount) * 100),
                 ProcessedCount = processedCount,
                 TotalCount = totalCount
-            };
+        };
         }
 
         public async Task IndexDocumentationIfRequiredAsync(string projectPath, bool? forceReindex)
