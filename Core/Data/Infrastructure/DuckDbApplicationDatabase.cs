@@ -225,7 +225,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             try
             {
                 // Run initialization scripts
-                command.CommandText = "INSTALL vss; LOAD vss; SET hnsw_enable_experimental_persistence = true;";
+                command.CommandText = "LOAD vss; SET hnsw_enable_experimental_persistence = true;";
                 await command.ExecuteNonQueryAsync();
                 Console.Error.WriteLine("[VSS] Loaded");
 
