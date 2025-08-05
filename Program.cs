@@ -18,7 +18,7 @@ builder.Services
     })
     .WithStdioServerTransport()
     .WithToolsFromAssembly()
-    .WithResourcesFromAssembly(); // Add this to discover resources
+    .WithResourcesFromAssembly(); 
 
 // Clean registration using extension method below
 builder.Services.AddUnityAnalysisServices();

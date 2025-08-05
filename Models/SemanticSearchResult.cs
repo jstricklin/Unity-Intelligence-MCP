@@ -8,7 +8,7 @@ namespace UnityIntelligenceMCP.Models
         public string Source { get; set; }
         public double RelevanceScore { get; set; }
         
-        public SemanticSearchResult() {}
+        // public SemanticSearchResult() {}
         
         public SemanticSearchResult(long docId, string title, string url, string source, double relevanceScore)
         {
