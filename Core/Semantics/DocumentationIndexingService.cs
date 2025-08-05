@@ -42,6 +42,54 @@ namespace UnityIntelligenceMCP.Core.Semantics
             _embeddingService = embeddingService;
             _connectionFactory = connectionFactory;
         }
+
+        public async Task<IndexingStatus> GetIndexingStatusAsync(string projectPath)
+        {
+            var unityVersion = _unityInstallationService.GetProjectVersion(projectPath);
+            if (string.IsNullOrEmpty(unityVersion))
+            {
+                return new IndexingStatus { Status = "Error: Unity version not found.", UnityVersion = "Unknown" };
+            }
+
+            string docPath;
+            try
+            {
+                docPath = _unityInstallationService.GetDocumentationPath(projectPath, "ScriptReference");
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return new IndexingStatus { Status = "Error: Documentation directory not found.", UnityVersion = unityVersion };
+            }
+
+            var totalCount = Directory.EnumerateFiles(docPath, "*.html", SearchOption.AllDirectories).Count();
+
+            if (totalCount == 0)
+            {
+                return new IndexingStatus { Status = "Complete", TotalCount = 0, ProcessedCount = 0, UnityVersion = unityVersion };
+            }
+
+            var trackingData = await _repository.GetDocumentTrackingAsync(unityVersion);
+            var processedCount = trackingData.Values.Count(s => s.State == DocumentState.Processed);
+
+            var status = "Not Started";
+            if (processedCount == totalCount)
+            {
+                status = "Complete";
+            }
+            else if (processedCount > 0)
+            {
+                status = "In Progress";
+            }
+
+            return new IndexingStatus
+            {
+                UnityVersion = unityVersion,
+                Status = status,
+                ProcessedCount = processedCount,
+                TotalCount = totalCount
+            };
+        }
+
         public async Task IndexDocumentationIfRequiredAsync(string projectPath, bool? forceReindex)
         {
             var unityVersion = _unityInstallationService.GetProjectVersion(projectPath);
