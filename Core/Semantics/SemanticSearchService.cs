@@ -34,11 +34,11 @@ namespace UnityIntelligenceMCP.Core.Semantics
                         d.title,
                         d.url,
                         s.source_name AS Source,
-                        1 - array_distance(d.embedding, $query) AS RelevanceScore
+                        1 - array_distance(d.embedding, CAST($query AS FLOAT[384])) AS RelevanceScore
                     FROM unity_docs d
                     JOIN doc_sources s ON d.source_id = s.id
                     WHERE s.source_type = $sourceType
-                    ORDER BY array_distance(d.embedding, $query)
+                    ORDER BY RelevanceScore DESC
                     LIMIT $limit;";
 
                     cmd.Parameters.AddRange(new[] { 
@@ -57,7 +57,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             title: reader.GetString(1),
                             url: reader.GetString(2),
                             source: reader.GetString(3),
-                            relevanceScore: reader.GetDouble(4)
+                            relevanceScore: reader.GetFloat(4)
                         ));
                     }
                     return results;
