@@ -107,7 +107,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 // Only create keyword scoring function if we have terms
                 if (terms.Any())
                 {
-                    connection.CreateScalarFunction<double, string>("keyword_score", content => {
+                    connection.RegisterScalarFunction<double, string>("keyword_score", (reader, writer, rowCount) => {
                         double score = 0;
                         foreach (var term in terms)
                         {
@@ -122,7 +122,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 else
                 {
                     // Fallback: Return zero if no valid terms
-                    connection.CreateScalarFunction<double, string>("keyword_score", _ => 0);
+                    connection.RegisterScalarFunction<double, string>("keyword_score", _ => 0);
                 }
 
                 using var cmd = connection.CreateCommand();
