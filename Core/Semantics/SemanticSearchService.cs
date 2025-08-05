@@ -58,10 +58,10 @@ namespace UnityIntelligenceMCP.Core.Semantics
                         results.Add(new SemanticSearchResult(
                             docId: reader.GetInt64(0),
                             title: reader.GetString(1),
-                            url: reader.IsDBNull(2) ? null : reader.GetString(2),
+                            url: reader.GetString(2),
                             source: reader.GetString(3),
                             contentSnippet: reader.GetString(4),
-                            relevanceScore: reader.GetDouble(5)
+                            relevanceScore: reader.GetFloat(5)
                         ));
                     }
                     return results;
