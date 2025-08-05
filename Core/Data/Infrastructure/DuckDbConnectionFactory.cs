@@ -11,15 +11,17 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
     {
         private readonly string _dbPath;
         private readonly ILogger<DuckDbConnectionFactory> _logger;
-
-        public DuckDbConnectionFactory(string dbPath, ILogger<DuckDbConnectionFactory> logger)
+        private readonly SemaphoreSlim _connectionSemaphore = new(1, 1); 
+        public DuckDbConnectionFactory(ILogger<DuckDbConnectionFactory> logger, string dbPath = "application.duckdb")
         {
-            _dbPath = dbPath;
+            _dbPath = Path.Combine(AppContext.BaseDirectory, dbPath);
             _logger = logger;
         }
 
+        public string GetConnectionString() => _dbPath;
         public async Task<DuckDBConnection> GetConnectionAsync()
         {
+            await _connectionSemaphore.WaitAsync();
             const int maxAttempts = 3;
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
@@ -27,8 +29,17 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 {
                     var connection = new DuckDBConnection($"DataSource={_dbPath}");
                     await connection.OpenAsync();
-                    
-                    // VSS already loaded by factory
+                        
+                    using var cmd = connection.CreateCommand();
+                    cmd.CommandText = @"
+                        SELECT COUNT(*) from duckdb_extensions() WHERE extension_name = 'vss' AND loaded = true;";
+                    var result = await cmd.ExecuteScalarAsync();
+                    if (result == null || int.Parse(result.ToString() ?? "0") == 0)
+                    {
+                        cmd.CommandText = @"
+                            LOAD vss;";
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                     return connection;
                 }
                 catch (DuckDBException ex) when (IsLockedDatabaseError(ex))
@@ -45,6 +56,10 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                     await TryRecoverDatabaseAsync();
                     await Task.Delay(500 * attempt); // Backoff delay
                 }
+                finally
+                {
+                    _connectionSemaphore.Release();
+                }
             }
             throw new InvalidOperationException("Unexpected connection flow");
         }
@@ -56,17 +71,17 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                    ex.Message.Contains("out of memory");
         }
 
-        private async Task TryRecoverDatabaseAsync()
+        public async Task TryRecoverDatabaseAsync()
         {
             try
             {
                 // Try graceful checkpoint first
                 _logger.LogInformation("Attempting checkpoint...");
                 using var conn = new DuckDBConnection($"DataSource={_dbPath};access_mode=READ_ONLY");
-                conn.Open();
+                await conn.OpenAsync();
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = "CHECKPOINT";
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync();
                 _logger.LogInformation("Checkpoint successful");
             }
             catch (Exception checkpointEx)

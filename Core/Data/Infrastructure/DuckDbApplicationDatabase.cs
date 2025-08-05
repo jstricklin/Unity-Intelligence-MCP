@@ -11,29 +11,30 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
     public class DuckDbApplicationDatabase : IApplicationDatabase
     {
         private readonly IDuckDbConnectionFactory _connectionFactory;
-        private readonly string _databasePath;
         private readonly SemaphoreSlim _schemaLock = new(1, 1);
 
-        public DuckDbApplicationDatabase(
-            IDuckDbConnectionFactory connectionFactory,
-            string databasePath = "application.duckdb")
+        public DuckDbApplicationDatabase(IDuckDbConnectionFactory connectionFactory)
         {
             _connectionFactory = connectionFactory;
-            _databasePath = Path.Combine(AppContext.BaseDirectory, databasePath);
         }
 
-        public string GetConnectionString() => _databasePath;
 
         public async Task InitializeDatabaseAsync(string unityVersion)
         {
             await _schemaLock.WaitAsync();
             try
             {
-                await TryRecoverDatabase();
+                // await _connectionFactory.TryRecoverDatabaseAsync();
             
                 // Get connection through factory
                 await using var connection = await _connectionFactory.GetConnectionAsync();
-            
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = @"
+                    LOAD vss;";
+                await cmd.ExecuteNonQueryAsync();
+                cmd.CommandText = @"
+                    SET hnsw_enable_experimental_persistence = true;";
+                await cmd.ExecuteNonQueryAsync();
                 if (await IsSchemaInitializedAsync(connection))
                 {
                     Console.Error.WriteLine("[Database] Schema is already initialized - skipping initialization");
@@ -118,8 +119,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
         private const string SchemaHnswIndexes = @"
             CREATE INDEX idx_unity_docs_embedding ON unity_docs USING HNSW (embedding)
             WITH (
-                metric = cosine,
-                dimensions = 384
+                metric = 'cosine'
             );
             CREATE INDEX idx_docs_source_type ON unity_docs(source_id, doc_type);
             CREATE INDEX idx_content_elements_embedding ON content_elements USING HNSW (embedding);
@@ -274,37 +274,37 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             }
         }
 
-        private async Task TryRecoverDatabase()
-        {
-            try
-            {
-                await _connectionFactory.ExecuteWithConnectionAsync(async connection => 
-                {
-                    using var cmd = connection.CreateCommand();
-                    cmd.CommandText = "CHECKPOINT";
-                    await cmd.ExecuteNonQueryAsync();
-                });
-            }
-            catch (DuckDBException ex)
-            {
-                Debug.WriteLine($"Pre-init recovery failed: {ex.Message}");
-                await ForceWalCleanup();
-            }
-        }
+        // private async Task TryRecoverDatabase()
+        // {
+        //     try
+        //     {
+        //         await _connectionFactory.ExecuteWithConnectionAsync(async connection => 
+        //         {
+        //             using var cmd = connection.CreateCommand();
+        //             cmd.CommandText = "CHECKPOINT";
+        //             await cmd.ExecuteNonQueryAsync();
+        //         });
+        //     }
+        //     catch (DuckDBException ex)
+        //     {
+        //         Debug.WriteLine($"Pre-init recovery failed: {ex.Message}");
+        //         await ForceWalCleanup();
+        //     }
+        // }
 
-        private async Task ForceWalCleanup()
-        {
-            var dbPath = GetConnectionString();
-            var files = new[] { dbPath + ".wal", dbPath + ".tmp", dbPath + ".lock" };
-            foreach (var file in files)
-            {
-                try 
-                { 
-                    if (File.Exists(file)) File.Delete(file); 
-                }
-                catch { /* Ignore */ }
-            }
-            await Task.Delay(100);
-        }
+        // private async Task ForceWalCleanup()
+        // {
+        //     var dbPath = GetConnectionString();
+        //     var files = new[] { dbPath + ".wal", dbPath + ".tmp", dbPath + ".lock" };
+        //     foreach (var file in files)
+        //     {
+        //         try 
+        //         { 
+        //             if (File.Exists(file)) File.Delete(file); 
+        //         }
+        //         catch { /* Ignore */ }
+        //     }
+        //     await Task.Delay(100);
+        // }
     }
 }

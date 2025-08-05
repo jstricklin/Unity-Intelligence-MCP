@@ -18,6 +18,7 @@ using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Utilities;
 using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Core.Data.Services;
+using System.Data.Common;
 
 namespace UnityIntelligenceMCP.Extensions
 {
@@ -42,17 +43,12 @@ namespace UnityIntelligenceMCP.Extensions
 
             // New Semantic Search and Documentation Services
             services.AddSingleton<IApplicationDatabase, DuckDbApplicationDatabase>();
-            services.AddSingleton<IDuckDbConnectionFactory>(sp =>
-                new DuckDbConnectionFactory(
-                    sp.GetRequiredService<IApplicationDatabase>().GetConnectionString(),
-                    sp.GetRequiredService<ILogger<DuckDbConnectionFactory>>()
-                ));
+            services.AddSingleton<IDuckDbConnectionFactory, DuckDbConnectionFactory>();
             services.AddSingleton<IDocumentationRepository, DocumentationRepository>();
             services.AddSingleton<IDbWorkQueue, DbWorkQueue>();
             services.AddHostedService<QueuedDbWriterService>();
             // services.AddSingleton<IEmbeddingService, PlaceholderEmbeddingService>(); // Using placeholder for now
-            services.AddSingleton<IEmbeddingService>(sp => 
-                new AllMiniLMEmbeddingService(Environment.ProcessorCount));
+            services.AddSingleton<IEmbeddingService>(sp => new AllMiniLMEmbeddingService(Environment.ProcessorCount));
             services.AddSingleton<DocumentationOrchestrationService>();
             services.AddSingleton<UnityDocumentationParser>();
             services.AddSingleton<IDocumentChunker, UnityDocumentChunker>();
