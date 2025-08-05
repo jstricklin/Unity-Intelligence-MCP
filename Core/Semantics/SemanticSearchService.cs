@@ -29,17 +29,20 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 {
                     using var cmd = connection.CreateCommand();
                     cmd.CommandText = @"
-                    SELECT
-                        d.id AS DocId,
+                    SELECT 
+                        d.id,
                         d.title,
                         d.url,
-                        s.source_name AS Source,
-                        1 - array_distance(d.embedding, CAST($query AS FLOAT[384])) AS RelevanceScore
-                    FROM unity_docs d
+                        s.source_name,
+                        ce.content,
+                        1 - array_distance(ce.embedding, CAST($query AS FLOAT[384])) AS relevance
+                    FROM content_elements ce
+                    JOIN unity_docs d ON ce.doc_id = d.id
                     JOIN doc_sources s ON d.source_id = s.id
                     WHERE s.source_type = $sourceType
-                    ORDER BY RelevanceScore DESC
-                    LIMIT $limit;";
+                    ORDER BY relevance DESC
+                    LIMIT $limit;
+                    ";
 
                     cmd.Parameters.AddRange(new[] { 
                         new DuckDBParameter("query", vector),
@@ -55,9 +58,10 @@ namespace UnityIntelligenceMCP.Core.Semantics
                         results.Add(new SemanticSearchResult(
                             docId: reader.GetInt64(0),
                             title: reader.GetString(1),
-                            url: reader.GetString(2),
+                            url: reader.IsDBNull(2) ? null : reader.GetString(2),
                             source: reader.GetString(3),
-                            relevanceScore: reader.GetFloat(4)
+                            contentSnippet: reader.GetString(4),
+                            relevanceScore: reader.GetDouble(5)
                         ));
                     }
                     return results;

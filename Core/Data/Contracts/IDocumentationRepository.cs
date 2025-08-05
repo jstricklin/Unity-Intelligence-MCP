@@ -10,7 +10,8 @@ namespace UnityIntelligenceMCP.Core.Data.Contracts
     public interface IDocumentationRepository
     {
         Task<int> InsertDocumentAsync(SemanticDocumentRecord record, CancellationToken cancellationToken = default);
-        Task InsertDocumentsInBulkAsync(IReadOnlyList<SemanticDocumentRecord> records, CancellationToken cancellationToken = default);
+        Task<Dictionary<string, long>> InsertDocumentsInBulkAsync(IReadOnlyList<SemanticDocumentRecord> records, CancellationToken cancellationToken = default);
+        Task InsertContentElementsInBulkAsync(IReadOnlyList<ContentElementRecord> elements, CancellationToken cancellationToken = default);
         Task<int> GetDocCountForVersionAsync(string unityVersion, CancellationToken cancellationToken = default);
         Task DeleteDocsByVersionAsync(string unityVersion, CancellationToken cancellationToken = default);
         Task InitializeDocumentTrackingAsync(string unityVersion, IEnumerable<FileStatus> fileStatuses);

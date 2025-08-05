@@ -232,9 +232,12 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 options,
                 async (fileBatch, token) =>
                 {
-                    var batchRecords = new List<SemanticDocumentRecord>();
+                    var docRecords = new List<SemanticDocumentRecord>();
+                    var contentElementRecords = new List<ContentElementRecord>();
                     var processedInBatch = new List<string>();
-                    
+
+                    var fileToChunksMap = new Dictionary<string, (List<DocumentChunk> chunks, List<float[]> embeddings)>();
+
                     foreach (var filePath in fileBatch)
                     {
                         try
@@ -250,13 +253,9 @@ namespace UnityIntelligenceMCP.Core.Semantics
                                 .ToList();
                             
                             // Get embeddings in one batch per document
-                            var embeddings = await _embeddingService.EmbedAsync(texts);
+                            var embeddings = (await _embeddingService.EmbedAsync(texts)).ToList();
                             
-                            parsedData.Embedding = embeddings.ElementAt(0);
-                            for (int i = 0; i < chunks.Count; i++)
-                            {
-                                chunks[i].Embedding = embeddings.ElementAt(i + 1);
-                            }
+                            parsedData.Embedding = embeddings.First();
                             
                             var source = new UnityDocumentationSource(parsedData, _chunker, chunks);
                             var record = await source.ToSemanticRecordAsync(_embeddingService);
@@ -265,7 +264,8 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             record.SourceFilePath = filePath;
                             record.ContentHash = pathToHash[filePath];
                             
-                            batchRecords.Add(record);
+                            docRecords.Add(record);
+                            fileToChunksMap[record.DocKey] = (chunks, embeddings.Skip(1).ToList());
                             processedInBatch.Add(filePath);
                             
                             // Update progress
@@ -282,14 +282,53 @@ namespace UnityIntelligenceMCP.Core.Semantics
                     }
                     
                     // Batch insert to database
-                    if (batchRecords.Count > 0)
+                    if (docRecords.Any())
                     {
-                        await _repository.InsertDocumentsInBulkAsync(batchRecords);
-                        
-                        // Batch mark as processed
-                        foreach (var filePath in processedInBatch)
+                        try
                         {
-                            await _repository.MarkDocumentProcessedAsync(filePath, unityVersion);
+                            var docIdMap = await _repository.InsertDocumentsInBulkAsync(docRecords, token);
+
+                            foreach (var docRecord in docRecords)
+                            {
+                                if (!docIdMap.TryGetValue(docRecord.DocKey, out var docId) || !fileToChunksMap.TryGetValue(docRecord.DocKey, out var chunkData)) continue;
+
+                                var (chunks, embeddings) = chunkData;
+                                for (int i = 0; i < chunks.Count; i++)
+                                {
+                                    var chunk = chunks[i];
+                                    contentElementRecords.Add(new ContentElementRecord
+                                    {
+                                        DocId = docId,
+                                        ElementType = chunk.Section,
+                                        Title = chunk.Title,
+                                        Content = chunk.Text,
+                                        Embedding = embeddings[i],
+                                        AttributesJson = System.Text.Json.JsonSerializer.Serialize(new {
+                                            Position = i,
+                                            IsInherited = (chunk.Section?.Contains("Inherited") ?? false)
+                                        })
+                                    });
+                                }
+                            }
+
+                            if (contentElementRecords.Any())
+                            {
+                                await _repository.InsertContentElementsInBulkAsync(contentElementRecords, token);
+                            }
+
+                            // Batch mark as processed
+                            foreach (var filePath in processedInBatch)
+                            {
+                                await _repository.MarkDocumentProcessedAsync(filePath, unityVersion);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine($"[ERROR] Batch insert failed: {ex.Message}");
+                            foreach (var filePath in processedInBatch)
+                            {
+                                await _repository.MarkDocumentFailedAsync(filePath, unityVersion);
+                            }
                         }
                     }
                 });

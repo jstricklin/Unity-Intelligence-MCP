@@ -89,12 +89,13 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             });
         }
 
-        public Task InsertDocumentsInBulkAsync(IReadOnlyList<SemanticDocumentRecord> records, CancellationToken cancellationToken = default)
+        public Task<Dictionary<string, long>> InsertDocumentsInBulkAsync(IReadOnlyList<SemanticDocumentRecord> records, CancellationToken cancellationToken = default)
         {
-            if (records == null || records.Count == 0) return Task.CompletedTask;
+            if (records == null || !records.Any()) return Task.FromResult(new Dictionary<string, long>());
 
             return _connectionFactory.ExecuteWithConnectionAsync(async connection =>
             {
+                var docIdMap = new Dictionary<string, long>();
                 await using var transaction = connection.BeginTransaction();
                 try
                 {
@@ -122,13 +123,10 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 
                     var docsCount = records.Count;
                     var metadataCount = records.Sum(r => r.Metadata.Count);
-                    var elementsCount = records.Sum(r => r.Elements.Count);
 
                     var docIds = await GetNextIdsAsync("unity_docs_id_seq", docsCount);
                     var metadataIds = await GetNextIdsAsync("doc_metadata_id_seq", metadataCount);
-                    var elementIds = await GetNextIdsAsync("content_elements_id_seq", elementsCount);
 
-                    var docIdMap = new Dictionary<string, long>();
                     int docIdIndex = 0;
                     using (var appender = connection.CreateAppender("unity_docs"))
                     {
@@ -169,35 +167,69 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                             }
                         }
                     }
-
-                    int elementIdIndex = 0;
-                    using (var appender = connection.CreateAppender("content_elements"))
-                    {
-                        foreach (var record in records)
-                        {
-                            if (!docIdMap.TryGetValue(record.DocKey, out var docId)) continue;
-                            foreach (var element in record.Elements)
-                            {
-                                appender.CreateRow()
-                                    .AppendValue(elementIds[elementIdIndex++])
-                                    .AppendValue(docId)
-                                    .AppendValue(element.ElementType)
-                                    .AppendValue(element.Title)
-                                    .AppendValue(element.Content)
-                                    .AppendValue(element.AttributesJson)
-                                    .AppendValue(record.Embedding)
-                                    .EndRow();
-                            }
-                        }
-                    }
                 
                     await transaction.CommitAsync(cancellationToken);
                     Console.Error.WriteLine($"[DB] Successfully inserted a batch of {records.Count} documents.");
+                    return docIdMap;
                 }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync(cancellationToken);
                     Console.Error.WriteLine($"[ERROR] Failed to insert document batch: {ex.Message}");
+                    throw;
+                }
+            });
+        }
+
+        public Task InsertContentElementsInBulkAsync(IReadOnlyList<ContentElementRecord> elements, CancellationToken cancellationToken = default)
+        {
+            if (elements == null || !elements.Any()) return Task.CompletedTask;
+        
+            return _connectionFactory.ExecuteWithConnectionAsync(async connection =>
+            {
+                await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+                try
+                {
+                    async Task<List<long>> GetNextIdsAsync(string sequenceName, int count)
+                    {
+                        if (count == 0) return new List<long>();
+                        var ids = new List<long>(count);
+                        var command = connection.CreateCommand();
+                        command.Transaction = transaction;
+                        command.CommandText = $"SELECT nextval('{sequenceName}') FROM generate_series(1, {count})";
+                        using (var reader = await command.ExecuteReaderAsync(cancellationToken))
+                        {
+                            while (await reader.ReadAsync(cancellationToken))
+                            {
+                                ids.Add(reader.GetInt64(0));
+                            }
+                        }
+                        return ids;
+                    }
+                    
+                    var elementIds = await GetNextIdsAsync("content_elements_id_seq", elements.Count);
+        
+                    using var appender = connection.CreateAppender("content_elements");
+                    int elementIdIndex = 0;
+                    foreach (var element in elements)
+                    {
+                        appender.CreateRow()
+                            .AppendValue(elementIds[elementIdIndex++])
+                            .AppendValue(element.DocId)
+                            .AppendValue(element.ElementType)
+                            .AppendValue(element.Title ?? (object)DBNull.Value)
+                            .AppendValue(element.Content)
+                            .AppendValue(element.AttributesJson)
+                            .AppendValue(element.Embedding)
+                            .EndRow();
+                    }
+                    
+                    await transaction.CommitAsync(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    Console.Error.WriteLine($"[ERROR] Failed to insert content elements batch: {ex.Message}");
                     throw;
                 }
             });
