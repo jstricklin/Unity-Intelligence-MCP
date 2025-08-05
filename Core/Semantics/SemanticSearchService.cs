@@ -29,21 +29,16 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 {
                     using var cmd = connection.CreateCommand();
                     cmd.CommandText = @"
-                    SELECT 
+                    SELECT
                         d.id AS DocId,
                         d.title,
                         d.url,
                         s.source_name AS Source,
-                        1 - vss_distance(d.embedding, $query) AS RelevanceScore
-                    FROM vss_search(
-                        (SELECT embedding, _rowid FROM unity_docs), 
-                        $query, 
-                        k:=$limit
-                    ) vd
-                    JOIN unity_docs d ON vd._rowid = d._rowid
+                        1 - array_distance(d.embedding, $query) AS RelevanceScore
+                    FROM unity_docs d
                     JOIN doc_sources s ON d.source_id = s.id
                     WHERE s.source_type = $sourceType
-                    ORDER BY RelevanceScore DESC
+                    ORDER BY array_distance(d.embedding, $query)
                     LIMIT $limit;";
 
                     cmd.Parameters.AddRange(new[] { 
