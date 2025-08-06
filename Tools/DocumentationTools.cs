@@ -43,5 +43,17 @@ namespace UnityIntelligenceMCP.Tools
         {
             return await _searchService.SearchAsync(query, maxResults, source);
         }
+        [McpServerTool(Name = "hybrid_semantic_docs_search"), Description("Default search tool combining semantic understanding with keyword matching.")]
+        public async Task<List<DocumentGroup>> HybridSearchDocumentation(
+            [Description("Natural language query for Unity-related documentation")]
+            string query,
+            [Description("Maximum number of results (default: 5)")]
+            int maxResults = 5,
+            [Description("Document source: 'scripting_api', 'editor_manual', or 'tutorial'")]
+            string source = "scripting_api",
+            CancellationToken cancellationToken = default)
+        {
+            return await _searchService.HybridSearchAsync(query, docLimit: maxResults, sourceType: source);
+        }
     }
 }

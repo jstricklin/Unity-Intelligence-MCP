@@ -7,6 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup>
+      <NoWarn>$(NoWarn);DuckDBNET001</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="AllMiniLmL6V2Sharp" Version="0.0.3" />
     <PackageReference Include="DuckDB.NET.Data.Full" Version="1.3.2" />

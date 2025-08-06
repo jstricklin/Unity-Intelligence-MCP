@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using DuckDB.NET.Data;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using UnityIntelligenceMCP.Core.Data.Contracts;
 using UnityIntelligenceMCP.Models;
 
@@ -42,7 +43,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             s.source_name,
                             ce.id AS chunk_id,
                             ce.content,
-                            1 - array_distance(ce.embedding, $query) AS relevance,
+                            1 - array_distance(ce.embedding, CAST($query AS FLOAT[384])) AS relevance,
                             ce.element_type AS section
                         FROM content_elements ce
                         JOIN unity_docs d ON ce.doc_id = d.id
@@ -107,22 +108,34 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 // Only create keyword scoring function if we have terms
                 if (terms.Any())
                 {
-                    connection.RegisterScalarFunction<double, string>("keyword_score", (reader, writer, rowCount) => {
-                        double score = 0;
-                        foreach (var term in terms)
-                        {
-                            if (content != null && content.Contains(term, StringComparison.OrdinalIgnoreCase))
-                            {
-                                score += keywordThresholdWeight;
+                    connection.RegisterScalarFunction<string, double>("keyword_score", (readers, writer, rowCount) => {
+                        // Precompute lowercase terms once
+                        var tokens = terms.Select(t => t.ToLower()).ToArray();
+                        var weight = keywordThresholdWeight;
+                        
+                        for (ulong idx = 0; idx < rowCount; idx++) {
+                            var content = readers[0].GetValue<string>(idx)?.ToLower() ?? "";
+                            double score = 0;
+                            
+                            foreach (var term in tokens) {
+                                if (content.Contains(term)) {
+                                    score += weight;
+                                }
                             }
+                            writer.WriteValue(score, idx);
                         }
-                        return score;
                     });
                 }
                 else
                 {
-                    // Fallback: Return zero if no valid terms
-                    connection.RegisterScalarFunction<double, string>("keyword_score", _ => 0);
+                    // // Fallback: Return zero if no valid terms
+                     connection.RegisterScalarFunction<string, double>("keyword_score", (readers, writer, rowCount) =>
+                    {
+                        for (ulong i = 0; i < rowCount; i++)
+                        {
+                            writer.WriteValue(0.0, i);
+                        }
+                    });
                 }
 
                 using var cmd = connection.CreateCommand();
@@ -136,7 +149,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             ce.id AS chunk_id,
                             ce.content,
                             ce.element_type AS section,
-                            1 - array_distance(ce.embedding, $query) AS semantic_score,
+                            1 - array_distance(ce.embedding, CAST($query AS FLOAT[384])) AS semantic_score,
                             keyword_score(ce.content) AS keyword_score
                         FROM content_elements ce
                         JOIN unity_docs d ON ce.doc_id = d.id
@@ -201,7 +214,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                         d.url,
                         s.source_name,
                         ce.content,
-                        1 - array_distance(ce.embedding, $query) AS relevance
+                        1 - array_distance(ce.embedding, CAST($query AS FLOAT[384])) AS relevance
                     FROM content_elements ce
                     JOIN unity_docs d ON ce.doc_id = d.id
                     JOIN doc_sources s ON d.source_id = s.id

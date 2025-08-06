@@ -33,7 +33,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             d.title,
                             d.url,
                             s.source_name,
-                            1 - array_distance(d.embedding, cd.embedding) AS relevance
+                            1 - array_distance(d.embedding, CAST(cd.embedding AS FLOAT[384])) AS relevance
                         FROM unity_docs d
                         CROSS JOIN current_doc cd
                         JOIN doc_sources s ON d.source_id = s.id

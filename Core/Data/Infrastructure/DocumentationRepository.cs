@@ -217,7 +217,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                             .AppendValue(elementIds[elementIdIndex++])
                             .AppendValue(element.DocId)
                             .AppendValue(element.ElementType)
-                            .AppendValue(element.Title ?? (object)DBNull.Value)
+                            .AppendValue(element.Title)
                             .AppendValue(element.Content)
                             .AppendValue(element.AttributesJson)
                             .AppendValue(element.Embedding)
