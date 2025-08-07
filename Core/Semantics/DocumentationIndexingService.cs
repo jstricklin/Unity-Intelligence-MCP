@@ -300,8 +300,29 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
                             foreach (var docRecord in docRecords)
                             {
-                                if (!docIdMap.TryGetValue(docRecord.DocKey, out var docId) || !fileToChunksMap.TryGetValue(docRecord.DocKey, out var chunkData)) continue;
+                                if (!docIdMap.TryGetValue(docRecord.DocKey, out var docId) ||
+                                    !fileToChunksMap.TryGetValue(docRecord.DocKey, out var chunkData) ||
+                                    !parsedDataMap.TryGetValue(docRecord.SourceFilePath, out var parsedData)) continue;
 
+                                // Add code examples as content elements
+                                var exampleTexts = parsedData.Examples.Select(e => $"{e.Description}\n{e.Code}").ToList();
+                                if (exampleTexts.Any())
+                                {
+                                    var exampleEmbeddings = (await _embeddingService.EmbedAsync(exampleTexts)).ToList();
+                                    for (int i = 0; i < parsedData.Examples.Count; i++)
+                                    {
+                                        var example = parsedData.Examples[i];
+                                        contentElementRecords.Add(new ContentElementRecord
+                                        {
+                                            DocId = docId,
+                                            ElementType = "code_example",
+                                            Title = example.Description,
+                                            Content = example.Code,
+                                            Embedding = exampleEmbeddings[i],
+                                            AttributesJson = System.Text.Json.JsonSerializer.Serialize(new { language = "csharp" })
+                                        });
+                                    }
+                                }
                                 var (chunks, embeddings) = chunkData;
                                 for (int i = 0; i < chunks.Count; i++)
                                 {

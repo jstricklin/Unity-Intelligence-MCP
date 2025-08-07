@@ -59,7 +59,8 @@ namespace UnityIntelligenceMCP.Utilities
                 InheritedPublicMethods = ExtractLinks(docNode, LinkSectionRules["InheritedPublicMethods"]),
                 InheritedStaticMethods = ExtractLinks(docNode, LinkSectionRules["InheritedStaticMethods"]),
                 InheritedOperators = ExtractLinks(docNode, LinkSectionRules["InheritedOperators"]),
-                ContentLinkGroups = ExtractContentLinkGroups(docNode)
+                ContentLinkGroups = ExtractContentLinkGroups(docNode),
+                Examples = ExtractCodeExamples(docNode)
             };
 
             return data;
@@ -147,6 +148,38 @@ namespace UnityIntelligenceMCP.Utilities
                 }
             }
             return linkGroups;
+        }
+
+        private List<CodeExample> ExtractCodeExamples(HtmlNode docNode)
+        {
+            var examples = new List<CodeExample>();
+            var codeNodes = docNode.SelectNodes("//pre/code");
+
+            if (codeNodes == null) return examples;
+
+            foreach (var codeNode in codeNodes)
+            {
+                var preNode = codeNode.ParentNode;
+                var descriptionNode = preNode.PreviousSibling;
+                while (descriptionNode != null && (descriptionNode.NodeType == HtmlNodeType.Text || descriptionNode.NodeType == HtmlNodeType.Comment))
+                {
+                    descriptionNode = descriptionNode.PreviousSibling;
+                }
+
+                var description = string.Empty;
+                if (descriptionNode != null && descriptionNode.Name == "p")
+                {
+                    description = HtmlEntity.DeEntitize(descriptionNode.InnerText).Trim();
+                }
+
+                examples.Add(new CodeExample
+                {
+                    Description = description,
+                    Code = HtmlEntity.DeEntitize(codeNode.InnerText).Trim(),
+                    Language = "csharp"
+                });
+            }
+            return examples;
         }
 
         private DocumentationLink? ExtractLinkFollowingText(HtmlNode docNode, string anchorText)

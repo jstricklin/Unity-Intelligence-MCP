@@ -21,7 +21,15 @@ namespace UnityIntelligenceMCP.Models.Documentation
         public List<DocumentationLink> InheritedStaticMethods { get; set; } = new();
         public List<DocumentationLink> InheritedOperators { get; set; } = new();
         public List<LinkGroup> ContentLinkGroups { get; set; } = new();
+        public List<CodeExample> Examples { get; set; } = new();
         public float[]? Embedding { get; set; }
+    }
+
+    public class CodeExample
+    {
+        public string Description { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string Language { get; set; } = "csharp";
     }
 
     public class LinkGroup
