@@ -434,11 +434,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             if (relationshipRecords.Any())
             {
                 Console.Error.WriteLine($"[RELATIONSHIPS] Prepared {relationshipRecords.Count} relationships for insertion.");
-                // TODO: A new method 'InsertRelationshipsInBulkAsync' must be created in IDocumentationRepository and its implementation.
-                // This method should accept a collection of relationship records and perform a bulk insert
-                // into the 'doc_relationships' table. The 'relationshipRecords' list contains objects with properties:
-                // SourceDocId (long), TargetDocId (long), RelationshipType (string), Context (string).
-                // await _repository.InsertRelationshipsInBulkAsync(relationshipRecords, cancellationToken);
+                await _repository.InsertRelationshipsInBulkAsync(relationshipRecords.ToArray(), cancellationToken);
             }
 
             sw.Stop();

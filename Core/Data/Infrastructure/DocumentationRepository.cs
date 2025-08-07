@@ -235,6 +235,64 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             });
         }
 
+        public Task InsertRelationshipsInBulkAsync(IReadOnlyList<object> relationships, CancellationToken cancellationToken = default)
+        {
+            if (relationships == null || !relationships.Any()) return Task.CompletedTask;
+
+            return _connectionFactory.ExecuteWithConnectionAsync(async connection =>
+            {
+                await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+                try
+                {
+                    async Task<List<long>> GetNextIdsAsync(string sequenceName, int count)
+                    {
+                        if (count == 0) return new List<long>();
+                        var ids = new List<long>(count);
+                        var command = connection.CreateCommand();
+                        command.Transaction = transaction;
+                        command.CommandText = $"SELECT nextval('{sequenceName}') FROM generate_series(1, {count})";
+                        using (var reader = await command.ExecuteReaderAsync(cancellationToken))
+                        {
+                            while (await reader.ReadAsync(cancellationToken))
+                            {
+                                ids.Add(reader.GetInt64(0));
+                            }
+                        }
+                        return ids;
+                    }
+
+                    var relIds = await GetNextIdsAsync("doc_relationships_id_seq", relationships.Count);
+
+                    using var appender = connection.CreateAppender("doc_relationships");
+                    int relIdIndex = 0;
+                    foreach (var rel in relationships)
+                    {
+                        var type = rel.GetType();
+                        var sourceDocId = (long)type.GetProperty("SourceDocId").GetValue(rel, null);
+                        var targetDocId = (long)type.GetProperty("TargetDocId").GetValue(rel, null);
+                        var relationshipType = (string)type.GetProperty("RelationshipType").GetValue(rel, null);
+                        var context = (string)type.GetProperty("Context").GetValue(rel, null);
+
+                        appender.CreateRow()
+                            .AppendValue(relIds[relIdIndex++])
+                            .AppendValue(sourceDocId)
+                            .AppendValue(targetDocId)
+                            .AppendValue(relationshipType)
+                            .AppendValue(context ?? (object)DBNull.Value)
+                            .EndRow();
+                    }
+                    await transaction.CommitAsync(cancellationToken);
+                    Console.Error.WriteLine($"[DB] Successfully inserted a batch of {relationships.Count} relationships.");
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    Console.Error.WriteLine($"[ERROR] Failed to insert relationships batch: {ex.Message}");
+                    throw;
+                }
+            });
+        }
+
 
         public Task<int> GetDocCountForVersionAsync(string unityVersion, CancellationToken cancellationToken = default)
         {
