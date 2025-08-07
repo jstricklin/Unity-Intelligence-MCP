@@ -240,7 +240,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                     var contentElementRecords = new List<ContentElementRecord>();
                     var processedInBatch = new List<string>();
 
-                    var fileToChunksMap = new Dictionary<string, (List<DocumentChunk> chunks, List<float[]> embeddings)>();
+                    var fileDataMap = new Dictionary<string, (List<DocumentChunk> chunks, List<float[]> chunkEmbeddings, List<float[]> exampleEmbeddings)>();
 
                     foreach (var filePath in fileBatch)
                     {
@@ -253,14 +253,17 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             parsedData.UnityVersion = unityVersion;
                             
                             var chunks = _chunker.ChunkDocument(parsedData);
-                            var texts = new List<string> { parsedData.Description }
+                            var exampleTexts = parsedData.Examples.Select(e => $"{e.Description}\n{e.Code}").ToList();
+                            
+                            var allTexts = new List<string> { parsedData.Description }
                                 .Concat(chunks.Select(c => c.Text))
+                                .Concat(exampleTexts)
                                 .ToList();
                             
                             // Get embeddings in one batch per document
-                            var embeddings = (await _embeddingService.EmbedAsync(texts)).ToList();
+                            var allEmbeddings = (await _embeddingService.EmbedAsync(allTexts)).ToList();
                             
-                            parsedData.Embedding = embeddings.First();
+                            parsedData.Embedding = allEmbeddings.FirstOrDefault();
                             
                             var source = new UnityDocumentationSource(parsedData, _chunker, chunks);
                             var record = await source.ToSemanticRecordAsync(_embeddingService);
@@ -270,7 +273,9 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             record.ContentHash = pathToHash[filePath];
                             
                             docRecords.Add(record);
-                            fileToChunksMap[record.DocKey] = (chunks, embeddings.Skip(1).ToList());
+                            var chunkEmbeddings = allEmbeddings.Skip(1).Take(chunks.Count).ToList();
+                            var exampleEmbeddings = allEmbeddings.Skip(1 + chunks.Count).ToList();
+                            fileDataMap[record.DocKey] = (chunks, chunkEmbeddings, exampleEmbeddings);
                             processedInBatch.Add(filePath);
                             
                             // Update progress
@@ -300,15 +305,13 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
                             foreach (var docRecord in docRecords)
                             {
-                                if (!docIdMap.TryGetValue(docRecord.DocKey, out var docId) ||
-                                    !fileToChunksMap.TryGetValue(docRecord.DocKey, out var chunkData) ||
+                                if (!docIdMap.TryGetValue(docRecord.DocKey, out var docId) || !fileDataMap.TryGetValue(docRecord.DocKey, out var fileData) ||
                                     !parsedDataMap.TryGetValue(docRecord.SourceFilePath, out var parsedData)) continue;
 
                                 // Add code examples as content elements
-                                var exampleTexts = parsedData.Examples.Select(e => $"{e.Description}\n{e.Code}").ToList();
-                                if (exampleTexts.Any())
+                                var (chunks, chunkEmbeddings, exampleEmbeddings) = fileData;
+                                if (parsedData.Examples.Any())
                                 {
-                                    var exampleEmbeddings = (await _embeddingService.EmbedAsync(exampleTexts)).ToList();
                                     for (int i = 0; i < parsedData.Examples.Count; i++)
                                     {
                                         var example = parsedData.Examples[i];
@@ -318,12 +321,11 @@ namespace UnityIntelligenceMCP.Core.Semantics
                                             ElementType = "code_example",
                                             Title = example.Description,
                                             Content = example.Code,
-                                            Embedding = exampleEmbeddings[i],
+                                            Embedding = i < exampleEmbeddings.Count ? exampleEmbeddings[i] : null,
                                             AttributesJson = System.Text.Json.JsonSerializer.Serialize(new { language = "csharp" })
                                         });
                                     }
                                 }
-                                var (chunks, embeddings) = chunkData;
                                 for (int i = 0; i < chunks.Count; i++)
                                 {
                                     var chunk = chunks[i];
@@ -333,7 +335,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                                         ElementType = chunk.Section,
                                         Title = chunk.Title,
                                         Content = chunk.Text,
-                                        Embedding = embeddings[i],
+                                        Embedding = i < chunkEmbeddings.Count ? chunkEmbeddings[i] : null,
                                         AttributesJson = System.Text.Json.JsonSerializer.Serialize(new {
                                             Position = i,
                                             IsInherited = (chunk.Section?.Contains("Inherited") ?? false)

@@ -108,7 +108,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 context VARCHAR,
                 FOREIGN KEY (source_doc_id) REFERENCES unity_docs (id),
                 FOREIGN KEY (target_doc_id) REFERENCES unity_docs (id),
-                UNIQUE(source_doc_id, target_doc_id, relationship_type)
+                UNIQUE(source_doc_id, target_doc_id, relationship_type, context)
             );
         ";
 
