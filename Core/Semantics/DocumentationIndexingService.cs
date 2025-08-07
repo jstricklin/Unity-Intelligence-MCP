@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 using Microsoft.Extensions.AI;
 using UnityIntelligenceMCP.Core.Data;
 using System.Threading;
@@ -162,6 +163,9 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
             Console.Error.WriteLine($"[PROCESS] Starting documentation for {unityVersion}");
             var sw = Stopwatch.StartNew();
+
+            var parsedDataMap = new ConcurrentDictionary<string, UnityDocumentationData>();
+            var docKeyToIdMap = new ConcurrentDictionary<string, long>();
             
             // Load existing tracking data FIRST
             var trackingData = await _repository.GetDocumentTrackingAsync(unityVersion);
@@ -245,6 +249,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             await _repository.MarkDocumentProcessingAsync(filePath, unityVersion);
                             
                             var parsedData = _parser.Parse(filePath);
+                            parsedDataMap.TryAdd(filePath, parsedData);
                             parsedData.UnityVersion = unityVersion;
                             
                             var chunks = _chunker.ChunkDocument(parsedData);
@@ -287,6 +292,11 @@ namespace UnityIntelligenceMCP.Core.Semantics
                         try
                         {
                             var docIdMap = await _repository.InsertDocumentsInBulkAsync(docRecords, token);
+
+                            foreach (var (key, value) in docIdMap)
+                            {
+                                docKeyToIdMap.TryAdd(key, value);
+                            }
 
                             foreach (var docRecord in docRecords)
                             {
@@ -334,7 +344,82 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 });
             
             sw.Stop();
-            Console.Error.WriteLine($"[COMPLETE] Indexing finished in {TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds).ToString(@"hh\:mm\:ss")}s");
+            Console.Error.WriteLine($"[COMPLETE] Document indexing finished in {sw.Elapsed.TotalSeconds:F2}s");
+
+            await ProcessRelationshipsAsync(parsedDataMap, docKeyToIdMap, CancellationToken.None);
+        }
+
+        private async Task ProcessRelationshipsAsync(
+            ConcurrentDictionary<string, UnityDocumentationData> parsedDataMap,
+            ConcurrentDictionary<string, long> docKeyToIdMap,
+            CancellationToken cancellationToken)
+        {
+            Console.Error.WriteLine("[RELATIONSHIPS] Starting relationship processing...");
+            var sw = Stopwatch.StartNew();
+
+            var relationshipRecords = new List<object>(); // Using object for ad-hoc record structure.
+            if (!parsedDataMap.Any()) return;
+
+            var docRoot = Path.GetDirectoryName(parsedDataMap.Keys.First());
+            if (docRoot is null)
+            {
+                Console.Error.WriteLine("[ERROR] Could not determine documentation root path for relationships.");
+                return;
+            }
+
+            foreach (var (sourcePath, parsedData) in parsedDataMap)
+            {
+                if (!docKeyToIdMap.TryGetValue(sourcePath, out var sourceDocId)) continue;
+
+                void AddRelationships(IEnumerable<DocumentationLink> links, string type, string? context = null)
+                {
+                    foreach (var link in links)
+                    {
+                        if (string.IsNullOrEmpty(link.RelativePath)) continue;
+                        var targetPath = Path.GetFullPath(Path.Combine(docRoot, link.RelativePath));
+                        if (docKeyToIdMap.TryGetValue(targetPath, out var targetDocId))
+                        {
+                            relationshipRecords.Add(new { SourceDocId = sourceDocId, TargetDocId = targetDocId, RelationshipType = type, Context = context });
+                        }
+                    }
+                }
+
+                if (parsedData.InheritsFrom is not null)
+                {
+                    AddRelationships(new[] { parsedData.InheritsFrom }, "inherits_from");
+                }
+                if (parsedData.ImplementedIn is not null)
+                {
+                    AddRelationships(new[] { parsedData.ImplementedIn }, "implemented_in");
+                }
+
+                AddRelationships(parsedData.Properties, "property");
+                AddRelationships(parsedData.PublicMethods, "public_method");
+                AddRelationships(parsedData.StaticMethods, "static_method");
+                AddRelationships(parsedData.Messages, "message");
+                AddRelationships(parsedData.InheritedProperties, "inherited_property");
+                AddRelationships(parsedData.InheritedPublicMethods, "inherited_public_method");
+                AddRelationships(parsedData.InheritedStaticMethods, "inherited_static_method");
+                AddRelationships(parsedData.InheritedOperators, "inherited_operator");
+
+                foreach (var group in parsedData.ContentLinkGroups)
+                {
+                    AddRelationships(group.Links, "content_link", group.Context);
+                }
+            }
+
+            if (relationshipRecords.Any())
+            {
+                Console.Error.WriteLine($"[RELATIONSHIPS] Prepared {relationshipRecords.Count} relationships for insertion.");
+                // TODO: A new method 'InsertRelationshipsInBulkAsync' must be created in IDocumentationRepository and its implementation.
+                // This method should accept a collection of relationship records and perform a bulk insert
+                // into the 'doc_relationships' table. The 'relationshipRecords' list contains objects with properties:
+                // SourceDocId (long), TargetDocId (long), RelationshipType (string), Context (string).
+                // await _repository.InsertRelationshipsInBulkAsync(relationshipRecords, cancellationToken);
+            }
+
+            sw.Stop();
+            Console.Error.WriteLine($"[RELATIONSHIPS] Relationship processing finished in {sw.Elapsed.TotalSeconds:F2}s");
         }
 
         private IEnumerable<IEnumerable<TSource>> BatchFiles<TSource>(IEnumerable<TSource> source, int batchSize)

@@ -13,6 +13,7 @@ namespace UnityIntelligenceMCP.Utilities
         private static readonly Dictionary<string, string> TextExtractionRules = new()
         {
             ["Title"] = "//div[contains(@class, 'content')]//h1",
+            ["ConstructType"] = "//div[contains(@class, 'content')]//h1/following-sibling::p[1]",
         };
 
         private static readonly Dictionary<string, string> LinkSectionRules = new()
@@ -34,10 +35,19 @@ namespace UnityIntelligenceMCP.Utilities
             doc.LoadHtml(html);
             var docNode = doc.DocumentNode;
 
+            var constructTypeText = docNode.SelectSingleNode(TextExtractionRules["ConstructType"])?.InnerText.Trim() ??
+                                    string.Empty;
+            var inIndex = constructTypeText.IndexOf(" in ");
+            if (inIndex > 0)
+            {
+                constructTypeText = constructTypeText.Substring(0, inIndex);
+            }
+
             var data = new UnityDocumentationData
             {
                 FilePath = filePath,
                 Title = docNode.SelectSingleNode(TextExtractionRules["Title"])?.InnerText.Trim() ?? string.Empty,
+                ConstructType = constructTypeText,
                 Description = ExtractDescription(docNode),
                 InheritsFrom = ExtractLinkFollowingText(docNode, "Inherits from:"),
                 ImplementedIn = ExtractLinkFollowingText(docNode, "Implemented in:"),
@@ -48,7 +58,8 @@ namespace UnityIntelligenceMCP.Utilities
                 InheritedProperties = ExtractLinks(docNode, LinkSectionRules["InheritedProperties"]),
                 InheritedPublicMethods = ExtractLinks(docNode, LinkSectionRules["InheritedPublicMethods"]),
                 InheritedStaticMethods = ExtractLinks(docNode, LinkSectionRules["InheritedStaticMethods"]),
-                InheritedOperators = ExtractLinks(docNode, LinkSectionRules["InheritedOperators"])
+                InheritedOperators = ExtractLinks(docNode, LinkSectionRules["InheritedOperators"]),
+                ContentLinkGroups = ExtractContentLinkGroups(docNode)
             };
 
             return data;
@@ -100,6 +111,42 @@ namespace UnityIntelligenceMCP.Utilities
                 }
             }
             return links;
+        }
+
+        private List<LinkGroup> ExtractContentLinkGroups(HtmlNode docNode)
+        {
+            var linkGroups = new List<LinkGroup>();
+            var descriptionHeader = docNode.SelectSingleNode("//h3[text()='Description']");
+            if (descriptionHeader == null) return linkGroups;
+
+            var paragraphNodes =
+                docNode.SelectNodes("//h3[text()='Description']/following-sibling::p[count(preceding-sibling::h3)=1]");
+            if (paragraphNodes == null) return linkGroups;
+
+            foreach (var pNode in paragraphNodes)
+            {
+                var linkNodes = pNode.SelectNodes(".//a");
+                if (linkNodes == null) continue;
+
+                var linkGroup = new LinkGroup { Context = HtmlEntity.DeEntitize(pNode.InnerText).Trim() };
+
+                foreach (var linkNode in linkNodes)
+                {
+                    var href = linkNode.GetAttributeValue("href", string.Empty);
+                    if (string.IsNullOrEmpty(href) || href.StartsWith("#")) continue;
+
+                    linkGroup.Links.Add(new DocumentationLink
+                    {
+                        Title = HtmlEntity.DeEntitize(linkNode.InnerText).Trim(), RelativePath = href
+                    });
+                }
+
+                if (linkGroup.Links.Any())
+                {
+                    linkGroups.Add(linkGroup);
+                }
+            }
+            return linkGroups;
         }
 
         private DocumentationLink? ExtractLinkFollowingText(HtmlNode docNode, string anchorText)

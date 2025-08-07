@@ -7,6 +7,7 @@ namespace UnityIntelligenceMCP.Models.Documentation
         public string? Namespace { get; set; }
         public string FilePath { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
+        public string ConstructType { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string UnityVersion { get; set; } = string.Empty;
         public DocumentationLink? InheritsFrom { get; set; }
@@ -19,7 +20,14 @@ namespace UnityIntelligenceMCP.Models.Documentation
         public List<DocumentationLink> InheritedPublicMethods { get; set; } = new();
         public List<DocumentationLink> InheritedStaticMethods { get; set; } = new();
         public List<DocumentationLink> InheritedOperators { get; set; } = new();
+        public List<LinkGroup> ContentLinkGroups { get; set; } = new();
         public float[]? Embedding { get; set; }
+    }
+
+    public class LinkGroup
+    {
+        public string Context { get; set; } = string.Empty;
+        public List<DocumentationLink> Links { get; set; } = new();
     }
 
     public class DocumentationLink
