@@ -22,7 +22,22 @@ namespace UnityIntelligenceMCP.Models.Documentation
         public List<DocumentationLink> InheritedOperators { get; set; } = new();
         public List<LinkGroup> ContentLinkGroups { get; set; } = new();
         public List<CodeExample> Examples { get; set; } = new();
+        public List<MethodOverload> Overloads { get; set; } = new();
         public float[]? Embedding { get; set; }
+    }
+
+    public class MethodOverload
+    {
+        public string Declaration { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public List<ParameterInfo> Parameters { get; set; } = new();
+        public List<CodeExample> Examples { get; set; } = new();
+    }
+
+    public class ParameterInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
     }
 
     public class CodeExample

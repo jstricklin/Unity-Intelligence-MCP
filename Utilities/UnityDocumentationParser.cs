@@ -59,9 +59,42 @@ namespace UnityIntelligenceMCP.Utilities
                 InheritedPublicMethods = ExtractLinks(docNode, LinkSectionRules["InheritedPublicMethods"]),
                 InheritedStaticMethods = ExtractLinks(docNode, LinkSectionRules["InheritedStaticMethods"]),
                 InheritedOperators = ExtractLinks(docNode, LinkSectionRules["InheritedOperators"]),
-                ContentLinkGroups = ExtractContentLinkGroups(docNode),
-                Examples = ExtractCodeExamples(docNode)
+                ContentLinkGroups = ExtractContentLinkGroups(docNode)
             };
+            
+            var declarationHeaders = docNode.SelectNodes("//div[contains(@class, 'content')]//h2[text()='Declaration']");
+            if (declarationHeaders != null && declarationHeaders.Any())
+            {
+                for (var i = 0; i < declarationHeaders.Count; i++)
+                {
+                    var header = declarationHeaders[i];
+                    var nextHeader = (i + 1 < declarationHeaders.Count) ? declarationHeaders[i + 1] : null;
+
+                    var overloadNode = HtmlNode.CreateNode("<div></div>");
+                    var signatureNode = header.SelectSingleNode("following-sibling::div[contains(@class, 'signature-CS')][1]");
+                    if(signatureNode != null) overloadNode.AppendChild(signatureNode.Clone());
+
+                    var currentNode = header.NextSibling;
+                    while (currentNode != null && currentNode != nextHeader)
+                    {
+                        overloadNode.AppendChild(currentNode.Clone());
+                        currentNode = currentNode.NextSibling;
+                    }
+
+                    var overload = new MethodOverload
+                    {
+                        Declaration = HtmlEntity.DeEntitize(signatureNode?.InnerText ?? "").Trim(),
+                        Parameters = ExtractParameters(overloadNode),
+                        Description = ExtractOverloadDescription(overloadNode),
+                        Examples = ExtractCodeExamples(overloadNode)
+                    };
+                    data.Overloads.Add(overload);
+                }
+            }
+            else
+            {
+                data.Examples = ExtractCodeExamples(docNode);
+            }
 
             return data;
         }
@@ -73,7 +106,7 @@ namespace UnityIntelligenceMCP.Utilities
 
             var sb = new StringBuilder();
             var currentNode = descriptionHeader.NextSibling;
-            while (currentNode != null && currentNode.Name != "h3")
+            while (currentNode != null && currentNode.Name != "h3" && currentNode.Name != "h2")
             {
                 if (currentNode.NodeType == HtmlNodeType.Element && currentNode.Name == "p")
                 {
@@ -153,7 +186,7 @@ namespace UnityIntelligenceMCP.Utilities
         private List<CodeExample> ExtractCodeExamples(HtmlNode docNode)
         {
             var examples = new List<CodeExample>();
-            var codeNodes = docNode.SelectNodes("//pre[contains(@class, 'codeExampleCS')]");
+            var codeNodes = docNode.SelectNodes(".//pre[contains(@class, 'codeExampleCS')]");
 
             if (codeNodes == null) return examples;
 
@@ -180,6 +213,53 @@ namespace UnityIntelligenceMCP.Utilities
                 });
             }
             return examples;
+        }
+
+        private string ExtractOverloadDescription(HtmlNode overloadNode)
+        {
+            var descriptionHeader = overloadNode.SelectSingleNode(".//h3[text()='Description']");
+            if (descriptionHeader == null) return string.Empty;
+
+            var sb = new StringBuilder();
+            var currentNode = descriptionHeader.NextSibling;
+            while (currentNode != null && currentNode.Name != "h3" && currentNode.Name != "h2")
+            {
+                if (currentNode.NodeType == HtmlNodeType.Element && (currentNode.Name == "p" || (currentNode.Name == "div" && !currentNode.HasClass("subsection"))))
+                {
+                    sb.AppendLine(HtmlEntity.DeEntitize(currentNode.InnerText).Trim());
+                }
+                currentNode = currentNode.NextSibling;
+            }
+            return sb.ToString().Trim();
+        }
+
+        private List<ParameterInfo> ExtractParameters(HtmlNode overloadNode)
+        {
+            var parameters = new List<ParameterInfo>();
+            var headerNode = overloadNode.SelectSingleNode(".//h3[text()='Parameters']");
+            if (headerNode == null) return parameters;
+
+            var tableNode = headerNode.SelectSingleNode("following-sibling::table[1]");
+            if (tableNode == null) return parameters;
+
+            var rows = tableNode.SelectNodes(".//tr");
+            if (rows == null) return parameters;
+
+            foreach (var row in rows)
+            {
+                var nameNode = row.SelectSingleNode("./td[1]");
+                var descriptionNode = row.SelectSingleNode("./td[2]");
+
+                if (nameNode != null && descriptionNode != null)
+                {
+                    parameters.Add(new ParameterInfo
+                    {
+                        Name = HtmlEntity.DeEntitize(nameNode.InnerText).Trim(),
+                        Description = HtmlEntity.DeEntitize(descriptionNode.InnerText).Trim()
+                    });
+                }
+            }
+            return parameters;
         }
 
         private DocumentationLink? ExtractLinkFollowingText(HtmlNode docNode, string anchorText)
