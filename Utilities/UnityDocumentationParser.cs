@@ -153,7 +153,7 @@ namespace UnityIntelligenceMCP.Utilities
         private List<CodeExample> ExtractCodeExamples(HtmlNode docNode)
         {
             var examples = new List<CodeExample>();
-            var codeNodes = docNode.SelectNodes("//pre/code");
+            var codeNodes = docNode.SelectNodes("//pre[contains(@class, 'codeExampleCS')]");
 
             if (codeNodes == null) return examples;
 

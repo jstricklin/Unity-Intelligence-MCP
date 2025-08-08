@@ -278,7 +278,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                             .AppendValue(sourceDocId)
                             .AppendValue(targetDocId)
                             .AppendValue(relationshipType)
-                            .AppendValue(context ?? (object)DBNull.Value)
+                            .AppendValue(context)
                             .EndRow();
                     }
                     await transaction.CommitAsync(cancellationToken);

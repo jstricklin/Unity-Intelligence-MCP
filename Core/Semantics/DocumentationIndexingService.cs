@@ -367,9 +367,8 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 });
             
             sw.Stop();
-            Console.Error.WriteLine($"[COMPLETE] Document indexing finished in {sw.Elapsed.TotalSeconds:F2}s");
-
             await ProcessRelationshipsAsync(parsedDataMap, docKeyToIdMap, CancellationToken.None);
+            Console.Error.WriteLine($"[COMPLETE] Document Indexing finished in {TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds).ToString(@"hh\:mm\:ss")}s");
         }
 
         private async Task ProcessRelationshipsAsync(
