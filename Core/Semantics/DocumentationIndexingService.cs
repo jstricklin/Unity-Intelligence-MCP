@@ -240,7 +240,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                     var contentElementRecords = new List<ContentElementRecord>();
                     var processedInBatch = new List<string>();
 
-                    var fileDataMap = new Dictionary<string, (List<DocumentChunk> chunks, List<float[]> chunkEmbeddings, List<float[]> exampleEmbeddings)>();
+                    var fileDataMap = new Dictionary<string, (List<DocumentChunk> chunks, List<float[]> embeddings)>();
 
                     foreach (var filePath in fileBatch)
                     {
@@ -251,31 +251,13 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             var parsedData = _parser.Parse(filePath);
                             parsedDataMap.TryAdd(filePath, parsedData);
                             parsedData.UnityVersion = unityVersion;
-                            
-                            const int maxExampleLength = 4096;
-                            Func<CodeExample, string> formatExampleText = e =>
-                            {
-                                var text = $"{e.Description}\n{e.Code}";
-                                return text.Length > maxExampleLength ? text.Substring(0, maxExampleLength) : text;
-                            };
 
                             var chunks = _chunker.ChunkDocument(parsedData);
-                            var exampleTexts = parsedData.Examples.Select(formatExampleText).ToList();
-                            var overloadDescriptions = parsedData.Overloads.Select(o => o.Description).ToList();
-                            var overloadExampleTexts = parsedData.Overloads.SelectMany(o => o.Examples.Select(formatExampleText)).ToList();
+                            var chunkTexts = chunks.Select(c => c.Text).ToList();
+                            var embeddings = (await _embeddingService.EmbedAsync(chunkTexts)).ToList();
 
-                            var allTexts = new List<string> { parsedData.Description }
-                                .Concat(chunks.Select(c => c.Text))
-                                .Concat(exampleTexts)
-                                .Concat(overloadDescriptions)
-                                .Concat(overloadExampleTexts)
-                                .ToList();
-
-                            var allEmbeddings = (await _embeddingService.EmbedAsync(allTexts)).ToList();
-                            
-                            int embeddingIndex = 0;
-                            parsedData.Embedding = allEmbeddings.FirstOrDefault();
-                            embeddingIndex++;
+                            // Use the first chunk's embedding for the main document
+                            parsedData.Embedding = embeddings.FirstOrDefault();
                             
                             var source = new UnityDocumentationSource(parsedData, _chunker, chunks);
                             var record = await source.ToSemanticRecordAsync(_embeddingService);
@@ -283,17 +265,10 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             record.ContentHash = pathToHash[filePath];
                             docRecords.Add(record);
 
-                            var chunkEmbeddings = allEmbeddings.Skip(embeddingIndex).Take(chunks.Count).ToList();
-                            embeddingIndex += chunks.Count;
-                            var exampleEmbeddings = allEmbeddings.Skip(embeddingIndex).Take(exampleTexts.Count).ToList();
-                            embeddingIndex += exampleTexts.Count;
-                            
-                            fileDataMap[record.DocKey] = (chunks, chunkEmbeddings, exampleEmbeddings);
+                            fileDataMap[record.DocKey] = (chunks, embeddings);
                             processedInBatch.Add(filePath);
                             
-                            // Update progress
                             var current = Interlocked.Increment(ref processedCount);
-                            // Console.Error.WriteLine($"[PROGRESS] {current}/{totalFiles} files processed");
                             if (((float)current / totalFiles) * 100 % 2 == 0)
                                 Console.Error.WriteLine($"[PROGRESS] {(int)(((float)current/totalFiles) * 100)}% out of {totalFiles} total files prepared for insert.");
                         }
@@ -304,7 +279,6 @@ namespace UnityIntelligenceMCP.Core.Semantics
                         }
                     }
                     
-                    // Batch insert to database
                     if (docRecords.Any())
                     {
                         try
@@ -318,54 +292,22 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
                             foreach (var docRecord in docRecords)
                             {
-                                if (!docIdMap.TryGetValue(docRecord.DocKey, out var docId) || !fileDataMap.TryGetValue(docRecord.DocKey, out var fileData) ||
-                                    !parsedDataMap.TryGetValue(docRecord.SourceFilePath, out var parsedData)) continue;
+                                if (!docIdMap.TryGetValue(docRecord.DocKey, out var docId) || !fileDataMap.TryGetValue(docRecord.DocKey, out var fileData)) continue;
 
-                                var (chunks, chunkEmbeddings, exampleEmbeddings) = fileData;
+                                var (chunks, embeddings) = fileData;
 
-                                // Add chunks
                                 for (int i = 0; i < chunks.Count; i++)
                                 {
                                     var chunk = chunks[i];
                                     contentElementRecords.Add(new ContentElementRecord
                                     {
-                                        DocId = docId, ElementType = chunk.Section, Title = chunk.Title, Content = chunk.Text,
-                                        Embedding = i < chunkEmbeddings.Count ? chunkEmbeddings[i] : null,
-                                        AttributesJson = System.Text.Json.JsonSerializer.Serialize(new { Position = i, IsInherited = (chunk.Section?.Contains("Inherited") ?? false) })
+                                        DocId = docId,
+                                        ElementType = chunk.Section,
+                                        Title = chunk.Title,
+                                        Content = chunk.Text,
+                                        Embedding = i < embeddings.Count ? embeddings[i] : null,
+                                        AttributesJson = System.Text.Json.JsonSerializer.Serialize(new { chunk.Index })
                                     });
-                                }
-                                
-                                // Add root examples
-                                for (int i = 0; i < parsedData.Examples.Count; i++)
-                                {
-                                    var example = parsedData.Examples[i];
-                                    contentElementRecords.Add(new ContentElementRecord
-                                    {
-                                        DocId = docId, ElementType = "code_example", Title = example.Description, Content = example.Code,
-                                        Embedding = i < exampleEmbeddings.Count ? exampleEmbeddings[i] : null,
-                                        AttributesJson = System.Text.Json.JsonSerializer.Serialize(new { language = "csharp" })
-                                    });
-                                }
-
-                                // Add overloads and their examples
-                                if (parsedData.Overloads.Any())
-                                {
-                                    foreach (var overload in parsedData.Overloads)
-                                    {
-                                        contentElementRecords.Add(new ContentElementRecord {
-                                            DocId = docId, ElementType = "method_overload", Title = overload.Declaration, Content = overload.Description,
-                                            // TODO: Add embedding for overload description
-                                            AttributesJson = System.Text.Json.JsonSerializer.Serialize(new { parameters = overload.Parameters })
-                                        });
-
-                                        foreach (var example in overload.Examples) {
-                                            contentElementRecords.Add(new ContentElementRecord {
-                                                DocId = docId, ElementType = "code_example", Title = example.Description, Content = example.Code,
-                                                // TODO: Add embedding for overload examples
-                                                AttributesJson = System.Text.Json.JsonSerializer.Serialize(new { language = "csharp" })
-                                            });
-                                        }
-                                    }
                                 }
                             }
 
@@ -374,7 +316,6 @@ namespace UnityIntelligenceMCP.Core.Semantics
                                 await _repository.InsertContentElementsInBulkAsync(contentElementRecords, token);
                             }
 
-                            // Batch mark as processed
                             foreach (var filePath in processedInBatch)
                             {
                                 await _repository.MarkDocumentProcessedAsync(filePath, unityVersion);
