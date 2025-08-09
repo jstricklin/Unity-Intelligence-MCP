@@ -5,9 +5,9 @@ using UnityIntelligenceMCP.Models.Documentation;
 
 public class UnityDocumentChunker : IDocumentChunker
 {
-    private const int MaxTokens = 450; // A conservative token limit to avoid errors
+    private const int MaxTokens = 400; // A conservative token limit to avoid errors
     private const int CharsPerToken = 4;
-    private const int TargetChars = MaxTokens * CharsPerToken; // ~1800 chars
+    private const int TargetChars = MaxTokens * CharsPerToken; // ~1000 chars
     private const int OverlapTokens = 50;
     private const int OverlapChars = OverlapTokens * CharsPerToken; // ~200 chars
 
@@ -100,7 +100,8 @@ public class UnityDocumentChunker : IDocumentChunker
                 {
                     Index = currentIndex++,
                     Title = example.Description, // Context in title
-                    Text = example.Code,
+                    Text = "TEST",
+                    // Text = example.Code,
                     Section = section,
                     StartPosition = 0,
                     EndPosition = example.Code.Length
