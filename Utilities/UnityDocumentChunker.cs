@@ -95,17 +95,20 @@ public class UnityDocumentChunker : IDocumentChunker
                 // Description might need chunking
                 AddTextChunks(chunks, example.Description, example.Description, section, ref currentIndex);
                 
-                // Code is a single, unsplit chunk
-                chunks.Add(new DocumentChunk
+                // Chunk the code separately using the new method
+                var codeChunks = SplitCode(example.Code, TargetChars);
+                foreach (var codeChunk in codeChunks)
                 {
-                    Index = currentIndex++,
-                    Title = example.Description, // Context in title
-                    Text = "TEST",
-                    // Text = example.Code,
-                    Section = section,
-                    StartPosition = 0,
-                    EndPosition = example.Code.Length
-                });
+                    chunks.Add(new DocumentChunk
+                    {
+                        Index = currentIndex++,
+                        Title = example.Description, // Use description as context title
+                        Text = codeChunk,
+                        Section = section,
+                        StartPosition = 0,
+                        EndPosition = codeChunk.Length
+                    });
+                }
             }
         }
     }
@@ -145,6 +148,69 @@ public class UnityDocumentChunker : IDocumentChunker
     
             // Set the start of the next chunk to create an overlap
             startIndex = System.Math.Max(startIndex + 1, endIndex - OverlapChars);
+        }
+    
+        return chunks;
+    }
+
+    private static List<string> SplitCode(string code, int maxLength)
+    {
+        if (string.IsNullOrEmpty(code) || code.Length <= maxLength)
+        {
+            return new List<string> { code };
+        }
+    
+        const int overlapLines = 3;
+        var lines = code.Split('\n');
+        var chunks = new List<string>();
+        int currentLineIndex = 0;
+    
+        while (currentLineIndex < lines.Length)
+        {
+            var chunkBuilder = new System.Text.StringBuilder();
+            int endLineIndex = currentLineIndex;
+    
+            // Build chunk until it's full
+            for (int i = currentLineIndex; i < lines.Length; i++)
+            {
+                if (chunkBuilder.Length + lines[i].Length + 1 > maxLength && chunkBuilder.Length > 0)
+                {
+                    break; // Stop before adding the line that would overflow
+                }
+                chunkBuilder.AppendLine(lines[i]);
+                endLineIndex = i;
+            }
+    
+            // Try to find a better breaking point by looking backwards from the last line included
+            int finalEndLine = endLineIndex;
+            if (endLineIndex < lines.Length - 1) // Only look for better breaks if not the very last chunk
+            {
+                for (int i = endLineIndex; i > currentLineIndex && i > endLineIndex - 5; i--) // Look back up to 5 lines
+                {
+                    var trimmedLine = lines[i].Trim();
+                    if (trimmedLine == "}" || trimmedLine == "};" || string.IsNullOrWhiteSpace(trimmedLine))
+                    {
+                        finalEndLine = i;
+                        break;
+                    }
+                }
+            }
+            
+            // Re-build the chunk with the final determined end line
+            var finalChunk = new System.Text.StringBuilder();
+            for (int i = currentLineIndex; i <= finalEndLine; i++)
+            {
+                finalChunk.AppendLine(lines[i]);
+            }
+            chunks.Add(finalChunk.ToString().TrimEnd());
+            
+            if (finalEndLine >= lines.Length - 1)
+            {
+                break; // We've processed all lines
+            }
+    
+            // Set the start for the next chunk, ensuring overlap
+            currentLineIndex = System.Math.Max(0, finalEndLine + 1 - overlapLines);
         }
     
         return chunks;
