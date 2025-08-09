@@ -5,7 +5,7 @@ using UnityIntelligenceMCP.Models.Documentation;
 
 public class UnityDocumentChunker : IDocumentChunker
 {
-    private const int MaxChunkLength = 2000;
+    private const int MaxChunkLength = 1000;
 
     public List<DocumentChunk> ChunkDocument(UnityDocumentationData doc)
     {
