@@ -5,7 +5,11 @@ using UnityIntelligenceMCP.Models.Documentation;
 
 public class UnityDocumentChunker : IDocumentChunker
 {
-    private const int MaxChunkLength = 1000;
+    private const int MaxTokens = 450; // A conservative token limit to avoid errors
+    private const int CharsPerToken = 4;
+    private const int TargetChars = MaxTokens * CharsPerToken; // ~1800 chars
+    private const int OverlapTokens = 50;
+    private const int OverlapChars = OverlapTokens * CharsPerToken; // ~200 chars
 
     public List<DocumentChunk> ChunkDocument(UnityDocumentationData doc)
     {
@@ -41,7 +45,7 @@ public class UnityDocumentChunker : IDocumentChunker
     {
         if (string.IsNullOrWhiteSpace(text)) return;
 
-        var subChunks = SplitText(text, MaxChunkLength);
+        var subChunks = SplitText(text, TargetChars);
         foreach (var subChunk in subChunks)
         {
             chunks.Add(new DocumentChunk
@@ -72,31 +76,76 @@ public class UnityDocumentChunker : IDocumentChunker
         
         foreach (var example in examples)
         {
-            var fullText = $"{example.Description}\n\n{example.Code}";
-            AddTextChunks(chunks, example.Description, fullText, section, ref currentIndex);
+            var combinedLength = (example.Description?.Length ?? 0) + (example.Code?.Length ?? 0) + 2;
+            if (combinedLength <= TargetChars)
+            {
+                var fullText = $"{example.Description}\n\n{example.Code}";
+                chunks.Add(new DocumentChunk
+                {
+                    Index = currentIndex++,
+                    Title = example.Description,
+                    Text = fullText,
+                    Section = section,
+                    StartPosition = 0,
+                    EndPosition = fullText.Length
+                });
+            }
+            else
+            {
+                // Description might need chunking
+                AddTextChunks(chunks, example.Description, example.Description, section, ref currentIndex);
+                
+                // Code is a single, unsplit chunk
+                chunks.Add(new DocumentChunk
+                {
+                    Index = currentIndex++,
+                    Title = example.Description, // Context in title
+                    Text = example.Code,
+                    Section = section,
+                    StartPosition = 0,
+                    EndPosition = example.Code.Length
+                });
+            }
         }
     }
 
     private static List<string> SplitText(string text, int maxLength)
     {
-        if (string.IsNullOrEmpty(text))
-        {
-            return new List<string>();
-        }
-        
-        if (text.Length <= maxLength)
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
         {
             return new List<string> { text };
         }
-
+    
         var chunks = new List<string>();
-        var remainingText = text;
-        while (remainingText.Length > 0)
+        int startIndex = 0;
+    
+        while (startIndex < text.Length)
         {
-            var length = System.Math.Min(maxLength, remainingText.Length);
-            chunks.Add(remainingText.Substring(0, length));
-            remainingText = remainingText.Substring(length);
+            int endIndex = System.Math.Min(startIndex + maxLength, text.Length);
+    
+            // If not the last chunk, find a natural boundary near the end of the chunk
+            if (endIndex < text.Length)
+            {
+                // Search backwards from the end of the chunk for a sentence terminator
+                int lastSentenceEnd = text.LastIndexOfAny(new[] { '.', '!', '?' }, endIndex - 1, endIndex - startIndex);
+    
+                if (lastSentenceEnd > startIndex)
+                {
+                    endIndex = lastSentenceEnd + 1; // Split after the punctuation
+                }
+            }
+    
+            chunks.Add(text.Substring(startIndex, endIndex - startIndex).Trim());
+    
+            if (endIndex >= text.Length)
+            {
+                break;
+            }
+    
+            // Set the start of the next chunk to create an overlap
+            startIndex = System.Math.Max(startIndex + 1, endIndex - OverlapChars);
         }
+    
         return chunks;
     }
 }
