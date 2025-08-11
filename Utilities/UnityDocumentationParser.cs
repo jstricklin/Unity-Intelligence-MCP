@@ -110,7 +110,9 @@ namespace UnityIntelligenceMCP.Utilities
             {
                 if (currentNode.NodeType == HtmlNodeType.Element && currentNode.Name == "p")
                 {
-                    sb.AppendLine(currentNode.InnerText.Trim());
+                    string descriptionText = currentNode.InnerText.Trim();
+                    if (!string.IsNullOrEmpty(descriptionText))
+                        sb.AppendLine(descriptionText);
                 }
                 currentNode = currentNode.NextSibling;
             }
