@@ -232,7 +232,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             int totalFiles = pendingFiles.Count;
 
             await Parallel.ForEachAsync(
-                BatchFiles(pendingFiles, FilesPerBatch),
+                Batch(pendingFiles, FilesPerBatch),
                 options,
                 async (fileBatch, token) =>
                 {
@@ -348,7 +348,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             Console.Error.WriteLine("[RELATIONSHIPS] Starting relationship processing...");
             var sw = Stopwatch.StartNew();
 
-            var relationshipRecords = new List<object>(); // Using object for ad-hoc record structure.
+            var relationshipRecords = new ConcurrentBag<object>(); // Using ConcurrentBag for thread-safe collection.
             if (!parsedDataMap.Any()) return;
 
             var docRoot = Path.GetDirectoryName(parsedDataMap.Keys.First());
@@ -357,11 +357,17 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 Console.Error.WriteLine("[ERROR] Could not determine documentation root path for relationships.");
                 return;
             }
+            
+            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
 
-            foreach (var (sourcePath, parsedData) in parsedDataMap)
+            Parallel.ForEach(parsedDataMap, options, kvp =>
             {
+                var (sourcePath, parsedData) = (kvp.Key, kvp.Value);
                 var docKey = Path.GetFileNameWithoutExtension(sourcePath);
-                if (!docKeyToIdMap.TryGetValue(docKey, out var sourceDocId)) continue;
+                if (!docKeyToIdMap.TryGetValue(docKey, out var sourceDocId))
+                {
+                    return; // Equivalent to 'continue' in a parallel loop
+                }
 
                 void AddRelationships(IEnumerable<DocumentationLink> links, string type, string? context = null)
                 {
@@ -402,19 +408,23 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 {
                     AddRelationships(group.Links, "content_link", group.Context);
                 }
-            }
+            });
 
-            if (relationshipRecords.Any())
+            if (!relationshipRecords.IsEmpty)
             {
                 Console.Error.WriteLine($"[RELATIONSHIPS] Prepared {relationshipRecords.Count} relationships for insertion.");
-                await _repository.InsertRelationshipsInBulkAsync(relationshipRecords.ToArray(), cancellationToken);
+                const int RelationshipBatchSize = 4096;
+                foreach (var batch in Batch(relationshipRecords, RelationshipBatchSize))
+                {
+                    await _repository.InsertRelationshipsInBulkAsync(batch.ToArray(), cancellationToken);
+                }
             }
 
             sw.Stop();
             Console.Error.WriteLine($"[RELATIONSHIPS] Relationship processing finished in {sw.Elapsed.TotalSeconds:F2}s");
         }
 
-        private IEnumerable<IEnumerable<TSource>> BatchFiles<TSource>(IEnumerable<TSource> source, int batchSize)
+        private IEnumerable<IEnumerable<TSource>> Batch<TSource>(IEnumerable<TSource> source, int batchSize)
         {
             TSource[]? bucket = null;
             var count = 0;
