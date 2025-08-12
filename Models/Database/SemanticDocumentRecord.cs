@@ -24,9 +24,9 @@ namespace UnityIntelligenceMCP.Models.Database
 
         public string? ContentHash { get; set; }
         
-        public string? InheritsFromJson { get; set; }
+        // public string? InheritsFromJson { get; set; }
 
-        public string? ImplementedInJson { get; set; }
+        // public string? ImplementedInJson { get; set; }
 
         public string SourceFilePath { get; set; } = string.Empty;
         public List<DocMetadata> Metadata { get; set; } = new();

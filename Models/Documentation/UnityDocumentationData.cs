@@ -12,6 +12,7 @@ namespace UnityIntelligenceMCP.Models.Documentation
         public string UnityVersion { get; set; } = string.Empty;
         public DocumentationLink? InheritsFrom { get; set; }
         public DocumentationLink? ImplementedIn { get; set; }
+        public List<DocumentationLink> ImplementedInterfaces { get; set; } = new ();
         public List<DocumentationLink> Properties { get; set; } = new();
         public List<DocumentationLink> PublicMethods { get; set; } = new();
         public List<DocumentationLink> StaticMethods { get; set; } = new();

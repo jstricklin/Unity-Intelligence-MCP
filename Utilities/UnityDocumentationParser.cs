@@ -37,6 +37,7 @@ namespace UnityIntelligenceMCP.Utilities
                 Description = GetSectionContent(sections, "Description"),
                 InheritsFrom = ExtractLinkFollowingText(docNode, "Inherits from:"),
                 ImplementedIn = ExtractLinkFollowingText(docNode, "Implemented in:"),
+                ImplementedInterfaces = ExtractLinksFollowingText(docNode, "Implements interfaces:"),
                 Properties = ExtractLinksFromSection(sections, "Properties"),
                 PublicMethods = ExtractLinksFromSection(sections, "Public Methods"),
                 StaticMethods = ExtractLinksFromSection(sections, "Static Methods"),
@@ -271,6 +272,33 @@ namespace UnityIntelligenceMCP.Utilities
             var idx = text.IndexOf(" in ");
             return idx > 0 ? text.Substring(0, idx) : text;
         }
+        private List<DocumentationLink> ExtractLinksFollowingText(HtmlNode docNode, string text)
+        {
+            var links = new List<DocumentationLink>();
+            var textNode = docNode.SelectSingleNode($"//text()[contains(., '{text}')]");
+            if (textNode == null) return links;
+
+            for (var node = textNode.NextSibling; node != null; node = node.NextSibling)
+            {
+                // If we hit another type of element that isn't a link, we've left the list.
+                if (node.NodeType == HtmlNodeType.Element && node.Name != "a")
+                {
+                    break;
+                }
+
+                // We only care about <a> tags.
+                if (node.Name == "a")
+                {
+                    links.Add(new DocumentationLink
+                    {
+                        Title = HtmlEntity.DeEntitize(node.InnerText).Trim(),
+                        RelativePath = node.GetAttributeValue("href", "")
+                    });
+                }
+            }
+            return links;
+        }
+
 
         private DocumentationLink? ExtractLinkFollowingText(HtmlNode docNode, string text)
         {

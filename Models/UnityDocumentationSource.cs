@@ -47,7 +47,11 @@ namespace UnityIntelligenceMCP.Models
                     new()
                     {
                         MetadataType = "scripting_api",
-                        MetadataJson = JsonSerializer.Serialize(new { inherits = _data.InheritsFrom?.Title })
+                        MetadataJson = JsonSerializer.Serialize(new { 
+                            inherits = _data.InheritsFrom?.Title, 
+                            implementedIn = _data.ImplementedIn?.Title, 
+                            implementedInterfaces = _data.ImplementedInterfaces.Select(link => link.Title).ToList()
+                            })
                     }
                 },
                 Elements = elements

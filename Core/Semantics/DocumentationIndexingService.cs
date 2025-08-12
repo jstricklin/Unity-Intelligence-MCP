@@ -253,11 +253,16 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             parsedData.UnityVersion = unityVersion;
 
                             var chunks = _chunker.ChunkDocument(parsedData);
-                            var chunkTexts = chunks.Select(c => c.Text).ToList();
-                            var embeddings = (await _embeddingService.EmbedAsync(chunkTexts)).ToList();
+                            List<float[]> embeddings = new List<float[]>();
+
+                            if (chunks.Count > 0)
+                            {
+                                var chunkTexts = chunks.Select(c => c.Text).ToList();
+                                embeddings = (await _embeddingService.EmbedAsync(chunkTexts)).ToList();
+                            } 
+
                             // Use the first chunk's embedding for the main document
                             parsedData.Embedding = embeddings.FirstOrDefault();
-                            
                             var source = new UnityDocumentationSource(parsedData, _chunker, chunks);
                             var record = await source.ToSemanticRecordAsync(_embeddingService);
                             record.SourceFilePath = filePath;
@@ -355,7 +360,8 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
             foreach (var (sourcePath, parsedData) in parsedDataMap)
             {
-                if (!docKeyToIdMap.TryGetValue(sourcePath, out var sourceDocId)) continue;
+                var docKey = Path.GetFileNameWithoutExtension(sourcePath);
+                if (!docKeyToIdMap.TryGetValue(docKey, out var sourceDocId)) continue;
 
                 void AddRelationships(IEnumerable<DocumentationLink> links, string type, string? context = null)
                 {
@@ -363,20 +369,24 @@ namespace UnityIntelligenceMCP.Core.Semantics
                     {
                         if (string.IsNullOrEmpty(link.RelativePath)) continue;
                         var targetPath = Path.GetFullPath(Path.Combine(docRoot, link.RelativePath));
-                        if (docKeyToIdMap.TryGetValue(targetPath, out var targetDocId))
+                        var targetDocKey = Path.GetFileNameWithoutExtension(targetPath);
+                        if (docKeyToIdMap.TryGetValue(targetDocKey, out var targetDocId))
                         {
                             relationshipRecords.Add(new { SourceDocId = sourceDocId, TargetDocId = targetDocId, RelationshipType = type, Context = context });
                         }
                     }
                 }
-
-                if (parsedData.InheritsFrom is not null)
+                if (parsedData.InheritsFrom != null)
                 {
                     AddRelationships(new[] { parsedData.InheritsFrom }, "inherits_from");
                 }
-                if (parsedData.ImplementedIn is not null)
+                if (parsedData.ImplementedIn != null)
                 {
                     AddRelationships(new[] { parsedData.ImplementedIn }, "implemented_in");
+                }
+                if (parsedData.ImplementedInterfaces.Count() > 0)
+                {
+                    AddRelationships( parsedData.ImplementedInterfaces , "implemented_interfaces");
                 }
 
                 AddRelationships(parsedData.Properties, "property");

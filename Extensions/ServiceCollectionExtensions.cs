@@ -47,8 +47,8 @@ namespace UnityIntelligenceMCP.Extensions
             services.AddSingleton<IDocumentationRepository, DocumentationRepository>();
             services.AddSingleton<IDbWorkQueue, DbWorkQueue>();
             services.AddHostedService<QueuedDbWriterService>();
-            // services.AddSingleton<IEmbeddingService, PlaceholderEmbeddingService>(); // Using placeholder for now
-            services.AddSingleton<IEmbeddingService>(sp => new AllMiniLMEmbeddingService(Environment.ProcessorCount));
+            services.AddSingleton<IEmbeddingService, PlaceholderEmbeddingService>(); // Using placeholder for now
+            // services.AddSingleton<IEmbeddingService>(sp => new AllMiniLMEmbeddingService(Environment.ProcessorCount));
             services.AddSingleton<ISemanticSearchService, SemanticSearchService>();
             services.AddSingleton<DocumentationOrchestrationService>();
             services.AddSingleton<UnityDocumentationParser>();
