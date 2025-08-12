@@ -1,6 +1,8 @@
 using HtmlAgilityPack;
+using Microsoft.ML.Data;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -54,7 +56,6 @@ namespace UnityIntelligenceMCP.Utilities
         {
             var sections = new Dictionary<string, DocumentSection>(StringComparer.OrdinalIgnoreCase);
             var sectionCursor = FindFirstSectionNode(docNode);
-
             if (sectionCursor == null) return sections;
 
             var currentSection = new StringBuilder();
@@ -412,13 +413,11 @@ namespace UnityIntelligenceMCP.Utilities
             var docNode = doc.DocumentNode;
             
             var sections = ExtractSections(docNode);
-            Console.WriteLine($"Sections for: {Path.GetFileName(filePath)}");
             foreach (var (key, section) in sections)
             {
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"\n## {key} ({section.SectionType}) ##");
                 Console.ResetColor();
-                Console.WriteLine(section.Content.Length > 200 
+                Console.Error.WriteLine(section.Content.Length > 200 
                     ? section.Content.Substring(0, 200) + "..." 
                     : section.Content);
             }

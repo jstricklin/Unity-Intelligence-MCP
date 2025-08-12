@@ -23,6 +23,7 @@ namespace UnityIntelligenceMCP.Models.Documentation
         public List<LinkGroup> ContentLinkGroups { get; set; } = new();
         public List<CodeExample> Examples { get; set; } = new();
         public List<MethodOverload> Overloads { get; set; } = new();
+        public Dictionary<string, string> AdditionalSections { get; set; } = new();
         public float[]? Embedding { get; set; }
     }
 

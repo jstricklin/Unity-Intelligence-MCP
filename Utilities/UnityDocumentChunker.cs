@@ -6,7 +6,7 @@ using UnityIntelligenceMCP.Models.Documentation;
 public class UnityDocumentChunker : IDocumentChunker
 {
     private const int MaxTokens = 400; // A conservative token limit to avoid errors
-    private const int CharsPerToken = 4;
+    private const int CharsPerToken = 3;
     private const int TargetChars = MaxTokens * CharsPerToken; // ~1000 chars
     private const int OverlapTokens = 50;
     private const int OverlapChars = OverlapTokens * CharsPerToken; // ~200 chars
@@ -212,7 +212,6 @@ public class UnityDocumentChunker : IDocumentChunker
             // Set the start for the next chunk, ensuring overlap
             currentLineIndex = System.Math.Max(0, finalEndLine + 1 - overlapLines);
         }
-    
         return chunks;
     }
 }

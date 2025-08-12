@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.AI;
@@ -13,6 +12,7 @@ using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Models.Database;
 using UnityIntelligenceMCP.Models.Documentation;
 using UnityIntelligenceMCP.Utilities;
+using ModelContextProtocol.Protocol;
 
 namespace UnityIntelligenceMCP.Core.Semantics
 {
@@ -255,7 +255,6 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             var chunks = _chunker.ChunkDocument(parsedData);
                             var chunkTexts = chunks.Select(c => c.Text).ToList();
                             var embeddings = (await _embeddingService.EmbedAsync(chunkTexts)).ToList();
-
                             // Use the first chunk's embedding for the main document
                             parsedData.Embedding = embeddings.FirstOrDefault();
                             
@@ -264,7 +263,6 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             record.SourceFilePath = filePath;
                             record.ContentHash = pathToHash[filePath];
                             docRecords.Add(record);
-
                             fileDataMap[record.DocKey] = (chunks, embeddings);
                             processedInBatch.Add(filePath);
                             
