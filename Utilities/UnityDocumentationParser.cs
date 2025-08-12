@@ -55,78 +55,99 @@ namespace UnityIntelligenceMCP.Utilities
         private Dictionary<string, DocumentSection> ExtractSections(HtmlNode docNode)
         {
             var sections = new Dictionary<string, DocumentSection>(StringComparer.OrdinalIgnoreCase);
-            var sectionCursor = FindFirstSectionNode(docNode);
-            if (sectionCursor == null) return sections;
+            // FindFirstSectionNode now correctly targets the main content div.
+            var contentNode = FindFirstSectionNode(docNode);
+            if (contentNode == null) return sections;
 
             var currentSection = new StringBuilder();
-            string currentKey = "Document";
-            HtmlNode currentNode = sectionCursor;
-            var orphanedContent = new StringBuilder();
+            // Default to "Description" as it's the most common first section.
+            string currentKey = "Description"; 
+            HtmlNode? sectionStartNode = null;
 
-            while (currentNode != null)
+            // Iterate over the direct children of the main content `div.section`.
+            for (var currentNode = contentNode.FirstChild; currentNode != null; currentNode = currentNode.NextSibling)
             {
-                if (IsSectionHeader(currentNode))
+                // Skip nodes that are not significant (comments, whitespace-only text).
+                if (currentNode.NodeType is HtmlNodeType.Comment ||
+                    (currentNode.NodeType is HtmlNodeType.Text && string.IsNullOrWhiteSpace(currentNode.InnerText)))
                 {
-                    SaveCurrentSection();
-                    currentKey = CleanHeaderText(currentNode.InnerText);
-                    currentSection.Clear();
+                    continue;
                 }
                 
+                // The metadata block is handled by other dedicated functions, so we skip it here
+                // to prevent its content from being duplicated in the "Description" section.
+                if (currentNode.NodeType == HtmlNodeType.Element && currentNode.HasClass("mb20"))
+                {
+                    continue;
+                }
+
+                // A new section is starting.
+                if (IsSectionHeader(currentNode))
+                {
+                    // Save the previously accumulated section content.
+                    SaveCurrentSection(sectionStartNode);
+
+                    // Reset for the new section.
+                    currentSection.Clear();
+                    var headerNode = currentNode.SelectSingleNode("./h3|./h2");
+                    // The IsSectionHeader check ensures headerNode is not null.
+                    currentKey = CleanHeaderText(headerNode.InnerText);
+                    sectionStartNode = currentNode;
+                }
+
+                // The first significant content node becomes the start of our section.
+                // This is crucial for associating the content with the correct HtmlNode.
+                sectionStartNode ??= currentNode;
+                
                 currentSection.AppendLine(ExtractNodeContent(currentNode));
-                currentNode = currentNode.NextSibling;
             }
-            SaveCurrentSection();
-            HandleOrphanedContent();
+
+            // Save the last section after the loop finishes.
+            SaveCurrentSection(sectionStartNode);
             return sections;
 
-            // Local helper functions
-            void SaveCurrentSection()
+            // --- Local helper to save the buffered section ---
+            void SaveCurrentSection(HtmlNode? nodeForSection)
             {
-                if (currentSection.Length > 0)
+                var content = currentSection.ToString().Trim();
+                // Only save if there's actual content and a node to associate it with.
+                if (!string.IsNullOrWhiteSpace(content) && nodeForSection != null)
                 {
-                    sections[currentKey] = new DocumentSection
+                    // Handle cases where a section name is repeated (e.g., "Properties" within "Inherited Members").
+                    // Appending the content prevents data loss and aggregates related info.
+                    if (sections.TryGetValue(currentKey, out var existingSection))
                     {
-                        Content = currentSection.ToString().Trim(),
-                        Node = currentNode,
-                        SectionType = DetermineNodeType(currentNode)
-                    };
-                }
-            }
-
-            void HandleOrphanedContent()
-            {
-                if (orphanedContent.Length > 0)
-                {
-                    sections["Document"] = new DocumentSection
+                        existingSection.Content += "\n\n" + content;
+                    }
+                    else
                     {
-                        Content = orphanedContent.ToString().Trim(),
-                        SectionType = "text"
-                    };
+                        sections[currentKey] = new DocumentSection
+                        {
+                            Content = content,
+                            Node = nodeForSection,
+                            SectionType = DetermineNodeType(nodeForSection)
+                        };
+                    }
                 }
             }
         }
         
         private HtmlNode FindFirstSectionNode(HtmlNode docNode)
         {
-            string[] sectionSelectors = {
-                "//div[@class='subsection']",
-                "//div[contains(@class, 'section')]",
-                "//div[contains(@class, 'content')]//div[h3 or h2]"
-            };
-            
-            foreach (var selector in sectionSelectors)
-            {
-                var node = docNode.SelectSingleNode(selector);
-                if (node != null) return node;
-            }
-            return docNode.SelectSingleNode("//body") ?? docNode;
+            // This XPath is more reliable for finding the main content area across different doc pages.
+            // We're looking for the <div class="section"> inside the main <div class="content">.
+            return docNode.SelectSingleNode("//div[@class='content']/div[@class='section']");
         }
 
         private bool IsSectionHeader(HtmlNode node)
         {
-            return node?.Name?.StartsWith("h", StringComparison.OrdinalIgnoreCase) == true &&
-                   (node.Name.Length == 2 || node.Name.Length == 3) &&
-                   char.IsDigit(node.Name[1]);
+            // A section header is defined as a div with class 'subsection' that contains a direct child h3 or h2 element.
+            // This is the most consistent structural pattern across the example documents.
+            if (node?.Name == "div" && node.HasClass("subsection"))
+            {
+                return node.SelectSingleNode("./h3|./h2") != null;
+            }
+            return false;
         }
 
         private string CleanHeaderText(string text)
