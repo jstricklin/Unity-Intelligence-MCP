@@ -56,81 +56,63 @@ namespace UnityIntelligenceMCP.Utilities
         private Dictionary<string, DocumentSection> ExtractSections(HtmlNode docNode)
         {
             var sections = new Dictionary<string, DocumentSection>(StringComparer.OrdinalIgnoreCase);
-            // FindFirstSectionNode now correctly targets the main content div.
             var contentNode = FindFirstSectionNode(docNode);
             if (contentNode == null) return sections;
 
-            var currentSection = new StringBuilder();
-            // Default to "Description" as it's the most common first section.
+            var currentSectionNodes = new List<HtmlNode>();
             string currentKey = "Description"; 
-            HtmlNode? sectionStartNode = null;
 
-            // Iterate over the direct children of the main content `div.section`.
-            for (var currentNode = contentNode.FirstChild; currentNode != null; currentNode = currentNode.NextSibling)
+            void SaveSection()
             {
-                // Skip nodes that are not significant (comments, whitespace-only text).
+                if (!currentSectionNodes.Any()) return;
+
+                var container = HtmlNode.CreateNode("<div></div>");
+                currentSectionNodes.ForEach(n => container.AppendChild(n.Clone()));
+                var content = container.InnerText.Trim();
+                if (string.IsNullOrWhiteSpace(content)) return;
+
+                if (sections.TryGetValue(currentKey, out var existingSection))
+                {
+                    existingSection.Content += "\n\n" + content;
+                    currentSectionNodes.ForEach(n => existingSection.Node.AppendChild(n.Clone()));
+                }
+                else
+                {
+                    sections[currentKey] = new DocumentSection
+                    {
+                        Content = content,
+                        Node = container,
+                        SectionType = DetermineNodeType(container)
+                    };
+                }
+            }
+
+            foreach (var currentNode in contentNode.ChildNodes)
+            {
                 if (currentNode.NodeType is HtmlNodeType.Comment ||
                     (currentNode.NodeType is HtmlNodeType.Text && string.IsNullOrWhiteSpace(currentNode.InnerText)))
                 {
                     continue;
                 }
                 
-                // The metadata block is handled by other dedicated functions, so we skip it here
-                // to prevent its content from being duplicated in the "Description" section.
                 if (currentNode.NodeType == HtmlNodeType.Element && currentNode.HasClass("mb20"))
                 {
                     continue;
                 }
 
-                // A new section is starting.
                 if (IsSectionHeader(currentNode))
                 {
-                    // Save the previously accumulated section content.
-                    SaveCurrentSection(sectionStartNode);
-
-                    // Reset for the new section.
-                    currentSection.Clear();
+                    SaveSection();
+                    currentSectionNodes.Clear();
                     var headerNode = currentNode.SelectSingleNode("./h3|./h2");
-                    // The IsSectionHeader check ensures headerNode is not null.
-                    currentKey = CleanHeaderText(headerNode.InnerText);
-                    sectionStartNode = currentNode;
+                    currentKey = CleanHeaderText(headerNode!.InnerText);
                 }
-
-                // The first significant content node becomes the start of our section.
-                // This is crucial for associating the content with the correct HtmlNode.
-                sectionStartNode ??= currentNode;
                 
-                currentSection.AppendLine(ExtractNodeContent(currentNode));
+                currentSectionNodes.Add(currentNode);
             }
-
-            // Save the last section after the loop finishes.
-            SaveCurrentSection(sectionStartNode);
+            
+            SaveSection();
             return sections;
-
-            // --- Local helper to save the buffered section ---
-            void SaveCurrentSection(HtmlNode? nodeForSection)
-            {
-                var content = currentSection.ToString().Trim();
-                // Only save if there's actual content and a node to associate it with.
-                if (!string.IsNullOrWhiteSpace(content) && nodeForSection != null)
-                {
-                    // Handle cases where a section name is repeated (e.g., "Properties" within "Inherited Members").
-                    // Appending the content prevents data loss and aggregates related info.
-                    if (sections.TryGetValue(currentKey, out var existingSection))
-                    {
-                        existingSection.Content += "\n\n" + content;
-                    }
-                    else
-                    {
-                        sections[currentKey] = new DocumentSection
-                        {
-                            Content = content,
-                            Node = nodeForSection,
-                            SectionType = DetermineNodeType(nodeForSection)
-                        };
-                    }
-                }
-            }
         }
         
         private HtmlNode FindFirstSectionNode(HtmlNode docNode)
@@ -395,18 +377,22 @@ namespace UnityIntelligenceMCP.Utilities
                 
                 var codeNodes = section.Node.SelectNodes(".//pre[contains(@class, 'codeExampleCS')]")
                                       ?? Enumerable.Empty<HtmlNode>();
+<<<<<<< Updated upstream
                 
+=======
+
+>>>>>>> Stashed changes
                 foreach (var code in codeNodes)
                 {
                     var preNode = code.ParentNode;
                     var descriptionNode = preNode.PreviousSibling;
-                    while (descriptionNode != null && (descriptionNode.NodeType == HtmlNodeType.Text || descriptionNode.NodeType == HtmlNodeType.Comment))
+                    while (descriptionNode != null && descriptionNode.NodeType != HtmlNodeType.Element)
                     {
                         descriptionNode = descriptionNode.PreviousSibling;
                     }
 
                     var description = string.Empty;
-                    if (descriptionNode != null && descriptionNode.Name == "p")
+                    if (descriptionNode != null)
                     {
                         description = HtmlEntity.DeEntitize(descriptionNode.InnerText).Trim();
                     }
