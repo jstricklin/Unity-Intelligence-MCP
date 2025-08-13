@@ -32,8 +32,8 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 var docCommand = connection.CreateCommand();
                 docCommand.Transaction = transaction;
                 docCommand.CommandText = @"
-                INSERT INTO unity_docs (source_id, doc_key, title, url, doc_type, category, unity_version, content_hash, embedding)
-                VALUES ((SELECT id FROM doc_sources WHERE source_type = $source_type), $doc_key, $title, $url, $doc_type, $category, $unity_version, $content_hash, $embedding)
+                INSERT INTO unity_docs (source_id, doc_key, title, url, construct_type, category, unity_version, content_hash, embedding)
+                VALUES ((SELECT id FROM doc_sources WHERE source_type = $source_type), $doc_key, $title, $url, $type, $category, $unity_version, $content_hash, $embedding)
                 RETURNING id;
             ";
 
@@ -41,7 +41,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 docCommand.Parameters.Add(new DuckDBParameter("doc_key", record.DocKey));
                 docCommand.Parameters.Add(new DuckDBParameter("title", record.Title));
                 docCommand.Parameters.Add(new DuckDBParameter("url", record.Url ?? (object)DBNull.Value));
-                docCommand.Parameters.Add(new DuckDBParameter("doc_type", record.DocType ?? (object)DBNull.Value));
+                docCommand.Parameters.Add(new DuckDBParameter("type", record.ConstructType ?? (object)DBNull.Value));
                 docCommand.Parameters.Add(new DuckDBParameter("category", record.Category ?? (object)DBNull.Value));
                 docCommand.Parameters.Add(new DuckDBParameter("unity_version", record.UnityVersion ?? (object)DBNull.Value));
                 docCommand.Parameters.Add(new DuckDBParameter("content_hash", record.ContentHash ?? (object)DBNull.Value));
@@ -140,7 +140,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                                 .AppendValue(record.DocKey)
                                 .AppendValue(record.Title)
                                 .AppendValue(record.Url)
-                                .AppendValue(record.DocType)
+                                .AppendValue(record.ConstructType)
                                 .AppendValue(record.Category)
                                 .AppendValue(record.UnityVersion)
                                 .AppendValue(record.ContentHash)

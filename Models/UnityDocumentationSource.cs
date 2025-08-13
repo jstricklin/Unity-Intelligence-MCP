@@ -37,7 +37,7 @@ namespace UnityIntelligenceMCP.Models
                 DocKey = System.IO.Path.GetFileNameWithoutExtension(_data.FilePath),
                 Title = _data.Title,
                 Url = _data.FilePath,
-                DocType = "class",
+                ConstructType = _data.ConstructType,
                 Category = "Scripting API",
                 UnityVersion = _data.UnityVersion,
                 ContentHash = ComputeContentHash(),

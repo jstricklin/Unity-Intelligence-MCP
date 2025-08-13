@@ -16,7 +16,7 @@ namespace UnityIntelligenceMCP.Models.Database
 
         public string? Url { get; set; }
 
-        public string? DocType { get; set; }
+        public string? ConstructType { get; set; }
 
         public string? Category { get; set; }
 
