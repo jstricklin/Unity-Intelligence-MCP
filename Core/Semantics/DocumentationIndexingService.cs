@@ -225,7 +225,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             }
             
             // Configure parallel processing
-            const int FilesPerBatch = 1024;  
+            const int FilesPerBatch = 4096;  
             int MaxParallelism = Environment.ProcessorCount;
             var options = new ParallelOptions { MaxDegreeOfParallelism = MaxParallelism };
             int processedCount = 0;
@@ -412,9 +412,18 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
             if (!relationshipRecords.IsEmpty)
             {
-                Console.Error.WriteLine($"[RELATIONSHIPS] Prepared {relationshipRecords.Count} relationships for insertion.");
+                Console.Error.WriteLine($"[RELATIONSHIPS] Prepared {relationshipRecords.Count} relationships. Deduplicating...");
+
+                var uniqueRelationshipRecords = relationshipRecords
+                    .Cast<dynamic>()
+                    .GroupBy(r => new { r.SourceDocId, r.TargetDocId, r.RelationshipType, r.Context })
+                    .Select(g => g.First())
+                    .ToList();
+
+                Console.Error.WriteLine($"[RELATIONSHIPS] Inserting {uniqueRelationshipRecords.Count} unique relationships.");
+
                 const int RelationshipBatchSize = 4096;
-                foreach (var batch in Batch(relationshipRecords, RelationshipBatchSize))
+                foreach (var batch in Batch(uniqueRelationshipRecords, RelationshipBatchSize))
                 {
                     await _repository.InsertRelationshipsInBulkAsync(batch.ToArray(), cancellationToken);
                 }

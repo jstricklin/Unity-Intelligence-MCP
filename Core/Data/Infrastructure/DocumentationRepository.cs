@@ -286,8 +286,8 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 }
                 catch (Exception ex)
                 {
-                    await transaction.RollbackAsync(cancellationToken);
                     Console.Error.WriteLine($"[ERROR] Failed to insert relationships batch: {ex.Message}");
+                    await transaction.RollbackAsync(cancellationToken);
                     throw;
                 }
             });
