@@ -307,13 +307,12 @@ namespace UnityIntelligenceMCP.Utilities
                     return "Method";
                 }
 
-                // In member signatures (properties, fields), the type is often the first link.
-                // For `public Vector3 cellGap;`, this will find the `<a>` tag around `Vector3`.
-                var typeLinkNode = signatureNode.SelectSingleNode(".//a");
-                if (typeLinkNode != null)
+                // Member pages for properties or fields don't have the <h2> header.
+                // Their signatures typically end with a semicolon or contain curly braces.
+                var signatureText = HtmlEntity.DeEntitize(signatureNode.InnerText).Trim();
+                if (signatureText.EndsWith(";") || signatureText.Contains("{"))
                 {
-                    // This will correctly extract "Vector3" and not "public Vector3".
-                    return HtmlEntity.DeEntitize(typeLinkNode.InnerText).Trim();
+                    return "Property";
                 }
             }
 
