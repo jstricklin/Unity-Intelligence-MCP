@@ -46,16 +46,16 @@ public class UnityDocumentChunker : IDocumentChunker
         if (string.IsNullOrWhiteSpace(text)) return;
 
         var subChunks = SplitText(text, TargetChars);
-        foreach (var subChunk in subChunks)
+        foreach (var (chunkText, start, end) in subChunks)
         {
             chunks.Add(new DocumentChunk
             {
                 Index = currentIndex++,
                 Title = title,
-                Text = subChunk,
+                Text = chunkText,
                 Section = section,
-                StartPosition = 0,
-                EndPosition = subChunk.Length
+                StartPosition = start,
+                EndPosition = end
             });
         }
     }
@@ -97,7 +97,7 @@ public class UnityDocumentChunker : IDocumentChunker
                 
                 // Chunk the code separately using the new method
                 var codeChunks = SplitCode(example.Code, TargetChars);
-                foreach (var codeChunk in codeChunks)
+                foreach (var (codeChunk, start, end) in codeChunks)
                 {
                     chunks.Add(new DocumentChunk
                     {
@@ -105,22 +105,26 @@ public class UnityDocumentChunker : IDocumentChunker
                         Title = example.Description, // Use description as context title
                         Text = codeChunk,
                         Section = section,
-                        StartPosition = 0,
-                        EndPosition = codeChunk.Length
+                        StartPosition = start,
+                        EndPosition = end
                     });
                 }
             }
         }
     }
 
-    private static List<string> SplitText(string text, int maxLength)
+    private static List<(string Text, int Start, int End)> SplitText(string text, int maxLength)
     {
-        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+        if (string.IsNullOrEmpty(text))
         {
-            return new List<string> { text };
+            return new List<(string, int, int)>();
+        }
+        if (text.Length <= maxLength)
+        {
+            return new List<(string, int, int)> { (text, 0, text.Length) };
         }
     
-        var chunks = new List<string>();
+        var chunks = new List<(string Text, int Start, int End)>();
         int startIndex = 0;
     
         while (startIndex < text.Length)
@@ -139,7 +143,7 @@ public class UnityDocumentChunker : IDocumentChunker
                 }
             }
     
-            chunks.Add(text.Substring(startIndex, endIndex - startIndex).Trim());
+            chunks.Add((text.Substring(startIndex, endIndex - startIndex).Trim(), startIndex, endIndex));
     
             if (endIndex >= text.Length)
             {
@@ -153,17 +157,27 @@ public class UnityDocumentChunker : IDocumentChunker
         return chunks;
     }
 
-    private static List<string> SplitCode(string code, int maxLength)
+    private static List<(string Text, int Start, int End)> SplitCode(string code, int maxLength)
     {
-        if (string.IsNullOrEmpty(code) || code.Length <= maxLength)
+        if (string.IsNullOrEmpty(code))
         {
-            return new List<string> { code };
+            return new List<(string, int, int)>();
+        }
+        if (code.Length <= maxLength)
+        {
+            return new List<(string, int, int)> { (code, 0, code.Length) };
         }
     
         const int overlapLines = 3;
         var lines = code.Split('\n');
-        var chunks = new List<string>();
+        var chunks = new List<(string Text, int Start, int End)>();
         int currentLineIndex = 0;
+    
+        var lineStartPositions = new List<int> { 0 };
+        for (int i = 0; i < lines.Length - 1; i++)
+        {
+            lineStartPositions.Add(lineStartPositions[i] + lines[i].Length + 1); // +1 for '\n'
+        }
     
         while (currentLineIndex < lines.Length)
         {
@@ -202,7 +216,9 @@ public class UnityDocumentChunker : IDocumentChunker
             {
                 finalChunk.AppendLine(lines[i]);
             }
-            chunks.Add(finalChunk.ToString().TrimEnd());
+            var startPos = lineStartPositions[currentLineIndex];
+            var endPos = lineStartPositions[finalEndLine] + lines[finalEndLine].Length;
+            chunks.Add((finalChunk.ToString().TrimEnd(), startPos, endPos));
             
             if (finalEndLine >= lines.Length - 1)
             {
