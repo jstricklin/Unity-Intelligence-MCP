@@ -266,11 +266,51 @@ namespace UnityIntelligenceMCP.Utilities
 
         private string ExtractConstructType(HtmlNode docNode)
         {
-            var text = docNode.SelectSingleNode("//div[contains(@class, 'content')]//h1/following-sibling::p[1]")?
-                .InnerText.Trim() ?? string.Empty;
-            
-            var idx = text.IndexOf(" in ");
-            return idx > 0 ? text.Substring(0, idx) : text;
+            var textNode = docNode.SelectSingleNode("//div[contains(@class, 'content')]//h1/following-sibling::p[1]");
+            if (textNode != null)
+            {
+                var text = textNode.InnerText.Trim();
+                if (!string.IsNullOrEmpty(text))
+                {
+                    // Using a dictionary is a great way to map to a canonical form.
+                    // This makes parsing more robust than simple string manipulation.
+                    var knownTypes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        { "class", "Class" },
+                        { "struct", "Struct" },
+                        { "enum", "Enum" },
+                        { "interface", "Interface" }
+                    };
+
+                    var words = text.Split(new[] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                    var firstWord = words.FirstOrDefault();
+
+                    if (firstWord != null && knownTypes.TryGetValue(firstWord, out var canonicalType))
+                    {
+                        return canonicalType;
+                    }
+
+                    // Fallback for constructs not in our map (e.g., "Attribute").
+                    var idx = text.IndexOf(" in ");
+                    return idx > 0 ? text.Substring(0, idx).Trim() : text;
+                }
+            }
+
+            // Fallback for pages like properties or fields where the type is in the signature.
+            var signatureNode = docNode.SelectSingleNode("//div[contains(@class, 'signature-CS')]");
+            if (signatureNode != null)
+            {
+                // In member signatures (properties, fields), the type is often the first link.
+                // For `public Vector3 cellGap;`, this will find the `<a>` tag around `Vector3`.
+                var typeLinkNode = signatureNode.SelectSingleNode(".//a");
+                if (typeLinkNode != null)
+                {
+                    // This will correctly extract "Vector3" and not "public Vector3".
+                    return HtmlEntity.DeEntitize(typeLinkNode.InnerText).Trim();
+                }
+            }
+
+            return string.Empty;
         }
         private List<DocumentationLink> ExtractLinksFollowingText(HtmlNode docNode, string text)
         {
