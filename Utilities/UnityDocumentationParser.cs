@@ -300,6 +300,13 @@ namespace UnityIntelligenceMCP.Utilities
             var signatureNode = docNode.SelectSingleNode("//div[contains(@class, 'signature-CS')]");
             if (signatureNode != null)
             {
+                // On method pages, the signature block contains an <h2>Declaration</h2> tag.
+                // This reliably distinguishes them from property/field pages.
+                if (signatureNode.SelectSingleNode(".//h2[text()='Declaration']") != null)
+                {
+                    return "Method";
+                }
+
                 // In member signatures (properties, fields), the type is often the first link.
                 // For `public Vector3 cellGap;`, this will find the `<a>` tag around `Vector3`.
                 var typeLinkNode = signatureNode.SelectSingleNode(".//a");
