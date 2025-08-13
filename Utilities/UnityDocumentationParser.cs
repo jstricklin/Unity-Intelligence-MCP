@@ -279,6 +279,7 @@ namespace UnityIntelligenceMCP.Utilities
                         { "class", "Class" },
                         { "struct", "Struct" },
                         { "enum", "Enum" },
+                        { "enumeration", "Enumeration" },
                         { "interface", "Interface" }
                     };
 
