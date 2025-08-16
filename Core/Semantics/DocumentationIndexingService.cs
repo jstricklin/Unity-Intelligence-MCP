@@ -226,6 +226,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             
             // Configure parallel processing
             const int FilesPerBatch = 4096;  
+            const long MemoryLimitMb = 4096; // 4GB limit
             int MaxParallelism = Environment.ProcessorCount;
             var options = new ParallelOptions { MaxDegreeOfParallelism = MaxParallelism };
             int processedCount = 0;
@@ -273,7 +274,16 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             
                             var current = Interlocked.Increment(ref processedCount);
                             if (((float)current / totalFiles) * 100 % 2 == 0)
-                                Console.Error.WriteLine($"[PROGRESS] {(int)(((float)current/totalFiles) * 100)}% out of {totalFiles} total files prepared for insert.");
+                            {
+                                var memoryUsage = GC.GetTotalMemory(false) / 1024 / 1024; // in MB
+                                Console.Error.WriteLine($"[PROGRESS] {(int)(((float)current/totalFiles) * 100)}% out of {totalFiles} total files prepared for insert. Memory: ~{memoryUsage} MB");
+
+                                if (memoryUsage > MemoryLimitMb)
+                                {
+                                    Console.Error.WriteLine($"[FATAL] Memory usage ({memoryUsage} MB) exceeds limit of {MemoryLimitMb} MB. Shutting down to prevent system instability.");
+                                    Environment.Exit(1);
+                                }
+                            }
                         }
                         catch (Exception ex)
                         {
