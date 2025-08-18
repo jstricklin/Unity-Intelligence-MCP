@@ -267,7 +267,8 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 var contents = GetArray<string>(reader, 6);
                 var relevances = GetArray<double>(reader, 7);
                 var sections = GetArray<string>(reader, 8);
-                
+
+                Console.Error.WriteLine($"[INFO] Chunk Check: {chunkIds.Count()}");
                 for (int i = 0; i < chunkIds.Length; i++)
                 {
                     group.TopChunks.Add(new ChunkResult {
