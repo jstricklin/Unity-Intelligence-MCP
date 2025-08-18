@@ -24,7 +24,11 @@ namespace UnityIntelligenceMCP.Resources
         private readonly ConfigurationService _configurationService;
         private readonly IToolUsageLogger _usageLogger;
 
-        public UnityDocumentationResource(UnityInstallationService installationService, ILogger<UnityDocumentationResource> logger, ConfigurationService configurationService, IToolUsageLogger usageLogger)
+        public UnityDocumentationResource(
+            UnityInstallationService installationService, 
+            ILogger<UnityDocumentationResource> logger, 
+            ConfigurationService configurationService, 
+            IToolUsageLogger usageLogger)
         {
             _installationService = installationService;
             _logger = logger;

@@ -230,7 +230,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
                 _ = _usageLogger.LogAsync(new ToolUsageLog
                 {
-                    ToolName = "HybridSearch",
+                    ToolName = "hybrid_semantic_docs_search",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     ResultSummaryJson = JsonSerializer.Serialize(resultSummary),
                     ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
