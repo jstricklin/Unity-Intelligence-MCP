@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Core.IO;
+using ModelContextProtocol.Protocol;
 using UnityIntelligenceMCP.Models.Documentation;
 using System.Text.Json;
 using UnityIntelligenceMCP.Utilities;

@@ -27,6 +27,7 @@ namespace UnityIntelligenceMCP.Extensions
         public static IServiceCollection AddUnityAnalysisServices(this IServiceCollection services)
         {
             // Core Infrastructure
+            services.AddSingleton<IToolUsageLogger, DuckDbToolUsageLogger>();
             services.AddSingleton<UnityInstallationService>();
             services.AddSingleton<UnityRoslynAnalysisService>();
             services.AddSingleton<UnityDocumentationResource>();

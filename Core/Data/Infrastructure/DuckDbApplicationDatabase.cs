@@ -244,7 +244,6 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 
             try
             {
-                // Remove VSS loading - factory handles this
                 command.CommandText = ToolUsageLogTable;
                 await command.ExecuteNonQueryAsync();
                 
