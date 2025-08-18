@@ -112,6 +112,20 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             );
         ";
 
+        private const string ToolUsageLogTable = @"
+            CREATE SEQUENCE tool_usage_log_id_seq START 1;
+            CREATE TABLE IF NOT EXISTS tool_usage_log (
+                id BIGINT PRIMARY KEY DEFAULT nextval('tool_usage_log_id_seq'),
+                event_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                tool_name VARCHAR NOT NULL,
+                parameters_json VARCHAR,
+                result_summary_json VARCHAR,
+                execution_time_ms BIGINT,
+                was_successful BOOLEAN,
+                peak_process_memory_mb BIGINT
+            );
+        ";
+
         private const string SchemaStandardIndexes = @"
             CREATE INDEX idx_elements_construct_type ON content_elements(doc_id, element_type);
             CREATE INDEX idx_metadata_doc ON doc_metadata(doc_id);
@@ -231,6 +245,9 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             try
             {
                 // Remove VSS loading - factory handles this
+                command.CommandText = ToolUsageLogTable;
+                await command.ExecuteNonQueryAsync();
+                
                 // Processing table
                 command.CommandText = ProcessingTable;
                 await command.ExecuteNonQueryAsync();
