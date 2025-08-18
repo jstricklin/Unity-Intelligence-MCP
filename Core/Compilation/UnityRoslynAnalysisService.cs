@@ -49,6 +49,15 @@ namespace UnityIntelligenceMCP.Core.RoslynServices
                 }
             }
 
+            var packageCachePath = Path.Combine(projectPath, "Library", "PackageCache");
+            if (Directory.Exists(packageCachePath))
+            {
+                foreach (var dll in Directory.GetFiles(packageCachePath, "*.dll", SearchOption.AllDirectories))
+                {
+                    references.Add(MetadataReference.CreateFromFile(dll));
+                }
+            }
+
             var searchDirectories = new List<string>();
             switch (searchScope)
             {
