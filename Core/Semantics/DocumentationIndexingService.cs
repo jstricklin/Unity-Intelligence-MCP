@@ -166,6 +166,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
             var parsedDataMap = new ConcurrentDictionary<string, UnityDocumentationData>();
             var docKeyToIdMap = new ConcurrentDictionary<string, long>();
+            // var logMessages = new ConcurrentBag<string>();
             
             // Load existing tracking data FIRST
             var trackingData = await _repository.GetDocumentTrackingAsync(unityVersion);
@@ -226,7 +227,6 @@ namespace UnityIntelligenceMCP.Core.Semantics
             
             // Configure parallel processing
             const int FilesPerBatch = 4096;  
-            const long MemoryLimitMb = 4096; // 4GB limit
             int MaxParallelism = Environment.ProcessorCount;
             var options = new ParallelOptions { MaxDegreeOfParallelism = MaxParallelism };
             int processedCount = 0;
@@ -250,6 +250,11 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             await _repository.MarkDocumentProcessingAsync(filePath, unityVersion);
                             
                             var parsedData = _parser.Parse(filePath);
+                            // logMessages.Add($"{Path.GetFileName(filePath)}:HasCodeExamples={parsedData.Examples.Count() > 0}");
+                            // if (parsedData.Examples.Count() > 0)
+                            // {
+                            // logMessages.Add($"{Path.GetFileName(filePath)}:ExampleCount={parsedDadoc.Count()}");
+                            // }
                             parsedDataMap.TryAdd(filePath, parsedData);
                             parsedData.UnityVersion = unityVersion;
 
@@ -277,12 +282,6 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             {
                                 var memoryUsage = GC.GetTotalMemory(false) / 1024 / 1024; // in MB
                                 Console.Error.WriteLine($"[PROGRESS] {(int)(((float)current/totalFiles) * 100)}% out of {totalFiles} total files prepared for insert. Memory: ~{memoryUsage} MB");
-
-                                if (memoryUsage > MemoryLimitMb)
-                                {
-                                    Console.Error.WriteLine($"[FATAL] Memory usage ({memoryUsage} MB) exceeds limit of {MemoryLimitMb} MB. Shutting down to prevent system instability.");
-                                    Environment.Exit(1);
-                                }
                             }
                         }
                         catch (Exception ex)
@@ -346,6 +345,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 });
             
             sw.Stop();
+            // await File.WriteAllLinesAsync("indexing_log.txt", logMessages);
             await ProcessRelationshipsAsync(parsedDataMap, docKeyToIdMap, CancellationToken.None);
             Console.Error.WriteLine($"[COMPLETE] Document Indexing finished in {TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds).ToString(@"hh\:mm\:ss")}s");
         }

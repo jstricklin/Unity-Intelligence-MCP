@@ -47,6 +47,7 @@ namespace UnityIntelligenceMCP.Utilities
                 InheritedStaticMethods = ExtractLinksFromSection(sections, "Inherited Static Methods"),
                 InheritedOperators = ExtractLinksFromSection(sections, "Inherited Operators"),
                 ContentLinkGroups = ExtractContentLinkGroups(sections),
+                // FIXME: resolve overload parsing
                 Overloads = ExtractOverloads(docNode),
                 Examples = ExtractCodeExamples(sections),
                 AdditionalSections = GetAdditionalSections(sections)
@@ -377,11 +378,6 @@ namespace UnityIntelligenceMCP.Utilities
                 
                 var codeNodes = section.Node.SelectNodes(".//pre[contains(@class, 'codeExampleCS')]")
                                       ?? Enumerable.Empty<HtmlNode>();
-<<<<<<< Updated upstream
-                
-=======
-
->>>>>>> Stashed changes
                 foreach (var code in codeNodes)
                 {
                     var preNode = code.ParentNode;

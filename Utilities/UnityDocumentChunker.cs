@@ -27,7 +27,6 @@ public class UnityDocumentChunker : IDocumentChunker
         AddLinkChunks(chunks, "Inherited Static Methods", doc.InheritedStaticMethods, ref chunkIndex);
         AddLinkChunks(chunks, "Inherited Operators", doc.InheritedOperators, ref chunkIndex);
         AddCodeExampleChunks(chunks, "Examples", doc.Examples, ref chunkIndex);
-
         foreach (var overload in doc.Overloads)
         {
             AddTextChunks(chunks, overload.Declaration, overload.Description, "MethodOverload.Description", ref chunkIndex);
@@ -93,8 +92,7 @@ public class UnityDocumentChunker : IDocumentChunker
             else
             {
                 // Description might need chunking
-                AddTextChunks(chunks, example.Description, example.Description, section, ref currentIndex);
-                
+                // AddTextChunks(chunks, example.Description, example.Description, section, ref currentIndex);
                 // Chunk the code separately using the new method
                 var codeChunks = SplitCode(example.Code, TargetChars);
                 foreach (var (codeChunk, start, end) in codeChunks)
@@ -209,7 +207,7 @@ public class UnityDocumentChunker : IDocumentChunker
                     }
                 }
             }
-            
+
             // Re-build the chunk with the final determined end line
             var finalChunk = new System.Text.StringBuilder();
             for (int i = currentLineIndex; i <= finalEndLine; i++)
@@ -224,9 +222,9 @@ public class UnityDocumentChunker : IDocumentChunker
             {
                 break; // We've processed all lines
             }
-    
+
             // Set the start for the next chunk, ensuring overlap
-            currentLineIndex = System.Math.Max(0, finalEndLine + 1 - overlapLines);
+            currentLineIndex = System.Math.Max(currentLineIndex + 1, finalEndLine + 1 - overlapLines);
         }
         return chunks;
     }

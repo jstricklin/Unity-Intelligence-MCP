@@ -27,5 +27,4 @@ var host = builder.Build();
 
 // Initialize the documentation database
 await host.Services.InitializeServicesAsync();
-
 await host.RunAsync();
