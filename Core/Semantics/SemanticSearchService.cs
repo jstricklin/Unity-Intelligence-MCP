@@ -93,6 +93,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             });
         }
 
+        // TODO: Update search to implement element_type parameter to allow searching for types excplicitly (examples, descriptions, etc)
         public async Task<List<DocumentGroup>> HybridSearchAsync(
             string query, 
             int docLimit = 5,
