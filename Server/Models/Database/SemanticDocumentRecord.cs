@@ -1,0 +1,35 @@
+using System.Collections.Generic;
+using UnityIntelligenceMCP.Core.Data;
+using UnityIntelligenceMCP.Core.Data.Contracts;
+
+namespace UnityIntelligenceMCP.Models.Database
+{
+    public class SemanticDocumentRecord : IDbWorkItem
+    {
+        public string DocKey { get; set; } = string.Empty;
+
+        public string Title { get; set; } = string.Empty;
+        
+        public string? Description { get; set; }
+        public float[]? Embedding { get; set; }
+        public string? Namespace { get; set; }
+
+        public string? Url { get; set; }
+
+        public string? ConstructType { get; set; }
+
+        public string? Category { get; set; }
+
+        public string? UnityVersion { get; set; }
+
+        public string? ContentHash { get; set; }
+        
+        // public string? InheritsFromJson { get; set; }
+
+        // public string? ImplementedInJson { get; set; }
+
+        public string SourceFilePath { get; set; } = string.Empty;
+        public List<DocMetadata> Metadata { get; set; } = new();
+        public List<ContentElement> Elements { get; set; } = new();
+    }
+}
