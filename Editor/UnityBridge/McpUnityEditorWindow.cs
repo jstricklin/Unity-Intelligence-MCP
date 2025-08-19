@@ -1,11 +1,11 @@
 using System;
-using McpUnity.Utils;
+using UnityIntelligenceMCP.Utils;
 using UnityEngine;
 using UnityEditor;
 
-namespace McpUnity.Unity
+namespace UnityIntelligenceMCP.Unity
 {
-    public class McpUnityEditorWindow : EditorWindow
+    public class UnityIntelligenceMCPEditorWindow : EditorWindow
     {
         private GUIStyle _headerStyle;
         private GUIStyle _subHeaderStyle;
@@ -15,10 +15,10 @@ namespace McpUnity.Unity
         private Vector2 _helpTabScrollPosition = Vector2.zero;
         private Vector2 _serverTabScrollPosition = Vector2.zero;
 
-        [MenuItem("Tools/MCP Unity/Server Window", false, 1)]
+        [MenuItem("Tools/Unity Intelligence MCP/Server Window", false, 1)]
         public static void ShowWindow()
         {
-            var window = GetWindow<McpUnityEditorWindow>("MCP Unity");
+            var window = GetWindow<UnityIntelligenceMCPEditorWindow>("Unity Intelligence MCP");
             window.minSize = new Vector2(600, 400);
         }
 
@@ -29,7 +29,7 @@ namespace McpUnity.Unity
 
             // Header
             EditorGUILayout.Space();
-            WrappedLabel("MCP Unity", _headerStyle);
+            WrappedLabel("Unity Intelligence MCP", _headerStyle);
             EditorGUILayout.Space();
 
             // Tabs
@@ -48,7 +48,7 @@ namespace McpUnity.Unity
 
             // Version info at the bottom
             GUILayout.FlexibleSpace();
-            WrappedLabel($"MCP Unity v0.1.0", EditorStyles.miniLabel, GUILayout.Width(150));
+            WrappedLabel($"Unity Intelligence MCP v0.1.0", EditorStyles.miniLabel, GUILayout.Width(150));
             EditorGUILayout.EndVertical();
         }
 
@@ -59,8 +59,8 @@ namespace McpUnity.Unity
             _serverTabScrollPosition = EditorGUILayout.BeginScrollView(_serverTabScrollPosition);
             EditorGUILayout.BeginVertical("box");
 
-            McpUnitySettings settings = McpUnitySettings.Instance;
-            McpUnityServer mcpUnityServer = McpUnityServer.Instance;
+            UnityIntelligenceMCPSettings settings = UnityIntelligenceMCPSettings.Instance;
+            UnityIntelligenceMCPServer mcpUnityServer = UnityIntelligenceMCPServer.Instance;
 
             // Server status
             EditorGUILayout.BeginHorizontal();
@@ -130,7 +130,7 @@ namespace McpUnity.Unity
         {
             _helpTabScrollPosition = EditorGUILayout.BeginScrollView(_helpTabScrollPosition);
             EditorGUILayout.BeginVertical("box");
-            WrappedLabel("MCP Unity - Usage Guide", _subHeaderStyle);
+            WrappedLabel("Unity Intelligence MCP - Usage Guide", _subHeaderStyle);
             EditorGUILayout.Space();
             WrappedLabel("This tool creates a bridge between Unity Editor and the MCP server. Start the server and have your MCP client connect to the specified port.");
             EditorGUILayout.Space();

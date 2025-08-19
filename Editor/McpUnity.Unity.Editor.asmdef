@@ -1,6 +1,6 @@
 {
-    "name": "McpUnity.Unity.Editor",
-    "rootNamespace": "McpUnity.Unity",
+    "name": "UnityIntelligenceMCP.Unity.Editor",
+    "rootNamespace": "UnityIntelligenceMCP.Unity",
     "references": [],
     "includePlatforms": [
         "Editor"

@@ -4,7 +4,7 @@ using UnityEngine;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
-public class McpUnitySocketHandler : WebSocketBehavior
+public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
 {
     [System.ComponentModel.Browsable(false)]
     public new WebSocketServiceManager WebSocketServices => base.WebSocketServices;
