@@ -2,25 +2,20 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using WebSocketSharp;
+using WebSocketSharp.Server;
 
 public class McpUnitySocketHandler : WebSocketBehavior
 {
-    private readonly Dictionary<string, WebSocketBehavior> connections;
-
-    public McpUnitySocketHandler(Dictionary<string, WebSocketBehavior> connDict)
-    {
-        connections = connDict;
-    }
+    [System.ComponentModel.Browsable(false)]
+    public new WebSocketServiceManager WebSocketServices => base.WebSocketServices;
 
     protected override void OnOpen()
     {
-        connections[ID] = this;
         Debug.Log($"New MCP client connected: {ID}");
     }
 
     protected override void OnClose(CloseEventArgs e)
     {
-        connections.Remove(ID);
         Debug.Log($"MCP client disconnected: {ID}");
     }
 
@@ -33,8 +28,8 @@ public class McpUnitySocketHandler : WebSocketBehavior
         };
     }
 
-    public new void Send(string data)
+    protected override void OnError(ErrorEventArgs e)
     {
-        base.Send(data);
+        Debug.LogError($"WebSocket error: {e.Message}");
     }
 }
