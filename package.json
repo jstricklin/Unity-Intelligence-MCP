@@ -15,5 +15,6 @@
   "author": {
     "name": "Jose Stricklin"
   },
+  "type": "library",
   "license": "MIT"
 }
