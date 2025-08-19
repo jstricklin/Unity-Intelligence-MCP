@@ -42,6 +42,11 @@ namespace UnityIntelligenceMCP.Extensions
             services.AddSingleton<PatternMetricsAnalyzer>();
             services.AddSingleton<IUnityMessageAnalyzer, UnityMessageAnalyzer>();
 
+            return services;
+        }
+        public static IServiceCollection AddUnityDocumentationServices(this IServiceCollection services)
+        {
+
             // New Semantic Search and Documentation Services
             services.AddSingleton<IApplicationDatabase, DuckDbApplicationDatabase>();
             services.AddSingleton<IDuckDbConnectionFactory, DuckDbConnectionFactory>();

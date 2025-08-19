@@ -20,11 +20,10 @@ builder.Services
     .WithToolsFromAssembly()
     .WithResourcesFromAssembly(); 
 
-// Clean registration using extension method below
 builder.Services.AddUnityAnalysisServices();
+builder.Services.AddUnityDocumentationServices();
 
 var host = builder.Build();
 
-// Initialize the documentation database
 await host.Services.InitializeServicesAsync();
 await host.RunAsync();
