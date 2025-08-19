@@ -3,8 +3,10 @@
   "version": "0.5.0",
   "displayName": "Unity Intelligence MCP",
   "description": "An MCP Server focused on project code analysis and Unity RAG.",
-  "dependencies": {
-  },
+  "references": [
+    "UnityEngine",
+    "WebsocketSharp"
+  ],
   "keywords": [
     "tools",
     "editor",
