@@ -18,6 +18,7 @@ using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Utilities;
 using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Core.Data.Services;
+using UnityIntelligenceMCP.Core.Services;
 using System.Data.Common;
 
 namespace UnityIntelligenceMCP.Extensions
@@ -61,6 +62,12 @@ namespace UnityIntelligenceMCP.Extensions
             services.AddSingleton<IDocumentChunker, UnityDocumentChunker>();
             services.AddSingleton<DocumentationIndexingService>();
 
+            return services;
+        }
+        public static IServiceCollection AddEditorBridgeServices(this IServiceCollection services)
+        {
+            // ADD THIS LINE
+            services.AddHostedService<EditorBridgeClientService>();
             return services;
         }
 
