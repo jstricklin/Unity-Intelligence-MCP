@@ -14,12 +14,18 @@ namespace UnityIntelligenceMCP.Unity
         private readonly string[] _tabNames = { "Server", "Help" };
         private Vector2 _helpTabScrollPosition = Vector2.zero;
         private Vector2 _serverTabScrollPosition = Vector2.zero;
+        private UnityIntelligenceMCPController _controller;
 
         [MenuItem("Tools/Unity Intelligence MCP/Server Window", false, 1)]
         public static void ShowWindow()
         {
             var window = GetWindow<UnityIntelligenceMCPEditorWindow>("Unity Intelligence MCP");
             window.minSize = new Vector2(600, 400);
+        }
+
+        private void OnEnable()
+        {
+            _controller = new UnityIntelligenceMCPController();
         }
 
         private void OnGUI()
@@ -76,21 +82,11 @@ namespace UnityIntelligenceMCP.Unity
 
             // Port configuration
             EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginChangeCheck();
             int newPort = EditorGUILayout.IntField("Connection Port", settings.Port);
-            if (newPort < 1 || newPort > 65536)
+            if (EditorGUI.EndChangeCheck())
             {
-                newPort = settings.Port;
-                Debug.LogError($"{newPort} is an invalid port number. Please enter a number between 1 and 65535.");
-            }
-            if (newPort != settings.Port)
-            {
-                settings.Port = newPort;
-                settings.SaveSettings();
-                if (mcpUnityServer.IsListening)
-                {
-                    mcpUnityServer.StopServer();
-                    mcpUnityServer.StartServer(settings.Port);
-                }
+                _controller.ChangePort(newPort);
             }
             EditorGUILayout.EndHorizontal();
 
@@ -102,22 +98,20 @@ namespace UnityIntelligenceMCP.Unity
             {
                 if (GUILayout.Button("Start Server", GUILayout.Height(30)))
                 {
-                    mcpUnityServer.StartServer(settings.Port);
+                    _controller.StartServer();
                 }
             }
             else
             {
                 if (GUILayout.Button("Stop Server", GUILayout.Height(30)))
                 {
-                    mcpUnityServer.StopServer();
+                    _controller.StopServer();
                 }
             }
             
             if (GUILayout.Button("Send Test Message", GUILayout.Height(30)))
             {
-                mcpUnityServer.SendToAllClients(
-                    "{\"event\":\"test\", \"data\":\"Hello from Unity Editor\"}"
-                );
+                _controller.SendTestMessage();
             }
             EditorGUILayout.EndHorizontal();
 
