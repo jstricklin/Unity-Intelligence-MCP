@@ -5,6 +5,7 @@ namespace UnityIntelligenceMCP.Unity
 {
     public class UnityIntelligenceMCPSettings
     {
+        public static string PackageName = "com.jstricklin.unity-intelligence-mcp";
         private const string SettingsKey = "UnityIntelligenceMCP.Settings";
         private const int DefaultPort = 50055;
 

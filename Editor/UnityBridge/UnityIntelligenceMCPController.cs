@@ -1,6 +1,7 @@
 using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityIntelligenceMCP.Utils;
 using Newtonsoft.Json;
 using UnityEditor;
 
@@ -70,13 +71,13 @@ namespace UnityIntelligenceMCP.Unity
                         {
                             ["command"] = "dotnet",
                             ["args"] = new List<string> { "build" },
-                            ["cwd"] = "${workspaceFolder}/UnityMCPServer"
+                            ["cwd"] = $"{Utilities.GetMcpServerPath()}"
                         },
                         ["run"] = new Dictionary<string, object>
                         {
                             ["command"] = "dotnet",
                             ["args"] = new List<string> { "run" },
-                            ["cwd"] = "${workspaceFolder}/UnityMCPServer",
+                            ["cwd"] = $"{Utilities.GetMcpServerPath()}",
                             ["env"] = new Dictionary<string, string>
                             {
                                 ["MCP_SERVER_PORT"] = "8080"
@@ -92,7 +93,7 @@ namespace UnityIntelligenceMCP.Unity
 
         public void ConfigureVSCode()
         {
-            var projectRoot = Directory.GetParent(Application.dataPath).FullName;
+            var projectRoot = Utilities.GetProjectPath();
             var vscodeDir = Path.Combine(projectRoot, ".vscode");
             var mcpJsonPath = Path.Combine(vscodeDir, "mcp.json");
 
