@@ -2,6 +2,7 @@ using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using UnityEditor;
 
 namespace UnityIntelligenceMCP.Unity
 {
@@ -51,12 +52,13 @@ namespace UnityIntelligenceMCP.Unity
             _server.SendToAllClients("{\"event\":\"test\", \"data\":\"Hello from Unity Editor\"}");
         }
 
-        public void ConfigureVSCode()
+        public void CopyMCPConfigToClipboard()
         {
-            var projectRoot = Directory.GetParent(Application.dataPath).FullName;
-            var vscodeDir = Path.Combine(projectRoot, ".vscode");
-            var mcpJsonPath = Path.Combine(vscodeDir, "mcp.json");
+            EditorGUIUtility.systemCopyBuffer = GetMCPConfigJson();
+        }
 
+        public string GetMCPConfigJson()
+        {
             var config = new Dictionary<string, object>
             {
                 ["mcp.servers"] = new List<object>
@@ -84,8 +86,17 @@ namespace UnityIntelligenceMCP.Unity
                     }
                 }
             };
+            
+            return JsonConvert.SerializeObject(config, Formatting.Indented);
+        }
 
-            var jsonContent = JsonConvert.SerializeObject(config, Formatting.Indented);
+        public void ConfigureVSCode()
+        {
+            var projectRoot = Directory.GetParent(Application.dataPath).FullName;
+            var vscodeDir = Path.Combine(projectRoot, ".vscode");
+            var mcpJsonPath = Path.Combine(vscodeDir, "mcp.json");
+
+            var jsonContent = GetMCPConfigJson();
 
             try
             {

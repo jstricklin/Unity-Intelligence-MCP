@@ -132,6 +132,14 @@ namespace UnityIntelligenceMCP.Unity
             WrappedLabel("VSCode Integration", _subHeaderStyle);
             EditorGUILayout.Space();
 
+            if (GUILayout.Button("Copy to Clipboard"))
+            {
+                _controller.CopyMCPConfigToClipboard();
+            }
+
+            EditorGUILayout.LabelField("Preview of mcp.json:", EditorStyles.boldLabel);
+            EditorGUILayout.SelectableLabel(_controller.GetMCPConfigJson(), EditorStyles.textArea, GUILayout.Height(200));
+
             if (GUILayout.Button("Configure VSCode (Cline/Roo/Etc)", GUILayout.Height(30)))
             {
                 _controller.ConfigureVSCode();
