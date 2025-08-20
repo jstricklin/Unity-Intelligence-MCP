@@ -1,0 +1,43 @@
+using UnityEditor;
+using UnityEngine;
+
+namespace UnityIntelligenceMCP.Unity
+{
+    public class UnityIntelligenceMCPSettings
+    {
+        private const string SettingsKey = "UnityIntelligenceMCP.Settings";
+        private const int DefaultPort = 50055;
+
+        private static UnityIntelligenceMCPSettings _instance;
+        public static UnityIntelligenceMCPSettings Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = new UnityIntelligenceMCPSettings();
+                    _instance.LoadSettings();
+                }
+                return _instance;
+            }
+        }
+
+        // JsonUtility serializes public fields.
+        public int Port = DefaultPort;
+
+        public void SaveSettings()
+        {
+            string json = JsonUtility.ToJson(this, true);
+            EditorPrefs.SetString(SettingsKey, json);
+        }
+
+        private void LoadSettings()
+        {
+            if (EditorPrefs.HasKey(SettingsKey))
+            {
+                string json = EditorPrefs.GetString(SettingsKey);
+                JsonUtility.FromJsonOverwrite(json, this);
+            }
+        }
+    }
+}
