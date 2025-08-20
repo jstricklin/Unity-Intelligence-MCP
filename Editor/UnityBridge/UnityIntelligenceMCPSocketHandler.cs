@@ -7,7 +7,7 @@ using WebSocketSharp.Server;
 public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
 {
     [System.ComponentModel.Browsable(false)]
-    public new WebSocketServiceManager WebSocketServices => base.WebSocketServices;
+    // public new WebSocketServiceManager WebSocketServices => base.WebSocketServices;
 
     protected override void OnOpen()
     {

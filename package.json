@@ -1,6 +1,6 @@
 {
   "name": "com.jstricklin.unity-intelligence-mcp",
-  "version": "0.5.0",
+  "version": "0.0.3",
   "displayName": "Unity Intelligence MCP",
   "description": "An MCP Server focused on project code analysis and Unity RAG.",
   "references": [

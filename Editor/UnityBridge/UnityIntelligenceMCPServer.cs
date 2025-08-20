@@ -5,8 +5,20 @@ using WebSocketSharp.Server;
 
 namespace UnityIntelligenceMCP.Unity
 {
-    public class UnityIntelligenceMCPServer : MonoBehaviour
+    public class UnityIntelligenceMCPServer 
     {
+        private static UnityIntelligenceMCPServer _instance;
+        public static UnityIntelligenceMCPServer Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = new UnityIntelligenceMCPServer();
+                }
+                return _instance;
+            }
+        }
         private WebSocketServer _wsserver;
         private readonly Dictionary<string, IWebSocketSession> _sessions = new();
 
@@ -43,8 +55,8 @@ namespace UnityIntelligenceMCP.Unity
         {
             if (!IsListening) return;
 
-            _wsserver?.WebSocketServices.Broadcast(jsonPayload);
-            Debug.Log($"Sent message to {_wsserver.WebSocketServices.Count} client(s)");
+            // _wsserver?.Send(jsonPayload);
+            // Debug.Log($"Sent message to {_wsserver.Server.Count} client(s)");
         }
 
         public void DisconnectClient(string sessionId)
