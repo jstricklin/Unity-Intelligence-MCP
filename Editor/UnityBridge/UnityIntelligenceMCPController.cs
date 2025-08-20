@@ -1,3 +1,8 @@
+using System.IO;
+using UnityEngine;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+
 namespace UnityIntelligenceMCP.Unity
 {
     public class UnityIntelligenceMCPController
@@ -44,6 +49,58 @@ namespace UnityIntelligenceMCP.Unity
         public void SendTestMessage()
         {
             _server.SendToAllClients("{\"event\":\"test\", \"data\":\"Hello from Unity Editor\"}");
+        }
+
+        public void ConfigureVSCode()
+        {
+            var projectRoot = Directory.GetParent(Application.dataPath).FullName;
+            var vscodeDir = Path.Combine(projectRoot, ".vscode");
+            var mcpJsonPath = Path.Combine(vscodeDir, "mcp.json");
+
+            var config = new Dictionary<string, object>
+            {
+                ["mcp.servers"] = new List<object>
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["name"] = "unity-mcp-server",
+                        ["build"] = new Dictionary<string, object>
+                        {
+                            ["command"] = "dotnet",
+                            ["args"] = new List<string> { "build" },
+                            ["cwd"] = "${workspaceFolder}/UnityMCPServer"
+                        },
+                        ["run"] = new Dictionary<string, object>
+                        {
+                            ["command"] = "dotnet",
+                            ["args"] = new List<string> { "run" },
+                            ["cwd"] = "${workspaceFolder}/UnityMCPServer",
+                            ["env"] = new Dictionary<string, string>
+                            {
+                                ["MCP_SERVER_PORT"] = "8080"
+                            }
+                        },
+                        ["autoStart"] = true
+                    }
+                }
+            };
+
+            var jsonContent = JsonConvert.SerializeObject(config, Formatting.Indented);
+
+            try
+            {
+                if (!Directory.Exists(vscodeDir))
+                {
+                    Directory.CreateDirectory(vscodeDir);
+                }
+
+                File.WriteAllText(mcpJsonPath, jsonContent);
+                Debug.Log($"Successfully created VSCode configuration at: {mcpJsonPath}");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to create VSCode configuration file: {e.Message}");
+            }
         }
     }
 }

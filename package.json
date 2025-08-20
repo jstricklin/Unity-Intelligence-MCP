@@ -3,10 +3,9 @@
   "version": "0.0.3",
   "displayName": "Unity Intelligence MCP",
   "description": "An MCP Server focused on project code analysis and Unity RAG.",
-  "references": [
-    "UnityEngine",
-    "WebsocketSharp"
-  ],
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
+  },
   "keywords": [
     "tools",
     "editor",

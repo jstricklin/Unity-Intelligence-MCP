@@ -11,9 +11,10 @@ namespace UnityIntelligenceMCP.Unity
         private GUIStyle _subHeaderStyle;
         private GUIStyle _wrappedLabelStyle;
         private int _selectedTab = 0;
-        private readonly string[] _tabNames = { "Server", "Help" };
+        private readonly string[] _tabNames = { "Server", "Configuration", "Help" };
         private Vector2 _helpTabScrollPosition = Vector2.zero;
         private Vector2 _serverTabScrollPosition = Vector2.zero;
+        private Vector2 _configurationTabScrollPosition = Vector2.zero;
         private UnityIntelligenceMCPController _controller;
 
         [MenuItem("Tools/Unity Intelligence MCP/Server Window", false, 1)]
@@ -47,7 +48,10 @@ namespace UnityIntelligenceMCP.Unity
                 case 0: // Server tab
                     DrawServerTab();
                     break;
-                case 1: // Help tab
+                case 1: // Configuration tab
+                    DrawConfigurationTab();
+                    break;
+                case 2: // Help tab
                     DrawHelpTab();
                     break;
             }
@@ -108,12 +112,30 @@ namespace UnityIntelligenceMCP.Unity
                     _controller.StopServer();
                 }
             }
-            
+
             if (GUILayout.Button("Send Test Message", GUILayout.Height(30)))
             {
                 _controller.SendTestMessage();
             }
             EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space();
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndScrollView();
+        }
+
+        private void DrawConfigurationTab()
+        {
+            _configurationTabScrollPosition = EditorGUILayout.BeginScrollView(_configurationTabScrollPosition);
+            EditorGUILayout.BeginVertical("box");
+
+            WrappedLabel("VSCode Integration", _subHeaderStyle);
+            EditorGUILayout.Space();
+
+            if (GUILayout.Button("Configure VSCode (Cline/Roo/Etc)", GUILayout.Height(30)))
+            {
+                _controller.ConfigureVSCode();
+            }
 
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
