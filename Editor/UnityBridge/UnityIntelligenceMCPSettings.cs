@@ -7,7 +7,8 @@ namespace UnityIntelligenceMCP.Unity
     {
         public static string PackageName = "com.jstricklin.unity-intelligence-mcp";
         private const string SettingsKey = "UnityIntelligenceMCP.Settings";
-        private const int DefaultPort = 50055;
+        private const int DefaultPort = 5000;
+        private const string DefaultServerUrl = "ws://localhost";
 
         private static UnityIntelligenceMCPSettings _instance;
         public static UnityIntelligenceMCPSettings Instance
@@ -23,8 +24,8 @@ namespace UnityIntelligenceMCP.Unity
             }
         }
 
-        // JsonUtility serializes public fields.
         public int Port = DefaultPort;
+        public string ServerUrl = DefaultServerUrl;
 
         public void SaveSettings()
         {

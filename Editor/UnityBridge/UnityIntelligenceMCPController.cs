@@ -18,14 +18,34 @@ namespace UnityIntelligenceMCP.Unity
             _settings = UnityIntelligenceMCPSettings.Instance;
         }
 
-        public void StartServer()
+        public void Connect()
         {
-            _server.StartServer(_settings.Port);
+            _server.Connect($"{_settings.ServerUrl}:{_settings.Port}/mcp-bridge");
         }
 
-        public void StopServer()
+        public void Disconnect()
         {
-            _server.StopServer();
+            _server.Disconnect();
+        }
+
+        public void ChangeServerUrl(string newUrl)
+        {
+            if (string.IsNullOrWhiteSpace(newUrl) || string.IsNullOrEmpty(newUrl))
+            {
+                UnityEngine.Debug.LogError($"Please enter a valid value for a server url.");
+                return;
+            }
+
+            if (newUrl != _settings.ServerUrl)
+            {
+                _settings.ServerUrl = newUrl;
+                _settings.SaveSettings();
+                if (_server.IsConnected)
+                {
+                    Disconnect();
+                    Connect();
+                }
+            }
         }
 
         public void ChangePort(int newPort)
@@ -40,17 +60,17 @@ namespace UnityIntelligenceMCP.Unity
             {
                 _settings.Port = newPort;
                 _settings.SaveSettings();
-                if (_server.IsListening)
+                if (_server.IsConnected)
                 {
-                    StopServer();
-                    StartServer();
+                    Disconnect();
+                    Connect();
                 }
             }
         }
 
         public void SendTestMessage()
         {
-            _server.SendToAllClients("{\"event\":\"test\", \"data\":\"Hello from Unity Editor\"}");
+            _server.Send("{\"event\":\"test\", \"data\":\"Hello from Unity Editor\"}");
         }
 
         public void CopyMCPConfigToClipboard()

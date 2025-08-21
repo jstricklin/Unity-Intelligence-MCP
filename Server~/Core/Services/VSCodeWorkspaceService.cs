@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Core.IO;
+using UnityIntelligenceMCP.Core.Services.Contracts;
 
 namespace UnityIntelligenceMCP.Core.Services
 {

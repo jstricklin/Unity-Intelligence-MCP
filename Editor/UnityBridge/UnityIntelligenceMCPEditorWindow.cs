@@ -75,8 +75,8 @@ namespace UnityIntelligenceMCP.Unity
             // Server status
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Status:", GUILayout.Width(120));
-            string statusText = mcpUnityServer.IsListening ? "Server Online" : "Server Offline";
-            Color statusColor = mcpUnityServer.IsListening ? Color.green : Color.red;
+            string statusText = mcpUnityServer.IsConnected ? "Server Connected" : "Server Disconnected";
+            Color statusColor = mcpUnityServer.IsConnected ? Color.green : Color.red;
             GUIStyle statusStyle = new GUIStyle(EditorStyles.boldLabel);
             statusStyle.normal.textColor = statusColor;
             EditorGUILayout.LabelField(statusText, statusStyle);
@@ -98,18 +98,18 @@ namespace UnityIntelligenceMCP.Unity
 
             // Server controls
             EditorGUILayout.BeginHorizontal();
-            if (!mcpUnityServer.IsListening)
+            if (!mcpUnityServer.IsConnected)
             {
-                if (GUILayout.Button("Start Server", GUILayout.Height(30)))
+                if (GUILayout.Button("Connect Server", GUILayout.Height(30)))
                 {
-                    _controller.StartServer();
+                    _controller.Connect();
                 }
             }
             else
             {
-                if (GUILayout.Button("Stop Server", GUILayout.Height(30)))
+                if (GUILayout.Button("Disconnect Server", GUILayout.Height(30)))
                 {
-                    _controller.StopServer();
+                    _controller.Disconnect();
                 }
             }
 
