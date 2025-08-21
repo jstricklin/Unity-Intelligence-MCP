@@ -26,13 +26,19 @@ namespace UnityIntelligenceMCP.Extensions
 {
     public static class ServiceCollectionExtensions
     {
+        public static IServiceCollection AddCoreUnityServices(this IServiceCollection services)
+        {
+            services.AddSingleton<IToolUsageLogger, DuckDbToolUsageLogger>();
+            services.AddSingleton<UnityInstallationService>();
+            services.AddSingleton<UnityDocumentationResource>();
+
+            return services;
+        }
+
         public static IServiceCollection AddUnityAnalysisServices(this IServiceCollection services)
         {
             // Core Infrastructure
-            services.AddSingleton<IToolUsageLogger, DuckDbToolUsageLogger>();
-            services.AddSingleton<UnityInstallationService>();
             services.AddSingleton<UnityRoslynAnalysisService>();
-            services.AddSingleton<UnityDocumentationResource>();
 
             // Static Code Analysis Services
             services.AddSingleton<IUnityStaticAnalysisService, UnityStaticAnalysisService>();

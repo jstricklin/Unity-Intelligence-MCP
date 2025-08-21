@@ -14,18 +14,35 @@ builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogL
 // Add configuration sources to the builder
 builder.Services.AddSingleton<ConfigurationService>();
 
-builder.Services
-    .AddMcpServer(options => 
+var mcpServerBuilder = builder.Services
+    .AddMcpServer(options =>
     {
         options.ServerInfo = new() { Name = "Unity Intelligence MCP Server", Version = "1.0.0" };
     })
-    .WithStdioServerTransport()
-    .WithToolsFromAssembly()
-    .WithResourcesFromAssembly(); 
+    .WithStdioServerTransport();
 
-builder.Services.AddUnityAnalysisServices();
+builder.Services.AddCoreUnityServices();
 builder.Services.AddUnityDocumentationServices();
 builder.Services.AddWebSocketServices();
+
+// Temporarily build service provider to access configuration for conditional registration
+using (var tempServiceProvider = builder.Services.BuildServiceProvider())
+{
+    var configService = tempServiceProvider.GetRequiredService<ConfigurationService>();
+    var logger = tempServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Program");
+
+    if (!string.IsNullOrEmpty(configService.UnitySettings.PROJECT_PATH))
+    {
+        builder.Services.AddUnityAnalysisServices();
+        mcpServerBuilder.WithToolsFromAssembly();
+    }
+    else
+    {
+        logger.LogWarning("PROJECT_PATH not configured, Unity analysis tools will be disabled.");
+    }
+}
+
+mcpServerBuilder.WithResourcesFromAssembly();
 
 var app = builder.Build();
 
