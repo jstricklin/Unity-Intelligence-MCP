@@ -57,33 +57,22 @@ namespace UnityIntelligenceMCP.Unity
         {
             EditorGUIUtility.systemCopyBuffer = GetMCPConfigJson();
         }
-
+        
         public string GetMCPConfigJson()
         {
             var config = new Dictionary<string, object>
             {
-                ["mcp.servers"] = new List<object>
+                ["servers"] = new Dictionary<string, object>
                 {
-                    new Dictionary<string, object>
+                    ["unity-intelligence-mcp"] = new Dictionary<string, object> 
                     {
-                        ["name"] = "unity-mcp-server",
-                        ["build"] = new Dictionary<string, object>
+                        ["command"] = "dotnet",
+                        ["args"] = new List<string> { "run" },
+                        ["cwd"] = $"{Utilities.GetMcpServerPath()}",
+                        ["env"] = new Dictionary<string, string>
                         {
-                            ["command"] = "dotnet",
-                            ["args"] = new List<string> { "build" },
-                            ["cwd"] = $"{Utilities.GetMcpServerPath()}"
-                        },
-                        ["run"] = new Dictionary<string, object>
-                        {
-                            ["command"] = "dotnet",
-                            ["args"] = new List<string> { "run" },
-                            ["cwd"] = $"{Utilities.GetMcpServerPath()}",
-                            ["env"] = new Dictionary<string, string>
-                            {
-                                ["MCP_SERVER_PORT"] = "8080"
-                            }
-                        },
-                        ["autoStart"] = true
+                            ["MCP_SERVER_PORT"] = "8080"
+                        }
                     }
                 }
             };
