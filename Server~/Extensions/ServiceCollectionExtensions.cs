@@ -20,6 +20,7 @@ using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Core.Data.Services;
 using UnityIntelligenceMCP.Core.Services;
 using System.Data.Common;
+using UnityIntelligenceMCP.Core.Services.Contracts;
 
 namespace UnityIntelligenceMCP.Extensions
 {
@@ -68,6 +69,12 @@ namespace UnityIntelligenceMCP.Extensions
         {
             // ADD THIS LINE
             services.AddHostedService<EditorBridgeClientService>();
+            return services;
+        }
+        public static IServiceCollection AddWebSocketServices(this IServiceCollection services)
+        {
+            services.AddSingleton<IMessageHandler, MessageHandler>();
+            services.AddSingleton<WebSocketService>();
             return services;
         }
 
