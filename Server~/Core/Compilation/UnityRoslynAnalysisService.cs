@@ -32,7 +32,7 @@ namespace UnityIntelligenceMCP.Core.RoslynServices
             };
 
             // Try to resolve Unity Editor path using multiple strategies
-            var unityEditorPath = _unityInstallationService.ResolveUnityEditorPath(projectPath);
+            var unityEditorPath = _unityInstallationService.GetEditorPath();
 
             // Replace manual loading with cached loader
             if (!string.IsNullOrEmpty(unityEditorPath))

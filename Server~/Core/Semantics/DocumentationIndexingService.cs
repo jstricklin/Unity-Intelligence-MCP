@@ -48,9 +48,9 @@ namespace UnityIntelligenceMCP.Core.Semantics
             _connectionFactory = connectionFactory;
         }
 
-        public async Task<IndexingStatus> GetIndexingStatusAsync(string projectPath)
+        public async Task<IndexingStatus> GetIndexingStatusAsync()
         {
-            var unityVersion = _unityInstallationService.GetProjectVersion(projectPath);
+            var unityVersion = _unityInstallationService.GetEditorVersion();
             if (string.IsNullOrEmpty(unityVersion))
             {
                 return new IndexingStatus { Status = "Error: Unity version not found.", UnityVersion = "Unknown" };
@@ -59,7 +59,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             string docPath;
             try
             {
-                docPath = _unityInstallationService.GetDocumentationPath(projectPath, "ScriptReference");
+                docPath = _unityInstallationService.GetDocumentationPath("ScriptReference");
             }
             catch (DirectoryNotFoundException)
             {
@@ -96,9 +96,9 @@ namespace UnityIntelligenceMCP.Core.Semantics
         };
         }
 
-        public async Task IndexDocumentationIfRequiredAsync(string projectPath, bool? forceReindex)
+        public async Task IndexDocumentationIfRequiredAsync(bool? forceReindex)
         {
-            var unityVersion = _unityInstallationService.GetProjectVersion(projectPath);
+            var unityVersion = _unityInstallationService.GetEditorVersion();
             if (string.IsNullOrEmpty(unityVersion))
             {
                 _logger.LogWarning("[WARN] Could not determine Unity version. Skipping documentation indexing.");
@@ -108,7 +108,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             string docPath;
             try
             {
-                docPath = _unityInstallationService.GetDocumentationPath(projectPath, "ScriptReference");
+                docPath = _unityInstallationService.GetDocumentationPath("ScriptReference");
             }
             catch (DirectoryNotFoundException ex)
             {

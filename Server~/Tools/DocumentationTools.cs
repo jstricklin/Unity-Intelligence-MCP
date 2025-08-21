@@ -27,8 +27,7 @@ namespace UnityIntelligenceMCP.Tools
         public async Task<IndexingStatus> SearchDocumentation(
             CancellationToken cancellationToken = default)
         {
-            var projectPath = _configurationService.GetConfiguredProjectPath();
-            return await _indexingService.GetIndexingStatusAsync(projectPath);
+            return await _indexingService.GetIndexingStatusAsync();
         }
 
         [McpServerTool(Name = "semantic_docs_search"), Description("Finds relevant Unity Engine documentation using semantic search.")]

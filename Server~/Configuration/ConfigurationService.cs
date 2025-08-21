@@ -23,7 +23,6 @@ namespace UnityIntelligenceMCP.Configuration
                 .Build();
 
             UnitySettings = configuration.Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
-            _logger.LogInformation($"Project Path: {UnitySettings.PROJECT_PATH}");
         }
 
         public string GetConfiguredProjectPath()
@@ -31,7 +30,7 @@ namespace UnityIntelligenceMCP.Configuration
             var projectPath = UnitySettings.PROJECT_PATH;
             if (string.IsNullOrEmpty(projectPath))
             {
-                _logger.LogWarning("Unity project path is not configured. Project Analysis tools disabled. (PROJECT_PATH).");
+                _logger.LogError("[ERROR] Unity project path is not configured.");
             }
             return projectPath ?? "";
         }

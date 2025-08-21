@@ -52,15 +52,19 @@ namespace UnityIntelligenceMCP.Extensions
 
             return services;
         }
+        public static IServiceCollection AddDatabaseServices(this IServiceCollection services)
+        {
+            services.AddSingleton<IApplicationDatabase, DuckDbApplicationDatabase>();
+            services.AddSingleton<IDuckDbConnectionFactory, DuckDbConnectionFactory>();
+            services.AddSingleton<IDbWorkQueue, DbWorkQueue>();
+            services.AddHostedService<QueuedDbWriterService>();
+            services.AddSingleton<IDocumentationRepository, DocumentationRepository>();
+            return services;
+        }
         public static IServiceCollection AddUnityDocumentationServices(this IServiceCollection services)
         {
 
             // New Semantic Search and Documentation Services
-            services.AddSingleton<IApplicationDatabase, DuckDbApplicationDatabase>();
-            services.AddSingleton<IDuckDbConnectionFactory, DuckDbConnectionFactory>();
-            services.AddSingleton<IDocumentationRepository, DocumentationRepository>();
-            services.AddSingleton<IDbWorkQueue, DbWorkQueue>();
-            services.AddHostedService<QueuedDbWriterService>();
             // services.AddSingleton<IEmbeddingService, PlaceholderEmbeddingService>(); // Using placeholder for now
             services.AddSingleton<IEmbeddingService>(sp => new AllMiniLMEmbeddingService(Environment.ProcessorCount));
             services.AddSingleton<ISemanticSearchService, SemanticSearchService>();
@@ -89,18 +93,21 @@ namespace UnityIntelligenceMCP.Extensions
             using var scope = serviceProvider.CreateScope();
             var provider = scope.ServiceProvider;
             var configService = provider.GetRequiredService<ConfigurationService>();
-            var projectPath = configService.GetConfiguredProjectPath();
             var unityService = provider.GetRequiredService<UnityInstallationService>();
-            var unityVersion = unityService.GetProjectVersion(projectPath) ?? "unknown";
+            var unityVersion = unityService.GetEditorVersion() ?? "unknown";
 
             // Initialize database
             var db = provider.GetRequiredService<IApplicationDatabase>();
             await db.InitializeDatabaseAsync(unityVersion);
             
-            // Index documentation if it's not already present for the current version
-            var indexingService = provider.GetRequiredService<DocumentationIndexingService>();
-            var forceReindex = configService.UnitySettings.FORCE_REINDEX;
-            await indexingService.IndexDocumentationIfRequiredAsync(projectPath, forceReindex);
+            var indexingService = provider.GetService<DocumentationIndexingService>();
+            if (indexingService != null)
+            {
+                var forceReindex = configService.UnitySettings.FORCE_REINDEX;
+                await indexingService.IndexDocumentationIfRequiredAsync(forceReindex);
+            } else {
+                return;
+            }
         }
     }
 }

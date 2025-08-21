@@ -22,7 +22,7 @@ var mcpServerBuilder = builder.Services
     .WithStdioServerTransport();
 
 builder.Services.AddCoreUnityServices();
-builder.Services.AddUnityDocumentationServices();
+builder.Services.AddDatabaseServices();
 builder.Services.AddWebSocketServices();
 
 // Temporarily build service provider to access configuration for conditional registration
@@ -35,10 +35,20 @@ using (var tempServiceProvider = builder.Services.BuildServiceProvider())
     {
         builder.Services.AddUnityAnalysisServices();
         mcpServerBuilder.WithToolsFromAssembly();
+        logger.LogInformation($"Project Path: {configService.UnitySettings.PROJECT_PATH}");
     }
     else
     {
-        logger.LogWarning("PROJECT_PATH not configured, Unity analysis tools will be disabled.");
+        logger.LogInformation("PROJECT_PATH not configured, Unity analysis tools disabled.");
+    }
+    if (!string.IsNullOrEmpty(configService.UnitySettings.EDITOR_PATH))
+    {
+        builder.Services.AddUnityDocumentationServices();
+        logger.LogInformation($"Editor Path: {configService.UnitySettings.EDITOR_PATH}");
+    }
+    else
+    {
+        logger.LogInformation("EDITOR_PATH not configured, Unity Documentation RAG disabled.");
     }
 }
 

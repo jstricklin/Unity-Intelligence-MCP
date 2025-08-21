@@ -48,7 +48,7 @@ namespace UnityIntelligenceMCP.Resources
             try
             {
                 string projectPath = _configurationService.GetConfiguredProjectPath();
-                string docRoot = _installationService.GetDocumentationPath(projectPath, "ScriptReference");
+                string docRoot = _installationService.GetDocumentationPath("ScriptReference");
                 string fullPath = Path.GetFullPath(Path.Combine(docRoot, relativePath));
 
                 // Security check to prevent path traversal attacks
