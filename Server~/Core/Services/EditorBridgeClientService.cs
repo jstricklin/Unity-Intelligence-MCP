@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace UnityIntelligenceMCP.Core.Services
 {
+    // This class exists as an alternative to the current architecture where this MCP server acts as a client to Unity Engine Websocket Server
     public class EditorBridgeClientService : BackgroundService
     {
         private readonly ILogger<EditorBridgeClientService> _logger;

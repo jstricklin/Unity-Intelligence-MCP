@@ -67,7 +67,6 @@ namespace UnityIntelligenceMCP.Extensions
         }
         public static IServiceCollection AddEditorBridgeServices(this IServiceCollection services)
         {
-            // ADD THIS LINE
             services.AddHostedService<EditorBridgeClientService>();
             return services;
         }
