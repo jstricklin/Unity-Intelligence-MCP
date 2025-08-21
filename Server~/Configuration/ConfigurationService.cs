@@ -8,9 +8,11 @@ namespace UnityIntelligenceMCP.Configuration
     public class ConfigurationService
     {
         public UnityAnalysisSettings UnitySettings { get; }
+        ILogger<ConfigurationService> _logger;
 
-        public ConfigurationService()
+        public ConfigurationService(ILogger<ConfigurationService> logger)
         {
+            _logger = logger;
             var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
 
             var configuration = new ConfigurationBuilder()
@@ -21,7 +23,7 @@ namespace UnityIntelligenceMCP.Configuration
                 .Build();
 
             UnitySettings = configuration.Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
-            Console.Error.WriteLine($"[Settings check] Project Path: {UnitySettings.PROJECT_PATH}");
+            _logger.LogInformation($"Project Path: {UnitySettings.PROJECT_PATH}");
         }
 
         public string GetConfiguredProjectPath()
@@ -29,9 +31,9 @@ namespace UnityIntelligenceMCP.Configuration
             var projectPath = UnitySettings.PROJECT_PATH;
             if (string.IsNullOrEmpty(projectPath))
             {
-                throw new InvalidOperationException("Unity project path is not configured. (PROJECT_PATH).");
+                _logger.LogWarning("Unity project path is not configured. Project Analysis tools disabled. (PROJECT_PATH).");
             }
-            return projectPath;
+            return projectPath ?? "";
         }
     }
 }

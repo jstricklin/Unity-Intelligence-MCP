@@ -41,3 +41,4 @@ project.assets.json
 *.pfx
 *.key
 appsettings.json
+appsettings.backup.json

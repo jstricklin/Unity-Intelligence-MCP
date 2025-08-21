@@ -12,10 +12,14 @@ namespace UnityIntelligenceMCP.Core.Services
     public class VSCodeWorkspaceService : IVSCodeWorkspaceService
     {
         private readonly UnityInstallationService _installationService;
+        private readonly ILogger<VSCodeWorkspaceService> _logger;
 
-        public VSCodeWorkspaceService(UnityInstallationService installationService)
+        public VSCodeWorkspaceService(
+            UnityInstallationService installationService,
+            ILogger<VSCodeWorkspaceService> logger)
         {
             _installationService = installationService;
+            _logger = logger;
         }
 
         public async Task<string> GenerateWorkspaceAsync(string projectPath, string workspaceName = "project-workspace")
@@ -74,7 +78,7 @@ namespace UnityIntelligenceMCP.Core.Services
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Workspace generation failed: {ex.Message}");
+                _logger.LogError($"Workspace generation failed: {ex.Message}");
                 throw;
             }
         }

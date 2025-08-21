@@ -13,13 +13,18 @@ namespace UnityIntelligenceMCP.Core.Data.Services
     public class QueuedDbWriterService : BackgroundService
     {
         private readonly IDbWorkQueue _workQueue;
+        private readonly ILogger<QueuedDbWriterService> _logger;
         private readonly IDocumentationRepository _repository;
         private readonly Dictionary<Type, Func<IReadOnlyList<IDbWorkItem>, CancellationToken, Task>> _handlers;
 
-        public QueuedDbWriterService(IDbWorkQueue workQueue, IDocumentationRepository repository)
+        public QueuedDbWriterService(
+            IDbWorkQueue workQueue, 
+            ILogger<QueuedDbWriterService> logger, 
+            IDocumentationRepository repository)
         {
             _workQueue = workQueue;
             _repository = repository;
+            _logger = logger;
 
             // Map work item types to their specific bulk handling logic.
             _handlers = new Dictionary<Type, Func<IReadOnlyList<IDbWorkItem>, CancellationToken, Task>>
@@ -66,12 +71,12 @@ namespace UnityIntelligenceMCP.Core.Data.Services
                     }
                     catch (Exception ex)
                     {
-                        Console.Error.WriteLine($"[ERROR] Failed to process DB work batch for type {group.Key.Name}: {ex.Message}");
+                        _logger.LogError($"[ERROR] Failed to process DB work batch for type {group.Key.Name}: {ex.Message}");
                     }
                 }
                 else
                 {
-                    Console.Error.WriteLine($"[WARN] No handler registered for DB work item type: {group.Key.Name}");
+                    _logger.LogWarning($"[WARN] No handler registered for DB work item type: {group.Key.Name}");
                 }
             }
         }

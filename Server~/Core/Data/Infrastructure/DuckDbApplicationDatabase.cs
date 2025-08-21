@@ -12,10 +12,15 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
     {
         private readonly IDuckDbConnectionFactory _connectionFactory;
         private readonly SemaphoreSlim _schemaLock = new(1, 1);
+        private readonly ILogger<DuckDbApplicationDatabase> _logger;
 
-        public DuckDbApplicationDatabase(IDuckDbConnectionFactory connectionFactory)
+        public DuckDbApplicationDatabase(
+            IDuckDbConnectionFactory connectionFactory,
+            ILogger<DuckDbApplicationDatabase> logger
+            )
         {
             _connectionFactory = connectionFactory;
+            _logger = logger;
         }
 
 
@@ -37,7 +42,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 await cmd.ExecuteNonQueryAsync();
                 if (await IsSchemaInitializedAsync(connection))
                 {
-                    Console.Error.WriteLine("[Database] Schema is already initialized - skipping initialization");
+                    _logger.LogInformation("[Database] Schema is already initialized - skipping initialization");
                     return;
                 }
 
@@ -261,7 +266,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 // await using var vssCmd = connection.CreateCommand();
                 command.CommandText = SchemaHnswIndexes;
                 await command.ExecuteNonQueryAsync();
-                Console.Error.WriteLine("[HNSW] Created indexes");
+                _logger.LogInformation("[HNSW] Created indexes");
 
                 // Create standard indexes and views
                 command.CommandText = SchemaStandardIndexes;
@@ -281,12 +286,12 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 await command.ExecuteNonQueryAsync();
 
                 await transaction.CommitAsync();
-                Console.Error.WriteLine("[Database] Complete");
+                _logger.LogInformation("[Database] Complete");
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                Console.Error.WriteLine($"[Database] Initialization failed: {ex}");
+                _logger.LogCritical($"[Database] Initialization failed: {ex}");
                 throw;
             }
         }

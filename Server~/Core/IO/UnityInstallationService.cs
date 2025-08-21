@@ -10,12 +10,17 @@ namespace UnityIntelligenceMCP.Core.IO
     public class UnityInstallationService
     {
         private readonly ConfigurationService _configurationService;
+        private readonly ILogger<UnityInstallationService> _logger;
         private readonly object _cacheLock = new();
         private string? _cachedEditorPath;
 
-        public UnityInstallationService(ConfigurationService configurationService)
+        public UnityInstallationService(
+            ConfigurationService configurationService,
+            ILogger<UnityInstallationService> logger
+            )
         {
             _configurationService = configurationService;
+            _logger = logger;
         }
 
         public string? ResolveUnityEditorPath(string projectPath)
@@ -38,10 +43,10 @@ namespace UnityIntelligenceMCP.Core.IO
                 var explicitPath = Path.Combine(installRoot, projectVersion);
                 if (Directory.Exists(explicitPath))
                 {
-                    Console.Error.WriteLine($"[INFO] Using config-specified installation: {explicitPath}");
+                    _logger.LogInformation($"[INFO] Using config-specified installation: {explicitPath}");
                     return explicitPath;
                 }
-                Console.Error.WriteLine($"[WARN] Configured path not found: {explicitPath}");
+                _logger.LogWarning($"[WARN] Configured path not found: {explicitPath}");
             }
 
             // Strategy 2: Direct path override
@@ -49,10 +54,10 @@ namespace UnityIntelligenceMCP.Core.IO
             {
                 if (Directory.Exists(directPath))
                 {
-                    Console.Error.WriteLine($"[INFO] Using direct path override: {directPath}");
+                    _logger.LogInformation($"[INFO] Using direct path override: {directPath}");
                     return directPath;
                 }
-                Console.Error.WriteLine($"[WARN] Direct editor path not found: {directPath}");
+                _logger.LogWarning($"[WARN] Direct editor path not found: {directPath}");
             }
 
             // Strategy 3: Automatic resolution
@@ -61,14 +66,14 @@ namespace UnityIntelligenceMCP.Core.IO
                 var commonPath = TryFindUnityInCommonLocations();
                 if (commonPath != null)
                 {
-                    Console.Error.WriteLine($"[INFO] Using automatically detected path: {commonPath}");
+                    _logger.LogInformation($"[INFO] Using automatically detected path: {commonPath}");
                     return commonPath;
                 }
             }
 
             // Final fallback
             var errMsg = "Unable to resolve Unity path. Verify configuration in appsettings.json";
-            Console.Error.WriteLine($"[ERROR] {errMsg}");
+            _logger.LogError($"[ERROR] {errMsg}");
             throw new InvalidOperationException(errMsg);
         }
 
@@ -80,7 +85,7 @@ namespace UnityIntelligenceMCP.Core.IO
             if (string.IsNullOrEmpty(editorPath))
             {
                 errorMsg = "Could not resolve Unity Editor path. Cannot find documentation.";
-                Console.Error.WriteLine($"[ERROR] {errorMsg}");
+                _logger.LogError($"[ERROR] {errorMsg}");
                 throw new DirectoryNotFoundException(errorMsg);
             }
 
@@ -98,13 +103,13 @@ namespace UnityIntelligenceMCP.Core.IO
                 if (Directory.Exists(docPath))
                 {
                     string retVal = Path.Combine(docPath, "en", docDomain);
-                    Console.Error.WriteLine($"[INFO] Found documentation at: {retVal}");
+                    _logger.LogInformation($"[INFO] Found documentation at: {retVal}");
                     return retVal;
                 }
             }
 
             errorMsg = $"Unable to find Unity Documentation folder for editor path: {editorPath}";
-            Console.Error.WriteLine($"[ERROR] {errorMsg}");
+            _logger.LogError($"[ERROR] {errorMsg}");
             throw new DirectoryNotFoundException(errorMsg);
         }
 
@@ -115,7 +120,7 @@ namespace UnityIntelligenceMCP.Core.IO
                 var projectVersionPath = Path.Combine(projectPath, "ProjectSettings", "ProjectVersion.txt");
                 if (!File.Exists(projectVersionPath))
                 {
-                    Console.Error.WriteLine($"[ERROR] ProjectVersion.txt not found at {projectVersionPath}");
+                    _logger.LogError($"[ERROR] ProjectVersion.txt not found at {projectVersionPath}");
                     return null;
                 }
 
@@ -125,23 +130,23 @@ namespace UnityIntelligenceMCP.Core.IO
                     
                 if (versionLine == null)
                 {
-                    Console.Error.WriteLine($"[ERROR] m_EditorVersion not found in ProjectVersion.txt at {projectVersionPath}");
+                    _logger.LogError($"[ERROR] m_EditorVersion not found in ProjectVersion.txt at {projectVersionPath}");
                     return null;
                 }
 
                 var version = versionLine.Split(':', 2)[1].Trim();
                 if (string.IsNullOrEmpty(version))
                 {
-                    Console.Error.WriteLine($"[ERROR] Empty version found in ProjectVersion.txt from line: {versionLine}");
+                    _logger.LogError($"[ERROR] Empty version found in ProjectVersion.txt from line: {versionLine}");
                     return null;
                 }
 
-                Console.Error.WriteLine($"[INFO] Unity version detected from project {projectPath}: {version}");
+                _logger.LogInformation($"[INFO] Unity version detected from project {projectPath}: {version}");
                 return version;
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"[ERROR] Failed to read Unity version from project: {ex.Message}");
+                _logger.LogError($"[ERROR] Failed to read Unity version from project: {ex.Message}");
                 return null;
             }
         }

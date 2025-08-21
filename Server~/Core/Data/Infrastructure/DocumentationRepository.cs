@@ -16,10 +16,15 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
     {
 
         private readonly IDuckDbConnectionFactory _connectionFactory;
+        private readonly ILogger<DocumentationRepository> _logger;
 
-        public DocumentationRepository(IDuckDbConnectionFactory connectionFactory)
+        public DocumentationRepository(
+            IDuckDbConnectionFactory connectionFactory,
+            ILogger<DocumentationRepository> logger
+            )
         {
             _connectionFactory = connectionFactory;
+            _logger = logger;
         }
 
         public Task<int> InsertDocumentAsync(SemanticDocumentRecord record, CancellationToken cancellationToken = default)
@@ -84,7 +89,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 
                 await transaction.CommitAsync(cancellationToken);
 
-                Console.Error.WriteLine($"[DB] Successfully inserted document '{record.Title}' with ID {docId}.");
+                _logger.LogInformation($"[DB] Successfully inserted document '{record.Title}' with ID {docId}.");
                 return docId;
             });
         }
@@ -169,13 +174,13 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                     }
                 
                     await transaction.CommitAsync(cancellationToken);
-                    Console.Error.WriteLine($"[DB] Successfully inserted a batch of {records.Count} documents.");
+                    _logger.LogInformation($"[DB] Successfully inserted a batch of {records.Count} documents.");
                     return docIdMap;
                 }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync(cancellationToken);
-                    Console.Error.WriteLine($"[ERROR] Failed to insert document batch: {ex.Message}");
+                    _logger.LogError($"[ERROR] Failed to insert document batch: {ex.Message}");
                     throw;
                 }
             });
@@ -229,7 +234,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync(cancellationToken);
-                    Console.Error.WriteLine($"[ERROR] Failed to insert content elements batch: {ex.Message}");
+                    _logger.LogError($"[ERROR] Failed to insert content elements batch: {ex.Message}");
                     throw;
                 }
             });
@@ -282,11 +287,11 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                             .EndRow();
                     }
                     await transaction.CommitAsync(cancellationToken);
-                    Console.Error.WriteLine($"[DB] Successfully inserted a batch of {relationships.Count} relationships.");
+                    _logger.LogInformation($"[DB] Successfully inserted a batch of {relationships.Count} relationships.");
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"[ERROR] Failed to insert relationships batch: {ex.Message}");
+                    _logger.LogError($"[ERROR] Failed to insert relationships batch: {ex.Message}");
                     await transaction.RollbackAsync(cancellationToken);
                     throw;
                 }
@@ -315,7 +320,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 command.CommandText = "DELETE FROM unity_docs WHERE unity_version = $unity_version;";
                 command.Parameters.Add(new DuckDBParameter("unity_version", unityVersion));
                 await command.ExecuteNonQueryAsync(cancellationToken);
-                Console.Error.WriteLine($"[DB] Deleted existing documentation for Unity version {unityVersion}.");
+                _logger.LogInformation($"[DB] Deleted existing documentation for Unity version {unityVersion}.");
             });
         }
 

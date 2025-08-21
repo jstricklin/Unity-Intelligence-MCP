@@ -13,6 +13,7 @@ using UnityIntelligenceMCP.Models.Database;
 using UnityIntelligenceMCP.Models.Documentation;
 using UnityIntelligenceMCP.Utilities;
 using ModelContextProtocol.Protocol;
+using System.Reflection.Metadata;
 
 namespace UnityIntelligenceMCP.Core.Semantics
 {
@@ -25,6 +26,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
         private readonly IDocumentChunker _chunker;
         private readonly IEmbeddingService _embeddingService;
         private readonly IDuckDbConnectionFactory _connectionFactory;
+        private readonly ILogger<DocumentationIndexingService> _logger;
 
         public DocumentationIndexingService(
             UnityInstallationService unityInstallationService,
@@ -33,6 +35,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             DocumentationOrchestrationService orchestrationService,
             IDocumentChunker chunker,
             IEmbeddingService embeddingService,
+            ILogger<DocumentationIndexingService> logger,
             IDuckDbConnectionFactory connectionFactory)
         {
             _unityInstallationService = unityInstallationService;
@@ -41,6 +44,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             _orchestrationService = orchestrationService;
             _chunker = chunker;
             _embeddingService = embeddingService;
+            _logger = logger;
             _connectionFactory = connectionFactory;
         }
 
@@ -97,7 +101,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             var unityVersion = _unityInstallationService.GetProjectVersion(projectPath);
             if (string.IsNullOrEmpty(unityVersion))
             {
-                Console.Error.WriteLine("[WARN] Could not determine Unity version. Skipping documentation indexing.");
+                _logger.LogWarning("[WARN] Could not determine Unity version. Skipping documentation indexing.");
                 return;
             }
 
@@ -108,7 +112,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             }
             catch (DirectoryNotFoundException ex)
             {
-                Console.Error.WriteLine($"[ERROR] Could not start indexing. Documentation directory not found: {ex.Message}");
+                _logger.LogError($"[ERROR] Could not start indexing. Documentation directory not found: {ex.Message}");
                 return;
             }
 
@@ -120,7 +124,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             }
             catch (DirectoryNotFoundException ex)
             {
-                Console.Error.WriteLine($"[ERROR] Documentation directory not found: {ex.Message}");
+                _logger.LogError($"[ERROR] Documentation directory not found: {ex.Message}");
                 return;
             }
             // Determine if indexing is needed based on file count
@@ -144,10 +148,10 @@ namespace UnityIntelligenceMCP.Core.Semantics
                     }
                     catch (Exception ex)
                     {
-                        Console.Error.WriteLine($"[FATAL] Indexing failed: {ex}");
+                        _logger.LogCritical($"[FATAL] Indexing failed: {ex}");
                     }
                 });
-                Console.Error.WriteLine("[INFO] Documentation indexing started in background");
+                _logger.LogInformation("[INFO] Documentation indexing started in background");
             }
         }
 
@@ -161,7 +165,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 await cmd.ExecuteNonQueryAsync();
             });
 
-            Console.Error.WriteLine($"[PROCESS] Starting documentation for {unityVersion}");
+            _logger.LogInformation($"[PROCESS] Starting documentation for {unityVersion}");
             var sw = Stopwatch.StartNew();
 
             var parsedDataMap = new ConcurrentDictionary<string, UnityDocumentationData>();
@@ -206,7 +210,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             var orphans = trackingData.Keys.Except(htmlFiles).ToList();
             if (orphans.Any())
             {
-                Console.Error.WriteLine($"[CLEANUP] Removing {orphans.Count} orphaned tracking entries");
+                _logger.LogInformation($"[CLEANUP] Removing {orphans.Count} orphaned tracking entries");
                 await _repository.RemoveOrphanedTrackingAsync(unityVersion, orphans);
             }
             
@@ -221,7 +225,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             
             if (!pendingFiles.Any())
             {
-                Console.Error.WriteLine("[INFO] No pending documents - indexing complete");
+                _logger.LogInformation("[INFO] No pending documents - indexing complete");
                 return;
             }
             
@@ -281,12 +285,12 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             if (((float)current / totalFiles) * 100 % 2 == 0)
                             {
                                 var memoryUsage = GC.GetTotalMemory(false) / 1024 / 1024; // in MB
-                                Console.Error.WriteLine($"[PROGRESS] {(int)(((float)current/totalFiles) * 100)}% out of {totalFiles} total files prepared for insert. Memory: ~{memoryUsage} MB");
+                                _logger.LogInformation($"[PROGRESS] {(int)(((float)current/totalFiles) * 100)}% out of {totalFiles} total files prepared for insert. Memory: ~{memoryUsage} MB");
                             }
                         }
                         catch (Exception ex)
                         {
-                            Console.Error.WriteLine($"[ERROR] {Path.GetFileName(filePath)}: {ex.Message}");
+                            _logger.LogError($"[ERROR] {Path.GetFileName(filePath)}: {ex.Message}");
                             await _repository.MarkDocumentFailedAsync(filePath, unityVersion);
                         }
                     }
@@ -335,7 +339,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                         }
                         catch (Exception ex)
                         {
-                            Console.Error.WriteLine($"[ERROR] Batch insert failed: {ex.Message}");
+                            _logger.LogError($"[ERROR] Batch insert failed: {ex.Message}");
                             foreach (var filePath in processedInBatch)
                             {
                                 await _repository.MarkDocumentFailedAsync(filePath, unityVersion);
@@ -347,7 +351,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             sw.Stop();
             // await File.WriteAllLinesAsync("indexing_log.txt", logMessages);
             await ProcessRelationshipsAsync(parsedDataMap, docKeyToIdMap, CancellationToken.None);
-            Console.Error.WriteLine($"[COMPLETE] Document Indexing finished in {TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds).ToString(@"hh\:mm\:ss")}s");
+            _logger.LogInformation($"[COMPLETE] Document Indexing finished in {TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds).ToString(@"hh\:mm\:ss")}s");
         }
 
         private async Task ProcessRelationshipsAsync(
@@ -355,7 +359,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             ConcurrentDictionary<string, long> docKeyToIdMap,
             CancellationToken cancellationToken)
         {
-            Console.Error.WriteLine("[RELATIONSHIPS] Starting relationship processing...");
+            _logger.LogInformation("[RELATIONSHIPS] Starting relationship processing...");
             var sw = Stopwatch.StartNew();
 
             var relationshipRecords = new ConcurrentBag<object>(); // Using ConcurrentBag for thread-safe collection.
@@ -364,7 +368,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             var docRoot = Path.GetDirectoryName(parsedDataMap.Keys.First());
             if (docRoot is null)
             {
-                Console.Error.WriteLine("[ERROR] Could not determine documentation root path for relationships.");
+                _logger.LogError("[ERROR] Could not determine documentation root path for relationships.");
                 return;
             }
             
@@ -422,7 +426,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
             if (!relationshipRecords.IsEmpty)
             {
-                Console.Error.WriteLine($"[RELATIONSHIPS] Prepared {relationshipRecords.Count} relationships. Deduplicating...");
+                _logger.LogInformation($"[RELATIONSHIPS] Prepared {relationshipRecords.Count} relationships. Deduplicating...");
 
                 var uniqueRelationshipRecords = relationshipRecords
                     .Cast<dynamic>()
@@ -430,7 +434,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                     .Select(g => g.First())
                     .ToList();
 
-                Console.Error.WriteLine($"[RELATIONSHIPS] Inserting {uniqueRelationshipRecords.Count} unique relationships.");
+                _logger.LogInformation($"[RELATIONSHIPS] Inserting {uniqueRelationshipRecords.Count} unique relationships.");
 
                 const int RelationshipBatchSize = 4096;
                 foreach (var batch in Batch(uniqueRelationshipRecords, RelationshipBatchSize))
@@ -440,7 +444,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             }
 
             sw.Stop();
-            Console.Error.WriteLine($"[RELATIONSHIPS] Relationship processing finished in {sw.Elapsed.TotalSeconds:F2}s");
+            _logger.LogInformation($"[RELATIONSHIPS] Relationship processing finished in {sw.Elapsed.TotalSeconds:F2}s");
         }
 
         private IEnumerable<IEnumerable<TSource>> Batch<TSource>(IEnumerable<TSource> source, int batchSize)
