@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using UnityEngine;
 using WebSocketSharp;
-using WebSocketSharp.Server;
 
 namespace UnityIntelligenceMCP.Unity
 {
@@ -19,53 +17,44 @@ namespace UnityIntelligenceMCP.Unity
                 return _instance;
             }
         }
-        private WebSocketServer _wsserver;
-        private readonly Dictionary<string, IWebSocketSession> _sessions = new();
+        private WebSocket _wsclient;
 
-        public bool IsListening => _wsserver?.IsListening ?? false;
+        public bool IsConnected => _wsclient?.ReadyState == WebSocketState.Open;
 
-        public void StartServer(int port)
+        public void Connect(string url)
         {
-            if (IsListening) return;
+            if (IsConnected) return;
 
             try
             {
-                _wsserver = new WebSocketServer(port);
-                _wsserver.AddWebSocketService<UnityIntelligenceMCPSocketHandler>("/mcp-bridge");
-                _wsserver.Start();
-                Debug.Log($"Unity Intelligence MCP WebSocket server started on port {port}");
+                _wsclient = new WebSocket(url);
+                _wsclient.OnOpen += (sender, e) => Debug.Log("WebSocket connection opened.");
+                _wsclient.OnMessage += (sender, e) => Debug.Log($"WebSocket message received: {e.Data}");
+                _wsclient.OnError += (sender, e) => Debug.LogError($"WebSocket error: {e.Message}");
+                _wsclient.OnClose += (sender, e) => Debug.Log("WebSocket connection closed.");
+                _wsclient.Connect();
+                Debug.Log($"Unity Intelligence MCP WebSocket connecting to {url}");
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Failed to start WebSocket server: {e.Message}");
+                Debug.LogError($"Failed to connect WebSocket: {e.Message}");
             }
         }
 
-        public void StopServer()
+        public void Disconnect()
         {
-            if (!IsListening) return;
+            if (_wsclient == null) return;
 
-            _wsserver?.Stop();
-            _wsserver = null;
-            _sessions.Clear();
-            Debug.Log("Unity Intelligence MCP WebSocket server stopped");
+            _wsclient?.Close();
+            _wsclient = null;
+            Debug.Log("Unity Intelligence MCP WebSocket disconnected");
         }
 
-        public void SendToAllClients(string jsonPayload)
+        public void Send(string jsonPayload)
         {
-            if (!IsListening) return;
+            if (!IsConnected) return;
 
-            // _wsserver?.Send(jsonPayload);
-            // Debug.Log($"Sent message to {_wsserver.Server.Count} client(s)");
-        }
-
-        public void DisconnectClient(string sessionId)
-        {
-            if (_sessions.TryGetValue(sessionId, out var session))
-            {
-                session.Context.WebSocket.Close();
-                _sessions.Remove(sessionId);
-            }
+            _wsclient?.Send(jsonPayload);
         }
     }
 }
