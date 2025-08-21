@@ -21,15 +21,15 @@ namespace UnityIntelligenceMCP.Configuration
                 .Build();
 
             UnitySettings = configuration.Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
-            Console.Error.WriteLine($"[Settings check] {UnitySettings.ProjectPath}");
+            Console.Error.WriteLine($"[Settings check] Project Path: {UnitySettings.PROJECT_PATH}\nPort: {UnitySettings.MCP_SERVER_PORT}");
         }
 
         public string GetConfiguredProjectPath()
         {
-            var projectPath = UnitySettings.ProjectPath;
+            var projectPath = UnitySettings.PROJECT_PATH;
             if (string.IsNullOrEmpty(projectPath))
             {
-                throw new InvalidOperationException("Unity project path is not configured in appsettings.json (ProjectPath).");
+                throw new InvalidOperationException("Unity project path is not configured. (PROJECT_PATH).");
             }
             return projectPath;
         }

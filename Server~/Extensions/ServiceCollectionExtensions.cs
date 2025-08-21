@@ -93,7 +93,7 @@ namespace UnityIntelligenceMCP.Extensions
             
             // Index documentation if it's not already present for the current version
             var indexingService = provider.GetRequiredService<DocumentationIndexingService>();
-            var forceReindex = configService.UnitySettings.ForceDocumentationReindex;
+            var forceReindex = configService.UnitySettings.FORCE_REINDEX;
             await indexingService.IndexDocumentationIfRequiredAsync(projectPath, forceReindex);
         }
     }

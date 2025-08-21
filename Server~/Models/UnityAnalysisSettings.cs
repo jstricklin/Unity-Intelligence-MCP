@@ -2,9 +2,10 @@ namespace UnityIntelligenceMCP.Models
 {
     public class UnityAnalysisSettings
     {
-        public string? InstallRoot { get; set; }
-        public string? EditorPath { get; set; }
-        public string? ProjectPath { get; set; }
-        public bool? ForceDocumentationReindex { get; set; }
+        public string? INSTALL_ROOT { get; set; }
+        public string? EDITOR_PATH { get; set; }
+        public string? PROJECT_PATH { get; set; }
+        public int? MCP_SERVER_PORT { get; set; }
+        public bool? FORCE_REINDEX { get; set; }
     }
 }

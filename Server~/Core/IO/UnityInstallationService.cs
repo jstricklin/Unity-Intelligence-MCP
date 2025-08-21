@@ -29,9 +29,9 @@ namespace UnityIntelligenceMCP.Core.IO
         private string? CalculateEditorPath(string projectPath)
         {
             // Strategy 1: Explicit configuration
-            var installRoot = _configurationService.UnitySettings.InstallRoot;
+            var installRoot = _configurationService.UnitySettings.INSTALL_ROOT;
             var projectVersion = GetProjectVersion(projectPath);
-            var directPath = _configurationService.UnitySettings.EditorPath;
+            var directPath = _configurationService.UnitySettings.EDITOR_PATH;
 
             if (!string.IsNullOrEmpty(installRoot) && !string.IsNullOrEmpty(projectVersion))
             {

@@ -126,10 +126,11 @@ namespace UnityIntelligenceMCP.Unity
 
         private void DrawConfigurationTab()
         {
+            UnityIntelligenceMCPSettings settings = UnityIntelligenceMCPSettings.Instance;
             _configurationTabScrollPosition = EditorGUILayout.BeginScrollView(_configurationTabScrollPosition);
             EditorGUILayout.BeginVertical("box");
 
-            WrappedLabel("VSCode Integration", _subHeaderStyle);
+            WrappedLabel("IDE Integration", _subHeaderStyle);
             EditorGUILayout.Space();
 
             if (GUILayout.Button("Copy to Clipboard"))
@@ -139,6 +140,13 @@ namespace UnityIntelligenceMCP.Unity
 
             EditorGUILayout.LabelField("Preview of mcp.json:", EditorStyles.boldLabel);
             EditorGUILayout.SelectableLabel(_controller.GetMCPConfigJson(), EditorStyles.textArea, GUILayout.Height(200));
+
+            GUILayout.Label("Tool Settings", EditorStyles.boldLabel);
+            // Simple checkboxes
+            settings.AnalyzeProjectCode = EditorGUILayout.Toggle("Enable Code Analysis", settings.AnalyzeProjectCode);
+            settings.EmbeddUnityDocs = EditorGUILayout.Toggle("Build Unity RAG (~2GB)", settings.EmbeddUnityDocs);
+
+            EditorGUILayout.Space();
 
             if (GUILayout.Button("Configure VSCode (Cline/Roo/Etc)", GUILayout.Height(30)))
             {
