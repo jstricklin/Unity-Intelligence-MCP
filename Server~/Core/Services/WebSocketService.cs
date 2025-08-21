@@ -33,7 +33,7 @@ namespace UnityIntelligenceMCP.Core.Services
             _logger.LogInformation("WebSocket connection established.");
             
             var buffer = new byte[1024 * 4];
-
+            await SendMessageAsync("Hello from Unity Intelligence MCP!");
             try
             {
                 while (_activeSocket.State == WebSocketState.Open)
