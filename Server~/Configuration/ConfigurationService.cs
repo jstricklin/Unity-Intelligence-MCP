@@ -21,7 +21,7 @@ namespace UnityIntelligenceMCP.Configuration
                 .Build();
 
             UnitySettings = configuration.Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
-            Console.Error.WriteLine($"[Settings check] Project Path: {UnitySettings.PROJECT_PATH}\nPort: {UnitySettings.MCP_SERVER_PORT}");
+            Console.Error.WriteLine($"[Settings check] Project Path: {UnitySettings.PROJECT_PATH}");
         }
 
         public string GetConfiguredProjectPath()

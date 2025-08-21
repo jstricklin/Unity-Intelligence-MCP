@@ -29,11 +29,13 @@ builder.Services.AddWebSocketServices();
 
 var app = builder.Build();
 
+var config = app.Services.GetRequiredService<ConfigurationService>();
+var port = config.UnitySettings.MCP_SERVER_PORT;
+
 app.UseWebSockets();
 app.MapGet("/mcp-bridge", async (HttpContext context, WebSocketService service) =>
 {
     await service.HandleConnectionAsync(context);
 });
-
 await app.Services.InitializeServicesAsync();
-await app.RunAsync();
+await app.RunAsync($"http://localhost:{port}");

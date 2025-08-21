@@ -80,7 +80,7 @@ namespace UnityIntelligenceMCP.Unity
         public string GetMCPConfigJson()
         {
             var envDict = new Dictionary<string, string>();
-            envDict["MCP_SERVER_PORT"] = "8080";
+            envDict["MCP_SERVER_PORT"] = _settings.Port.ToString();
 
             if (_settings.AnalyzeProjectCode)
                 envDict["PROJECT_PATH"] = $"{Directory.GetParent(Application.dataPath).FullName}";

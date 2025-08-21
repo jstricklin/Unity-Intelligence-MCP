@@ -84,17 +84,6 @@ namespace UnityIntelligenceMCP.Unity
 
             EditorGUILayout.Space();
 
-            // Port configuration
-            EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginChangeCheck();
-            int newPort = EditorGUILayout.IntField("Connection Port", settings.Port);
-            if (EditorGUI.EndChangeCheck())
-            {
-                _controller.ChangePort(newPort);
-            }
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.Space();
 
             // Server controls
             EditorGUILayout.BeginHorizontal();
@@ -140,6 +129,21 @@ namespace UnityIntelligenceMCP.Unity
 
             EditorGUILayout.LabelField("Preview of mcp.json:", EditorStyles.boldLabel);
             EditorGUILayout.SelectableLabel(_controller.GetMCPConfigJson(), EditorStyles.textArea, GUILayout.Height(200));
+
+            EditorGUILayout.Space();
+
+            GUILayout.Label("MCP Server Settings", EditorStyles.boldLabel);
+            // Port configuration
+            EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginChangeCheck();
+            int newPort = EditorGUILayout.IntField("Connection Port", settings.Port);
+            if (EditorGUI.EndChangeCheck())
+            {
+                _controller.ChangePort(newPort);
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space();
 
             GUILayout.Label("Tool Settings", EditorStyles.boldLabel);
             // Simple checkboxes

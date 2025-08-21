@@ -8,7 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
-- Unity3D Editor WebSocket Server integration in progress. 
+- Add Unity Package Cache to VSCode workspace
+
+## [0.1.0] - 2025 - 08 - 21
+### Added
+
+- Working basic MCP Websocket integration to act as bridge for Unity Editor interactions
+- Added Unity Editor Websocket client connection to MCP Server WS Host
+- Added mcp.json configuration to enable IDE integration with MCP Server
+
+### Changed
+
+- MCP Server configuration from appsettings.json now overridden by values input in Unity Editor Server Window
+- appsettings.json format updated to flatten structure
+
+
 
 ## [0.0.1] - 2025 - 08 - 20
 ### Added
