@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Generic;
 using UnityIntelligenceMCP.Models;
 
 namespace UnityIntelligenceMCP.Configuration
@@ -15,10 +16,27 @@ namespace UnityIntelligenceMCP.Configuration
             var installRoot = Environment.GetEnvironmentVariable("INSTALL_ROOT");
             var projectPath = Environment.GetEnvironmentVariable("PROJECT_PATH");
 
-            var configuration = new ConfigurationBuilder()
+            var configurationBuilder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
+
+            var envConfigOverrides = new Dictionary<string, string>();
+            if (port != null)
+            {
+                envConfigOverrides["McpServerPort"] = port;
+            }
+            if (!string.IsNullOrEmpty(installRoot))
+            {
+                envConfigOverrides["InstallRoot"] = installRoot;
+            }
+            if (!string.IsNullOrEmpty(projectPath))
+            {
+                envConfigOverrides["UnityAnalysisSettings:ProjectPath"] = projectPath;
+            }
+
+            var configuration = configurationBuilder
+                .AddInMemoryCollection(envConfigOverrides)
                 .Build();
 
             UnitySettings = configuration.GetSection("UnityAnalysisSettings").Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
