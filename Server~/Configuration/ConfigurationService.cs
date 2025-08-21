@@ -11,6 +11,9 @@ namespace UnityIntelligenceMCP.Configuration
         public ConfigurationService()
         {
             var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+            var port = Environment.GetEnvironmentVariable("MCP_SERVER_PORT") ?? "5000";
+            var installRoot = Environment.GetEnvironmentVariable("INSTALL_ROOT");
+            var projectPath = Environment.GetEnvironmentVariable("PROJECT_PATH");
 
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
