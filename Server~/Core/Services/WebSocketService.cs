@@ -13,6 +13,7 @@ namespace UnityIntelligenceMCP.Core.Services
     {
         private readonly IMessageHandler _messageHandler;
         private readonly ILogger<WebSocketService> _logger;
+        private WebSocket? _activeSocket;
 
         public WebSocketService(IMessageHandler messageHandler, ILogger<WebSocketService> logger)
         {
@@ -28,32 +29,58 @@ namespace UnityIntelligenceMCP.Core.Services
                 return;
             }
 
-            using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+            _activeSocket = await context.WebSockets.AcceptWebSocketAsync();
             _logger.LogInformation("WebSocket connection established.");
             
             var buffer = new byte[1024 * 4];
 
-            while (webSocket.State == WebSocketState.Open)
+            try
             {
-                var receiveResult = await webSocket.ReceiveAsync(
-                    new ArraySegment<byte>(buffer), CancellationToken.None);
-
-                if (receiveResult.MessageType == WebSocketMessageType.Close)
+                while (_activeSocket.State == WebSocketState.Open)
                 {
-                    await webSocket.CloseAsync(
-                        receiveResult.CloseStatus.Value,
-                        receiveResult.CloseStatusDescription,
-                        CancellationToken.None);
-                    _logger.LogInformation("WebSocket connection closed by client.");
-                    break;
-                }
+                    var receiveResult = await _activeSocket.ReceiveAsync(
+                        new ArraySegment<byte>(buffer), CancellationToken.None);
 
-                if (receiveResult.MessageType == WebSocketMessageType.Text)
-                {
-                    var message = Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
-                    await _messageHandler.ProcessMessageAsync(message, webSocket);
+                    if (receiveResult.MessageType == WebSocketMessageType.Close)
+                    {
+                        await _activeSocket.CloseAsync(
+                            receiveResult.CloseStatus.Value,
+                            receiveResult.CloseStatusDescription,
+                            CancellationToken.None);
+                        _logger.LogInformation("WebSocket connection closed by client.");
+                        break;
+                    }
+
+                    if (receiveResult.MessageType == WebSocketMessageType.Text)
+                    {
+                        var message = Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
+                        await _messageHandler.ProcessMessageAsync(message, _activeSocket);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred in the WebSocket connection.");
+            }
+            finally
+            {
+                _activeSocket?.Dispose();
+                _activeSocket = null;
+                _logger.LogInformation("WebSocket connection terminated.");
+            }
+        }
+
+        public async Task SendMessageAsync(string message)
+        {
+            if (_activeSocket == null || _activeSocket.State != WebSocketState.Open)
+            {
+                _logger.LogWarning("Attempted to send message, but no active connection is available.");
+                return;
+            }
+
+            var messageBytes = Encoding.UTF8.GetBytes(message);
+            var arraySegment = new ArraySegment<byte>(messageBytes, 0, messageBytes.Length);
+            await _activeSocket.SendAsync(arraySegment, WebSocketMessageType.Text, true, CancellationToken.None);
         }
     }
 }
