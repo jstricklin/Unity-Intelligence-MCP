@@ -6,15 +6,20 @@ using UnityIntelligenceMCP.Unity.Services;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 using Newtonsoft.Json;
 using UnityEditor;
+using UnityIntelligenceMCP.Tools;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace UnityIntelligenceMCP.Unity
 {
     public class UnityIntelligenceMCPController
     {
+        public static UnityIntelligenceMCPController Instance { get; private set; }
         private readonly UnityIntelligenceMCPServer _server;
         private readonly UnityIntelligenceMCPSettings _settings;
         private readonly VSCodeWorkspaceService _vsCodeWorkspaceService;
         private readonly IGameObjectService _gameObjectService;
+        private readonly ToolService _toolService;
         public enum MCP_IDE
         {
             VSCode,
@@ -28,10 +33,12 @@ namespace UnityIntelligenceMCP.Unity
 
         public UnityIntelligenceMCPController()
         {
+            Instance = this;
             _server = UnityIntelligenceMCPServer.Instance;
             _settings = UnityIntelligenceMCPSettings.Instance;
             _vsCodeWorkspaceService = new VSCodeWorkspaceService();
             _gameObjectService = new GameObjectService();
+            _toolService = new ToolService(_gameObjectService);
         }
 
         public void Connect()
@@ -203,6 +210,11 @@ namespace UnityIntelligenceMCP.Unity
             }
             _gameObjectService.UpdateRotation(target, newRotation);
             Debug.Log($"{target.name} rotation updated");
+        }
+
+        public async Task<ToolResponse> ExecuteTool(string command, JObject parameters)
+        {
+            return await _toolService.Execute(command, parameters);
         }
     }
 }
