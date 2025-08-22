@@ -44,7 +44,7 @@ namespace UnityIntelligenceMCP.Resources
         {
             var stopwatch = Stopwatch.StartNew();
             bool wasSuccessful = false;
-            TextResourceContents result = null;
+            TextResourceContents? result = null;
             try
             {
                 string projectPath = _configurationService.GetConfiguredProjectPath();

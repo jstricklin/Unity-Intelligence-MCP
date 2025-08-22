@@ -273,10 +273,10 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                     foreach (var rel in relationships)
                     {
                         var type = rel.GetType();
-                        var sourceDocId = (long)type.GetProperty("SourceDocId").GetValue(rel, null);
-                        var targetDocId = (long)type.GetProperty("TargetDocId").GetValue(rel, null);
-                        var relationshipType = (string)type.GetProperty("RelationshipType").GetValue(rel, null);
-                        var context = (string)type.GetProperty("Context").GetValue(rel, null);
+                        var sourceDocId = (long)type.GetProperty("SourceDocId")!.GetValue(rel, null)!;
+                        var targetDocId = (long)type.GetProperty("TargetDocId")!.GetValue(rel, null)!;
+                        var relationshipType = (string)type.GetProperty("RelationshipType")!.GetValue(rel, null)!;
+                        var context = (string)type.GetProperty("Context")!.GetValue(rel, null)!;
 
                         appender.CreateRow()
                             .AppendValue(relIds[relIdIndex++])

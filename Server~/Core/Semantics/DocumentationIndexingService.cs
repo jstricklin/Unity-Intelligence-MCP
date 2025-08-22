@@ -321,7 +321,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                                         ElementType = chunk.Section,
                                         Title = chunk.Title,
                                         Content = chunk.Text,
-                                        Embedding = i < embeddings.Count ? embeddings[i] : null,
+                                        Embedding = i < embeddings.Count ? embeddings[i] : new float[384],
                                         AttributesJson = System.Text.Json.JsonSerializer.Serialize(new { chunk.Index, chunk.StartPosition, chunk.EndPosition })
                                     });
                                 }

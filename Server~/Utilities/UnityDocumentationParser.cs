@@ -16,7 +16,7 @@ namespace UnityIntelligenceMCP.Utilities
         private class DocumentSection
         {
             public string Content { get; set; } = string.Empty;
-            public HtmlNode Node { get; set; }
+            public HtmlNode? Node { get; set; } = null;
             public string SectionType { get; set; } = "text";
         }
 
@@ -75,7 +75,7 @@ namespace UnityIntelligenceMCP.Utilities
                 if (sections.TryGetValue(currentKey, out var existingSection))
                 {
                     existingSection.Content += "\n\n" + content;
-                    currentSectionNodes.ForEach(n => existingSection.Node.AppendChild(n.Clone()));
+                    currentSectionNodes.ForEach(n => existingSection.Node?.AppendChild(n.Clone()));
                 }
                 else
                 {

@@ -102,7 +102,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             string sourceType = "scripting_api")
         {
             var stopwatch = Stopwatch.StartNew();
-            List<DocumentGroup> results = null;
+            List<DocumentGroup>? results = null;
             bool wasSuccessful = false;
 
             try

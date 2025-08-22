@@ -44,7 +44,7 @@ namespace UnityIntelligenceMCP.Core.Services
                     if (receiveResult.MessageType == WebSocketMessageType.Close)
                     {
                         await _activeSocket.CloseAsync(
-                            receiveResult.CloseStatus.Value,
+                            receiveResult.CloseStatus!.Value,
                             receiveResult.CloseStatusDescription,
                             CancellationToken.None);
                         _logger.LogInformation("WebSocket connection closed by client.");

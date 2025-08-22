@@ -34,7 +34,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 cmd.Parameters.Add(new DuckDBParameter("summary", log.ResultSummaryJson));
                 cmd.Parameters.Add(new DuckDBParameter("execution_time", log.ExecutionTimeMs));
                 cmd.Parameters.Add(new DuckDBParameter("success", log.WasSuccessful));
-                cmd.Parameters.Add(new DuckDBParameter("memory", (object)log.PeakProcessMemoryMb ?? System.DBNull.Value));
+                cmd.Parameters.Add(new DuckDBParameter("memory", (object?)log.PeakProcessMemoryMb ?? System.DBNull.Value));
                 
                 await cmd.ExecuteNonQueryAsync();
             });

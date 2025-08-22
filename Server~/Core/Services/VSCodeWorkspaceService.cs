@@ -113,20 +113,20 @@ namespace UnityIntelligenceMCP.Core.Services
 
         private class VSCodeWorkspaceConfig
         {
-            public List<WorkspaceFolder> Folders { get; set; }
-            public Dictionary<string, object> Settings { get; set; }
-            public WorkspaceExtensions Extensions { get; set; }
+            public List<WorkspaceFolder>? Folders { get; set; }
+            public Dictionary<string, object>? Settings { get; set; }
+            public WorkspaceExtensions? Extensions { get; set; }
         }
 
         private class WorkspaceFolder
         {
-            public string Name { get; set; }
-            public string Path { get; set; }
+            public string Name { get; set; } = "";
+            public string Path { get; set; } = "";
         }
 
         private class WorkspaceExtensions
         {
-            public List<string> Recommendations { get; set; }
+            public List<string>? Recommendations { get; set; }
         }
     }
 }

@@ -82,7 +82,7 @@ public class UnityDocumentChunker : IDocumentChunker
                 chunks.Add(new DocumentChunk
                 {
                     Index = currentIndex++,
-                    Title = example.Description,
+                    Title = example.Description ?? "",
                     Text = fullText,
                     Section = section,
                     StartPosition = 0,
@@ -94,13 +94,13 @@ public class UnityDocumentChunker : IDocumentChunker
                 // Description might need chunking
                 // AddTextChunks(chunks, example.Description, example.Description, section, ref currentIndex);
                 // Chunk the code separately using the new method
-                var codeChunks = SplitCode(example.Code, TargetChars);
+                var codeChunks = SplitCode(example.Code!, TargetChars);
                 foreach (var (codeChunk, start, end) in codeChunks)
                 {
                     chunks.Add(new DocumentChunk
                     {
                         Index = currentIndex++,
-                        Title = example.Description, // Use description as context title
+                        Title = example.Description ?? "", // Use description as context title
                         Text = codeChunk,
                         Section = section,
                         StartPosition = start,
