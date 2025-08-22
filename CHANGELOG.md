@@ -8,7 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 
-- Add Unity Package Cache to VSCode workspace
+- Add Unity Package Cache to VSCode workspace (Roslyn Static Analysis)
+- Add SCRIPT_DIR environ variable and Editor Window Server Setting to configure project script directory for analysis
+
+### Fixed
+
+- Resolve package scripts returned in project script analysis (SCRIPT_DIR var)
+
+### Deprecated
+
+- SearchScope tool parameters deprecated
 
 ## [0.1.0] - 2025 - 08 - 21
 ### Added
