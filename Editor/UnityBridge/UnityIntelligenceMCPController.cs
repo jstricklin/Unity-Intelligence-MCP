@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityIntelligenceMCP.Utils;
 using UnityIntelligenceMCP.Unity.Services;
+using UnityIntelligenceMCP.Unity.Services.Contracts;
 using Newtonsoft.Json;
 using UnityEditor;
 
@@ -13,6 +14,7 @@ namespace UnityIntelligenceMCP.Unity
         private readonly UnityIntelligenceMCPServer _server;
         private readonly UnityIntelligenceMCPSettings _settings;
         private readonly VSCodeWorkspaceService _vsCodeWorkspaceService;
+        private readonly IGameObjectService _gameObjectService;
         public enum MCP_IDE
         {
             VSCode,
@@ -29,6 +31,7 @@ namespace UnityIntelligenceMCP.Unity
             _server = UnityIntelligenceMCPServer.Instance;
             _settings = UnityIntelligenceMCPSettings.Instance;
             _vsCodeWorkspaceService = new VSCodeWorkspaceService();
+            _gameObjectService = new GameObjectService();
         }
 
         public void Connect()
@@ -145,6 +148,46 @@ namespace UnityIntelligenceMCP.Unity
             _currentKey = JSONKeys[MCP_IDE.RooCode];
             var jsonContent = GetMCPConfigJson();
             Utilities.WriteFile(rooCodeDir, "mcp.json", jsonContent);
+        }
+
+        public void CreateGameObject(string name, Vector3 position)
+        {
+            _gameObjectService.Create(name, position);
+            Debug.Log($"Created GameObject: {name}");
+        }
+        
+        public GameObject FindGameObject(string name)
+        {
+            var go = _gameObjectService.Find(name);
+            if (go == null)
+            {
+                Debug.LogWarning($"GameObject '{name}' not found");
+            }
+            return go;
+        }
+        
+        public void UpdatePosition(GameObject target, Vector3 newPosition)
+        {
+            if (target == null)
+            {
+                Debug.LogError("Cannot update position - target is null");
+                return;
+            }
+            _gameObjectService.UpdatePosition(target, newPosition);
+            Debug.Log($"{target.name} position updated");
+        }
+
+        public void UndoLastAction()
+        {
+            if (_gameObjectService is GameObjectService service)
+            {
+                service.UndoLast();
+                Debug.Log("Undone last GameObject operation");
+            }
+            else
+            {
+                Debug.LogWarning("Undo not supported in current service implementation");
+            }
         }
     }
 }
