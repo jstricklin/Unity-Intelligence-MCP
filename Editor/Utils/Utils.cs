@@ -10,6 +10,25 @@ namespace UnityIntelligenceMCP.Utils
         {
             return Directory.GetParent(Application.dataPath).FullName;
         }
+        public static void WriteFile(string dir, string fileName, string content)
+        {
+            var filePath = Path.Combine(dir, fileName);
+
+            try
+            {
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                File.WriteAllText(filePath, content);
+                Debug.Log($"Successfully created VSCode configuration at: {filePath}");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[ERROR]: {e.Message}");
+            }
+        }
         public static string GetMcpServerPath()
         {
             var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath($"Packages/{UnityIntelligenceMCPSettings.PackageName}");

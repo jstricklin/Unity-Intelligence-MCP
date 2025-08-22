@@ -11,6 +11,16 @@ namespace UnityIntelligenceMCP.Unity
     {
         private readonly UnityIntelligenceMCPServer _server;
         private readonly UnityIntelligenceMCPSettings _settings;
+        public enum MCP_IDE
+        {
+            VSCode,
+            RooCode
+        };
+        private string _currentKey = "servers";
+        readonly Dictionary<MCP_IDE, string> JSONKeys = new Dictionary<MCP_IDE, string> {
+            {MCP_IDE.VSCode, "servers"},
+            {MCP_IDE.RooCode, "mcpServers"},
+        };
 
         public UnityIntelligenceMCPController()
         {
@@ -89,7 +99,7 @@ namespace UnityIntelligenceMCP.Unity
 
             var config = new Dictionary<string, object>
             {
-                ["servers"] = new Dictionary<string, object>
+                [_currentKey] = new Dictionary<string, object>
                 {
                     ["unity-intelligence-mcp"] = new Dictionary<string, object>
                     {
@@ -108,24 +118,17 @@ namespace UnityIntelligenceMCP.Unity
         {
             var projectRoot = Utilities.GetProjectPath();
             var vscodeDir = Path.Combine(projectRoot, ".vscode");
-            var mcpJsonPath = Path.Combine(vscodeDir, "mcp.json");
-
+            _currentKey = JSONKeys[MCP_IDE.VSCode];
             var jsonContent = GetMCPConfigJson();
-
-            try
-            {
-                if (!Directory.Exists(vscodeDir))
-                {
-                    Directory.CreateDirectory(vscodeDir);
-                }
-
-                File.WriteAllText(mcpJsonPath, jsonContent);
-                Debug.Log($"Successfully created VSCode configuration at: {mcpJsonPath}");
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to create VSCode configuration file: {e.Message}");
-            }
+            Utilities.WriteFile(vscodeDir, "mcp.json", jsonContent);
+        }
+        public void ConfigureRooCode()
+        {
+            var projectRoot = Utilities.GetProjectPath();
+            var rooCodeDir = Path.Combine(projectRoot, ".roo");
+            _currentKey = JSONKeys[MCP_IDE.RooCode];
+            var jsonContent = GetMCPConfigJson();
+            Utilities.WriteFile(rooCodeDir, "mcp.json", jsonContent);
         }
     }
 }

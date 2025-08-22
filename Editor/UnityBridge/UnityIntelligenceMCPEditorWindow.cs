@@ -152,9 +152,13 @@ namespace UnityIntelligenceMCP.Unity
 
             EditorGUILayout.Space();
 
-            if (GUILayout.Button("Configure VSCode (Cline/Roo/Etc)", GUILayout.Height(30)))
+            if (GUILayout.Button("Configure VSCode (CoPilot)", GUILayout.Height(30)))
             {
                 _controller.ConfigureVSCode();
+            }
+            if (GUILayout.Button("Configure Roo Code", GUILayout.Height(30)))
+            {
+                _controller.ConfigureRooCode();
             }
 
             EditorGUILayout.Space();
