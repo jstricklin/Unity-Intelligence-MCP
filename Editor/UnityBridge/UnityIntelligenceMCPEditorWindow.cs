@@ -168,6 +168,12 @@ namespace UnityIntelligenceMCP.Unity
             }
 
             EditorGUILayout.Space();
+
+            if (GUILayout.Button("Add PackageCache to Workspace", GUILayout.Height(30)))
+            {
+                _controller.AddPackageCacheToWorkspace();
+            }
+            EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }

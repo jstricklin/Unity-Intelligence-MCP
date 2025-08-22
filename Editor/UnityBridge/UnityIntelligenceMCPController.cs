@@ -121,6 +121,10 @@ namespace UnityIntelligenceMCP.Unity
             
             return JsonConvert.SerializeObject(config, Formatting.Indented);
         }
+        public void AddPackageCacheToWorkspace()
+        {
+
+        }
 
         public void ConfigureVSCode()
         {
@@ -130,6 +134,7 @@ namespace UnityIntelligenceMCP.Unity
             var jsonContent = GetMCPConfigJson();
             Utilities.WriteFile(vscodeDir, "mcp.json", jsonContent);
         }
+
         public void ConfigureRooCode()
         {
             var projectRoot = Utilities.GetProjectPath();

@@ -1,27 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using UnityIntelligenceMCP.Unity.Services.Contracts;
 using System.Threading.Tasks;
-using UnityIntelligenceMCP.Core.IO;
-using UnityIntelligenceMCP.Core.Services.Contracts;
+using UnityEngine;
 
-namespace UnityIntelligenceMCP.Core.Services
+namespace UnityIntelligenceMCP.Unity.Services
 {
     public class VSCodeWorkspaceService : IVSCodeWorkspaceService
     {
-        private readonly UnityInstallationService _installationService;
-        private readonly ILogger<VSCodeWorkspaceService> _logger;
-
-        public VSCodeWorkspaceService(
-            UnityInstallationService installationService,
-            ILogger<VSCodeWorkspaceService> logger)
-        {
-            _installationService = installationService;
-            _logger = logger;
-        }
-
         public async Task<string> GenerateWorkspaceAsync(string projectPath, string workspaceName = "project-workspace")
         {
             try
@@ -66,10 +54,14 @@ namespace UnityIntelligenceMCP.Core.Services
                     });
                 }
 
-                var json = JsonSerializer.Serialize(config, new JsonSerializerOptions {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                });
+
+                // Use Newtonsoft.Json serialization
+                var json = JsonConvert.SerializeObject(config,
+                    new JsonSerializerSettings
+                    {
+                        ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                        Formatting = Formatting.Indented
+                    });
 
                 var workspacePath = Path.Combine(projectPath, $"{workspaceName}.code-workspace");
                 await File.WriteAllTextAsync(workspacePath, json);
@@ -78,7 +70,7 @@ namespace UnityIntelligenceMCP.Core.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Workspace generation failed: {ex.Message}");
+                Debug.LogError($"Workspace generation failed: {ex.Message}");
                 throw;
             }
         }
@@ -113,9 +105,9 @@ namespace UnityIntelligenceMCP.Core.Services
 
         private class VSCodeWorkspaceConfig
         {
-            public List<WorkspaceFolder>? Folders { get; set; }
-            public Dictionary<string, object>? Settings { get; set; }
-            public WorkspaceExtensions? Extensions { get; set; }
+            public List<WorkspaceFolder> Folders { get; set; }
+            public Dictionary<string, object> Settings { get; set; }
+            public WorkspaceExtensions Extensions { get; set; }
         }
 
         private class WorkspaceFolder
@@ -126,7 +118,7 @@ namespace UnityIntelligenceMCP.Core.Services
 
         private class WorkspaceExtensions
         {
-            public List<string>? Recommendations { get; set; }
+            public List<string> Recommendations { get; set; }
         }
     }
 }

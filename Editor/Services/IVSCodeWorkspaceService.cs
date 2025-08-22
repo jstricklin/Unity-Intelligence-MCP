@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace UnityIntelligenceMCP.Core.Services.Contracts
+namespace UnityIntelligenceMCP.Unity.Services.Contracts
 {
     public interface IVSCodeWorkspaceService
     {
