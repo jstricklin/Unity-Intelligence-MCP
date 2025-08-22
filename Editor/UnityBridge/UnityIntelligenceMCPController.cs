@@ -41,12 +41,12 @@ namespace UnityIntelligenceMCP.Unity
             _toolService = new ToolService(_gameObjectService);
         }
 
-        public void Connect()
+        public void StartServer()
         {
             _server.Start(_settings.Port);
         }
 
-        public void Disconnect()
+        public void StopServer()
         {
             _server.Stop();
         }
@@ -80,8 +80,8 @@ namespace UnityIntelligenceMCP.Unity
                 _settings.SaveSettings();
                 if (_server.IsListening)
                 {
-                    Disconnect();
-                    Connect();
+                    StopServer();
+                    StartServer();
                 }
             }
         }
@@ -104,7 +104,7 @@ namespace UnityIntelligenceMCP.Unity
         public string GetMCPConfigJson()
         {
             var envDict = new Dictionary<string, string>();
-            envDict["MCP_SERVER_PORT"] = _settings.Port.ToString();
+            envDict["SERVER_PORT"] = _settings.Port.ToString();
             
             if (!string.IsNullOrEmpty(_settings.ScriptsDir))
                 envDict["SCRIPTS_DIR"] = _settings.ScriptsDir;

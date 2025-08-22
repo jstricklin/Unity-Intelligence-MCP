@@ -1,5 +1,6 @@
 using System;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -10,14 +11,17 @@ using UnityIntelligenceMCP.Unity;
 
 public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
 {
+    public static List<string> Connections = new List<string>();
     protected override void OnOpen()
     {
-        Debug.Log($"New MCP client connected: {ID}");
+        Debug.Log($"New MCP client Started: {ID}");
+        Connections.Add(ID);
     }
 
     protected override void OnClose(CloseEventArgs e)
     {
         Debug.Log($"MCP client disconnected: {ID}");
+        Connections.Remove(ID);
     }
 
     protected override void OnMessage(MessageEventArgs e)
