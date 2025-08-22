@@ -1,6 +1,6 @@
 # Aider
 .aider*
-CONVENTIONS.md
+.CONVENTIONS.md
 
 # User-specific files
 *.rsuser
@@ -42,3 +42,4 @@ project.assets.json
 *.key
 appsettings.json
 appsettings.backup.json
+.[Dd]ev
