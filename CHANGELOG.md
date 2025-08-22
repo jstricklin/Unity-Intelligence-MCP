@@ -5,10 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] 2025 - 08 - 22
 ### Added
 
-- Add Unity Package Cache to VSCode workspace (Roslyn Static Analysis)
+- Add Unity Package Cache (Used during Roslyn Compilation Analysis and in VSCode Workspace)
 - Add SCRIPT_DIR environ variable and Editor Window Server Setting to configure project script directory for analysis
 
 ### Fixed
