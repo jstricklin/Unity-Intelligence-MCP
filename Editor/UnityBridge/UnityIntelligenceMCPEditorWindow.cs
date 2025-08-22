@@ -128,7 +128,7 @@ namespace UnityIntelligenceMCP.Unity
             }
 
             EditorGUILayout.LabelField("Preview of mcp.json:", EditorStyles.boldLabel);
-            EditorGUILayout.SelectableLabel(_controller.GetMCPConfigJson(), EditorStyles.textArea, GUILayout.Height(200));
+            EditorGUILayout.SelectableLabel(_controller.GetMCPConfigJson(), EditorStyles.textArea, GUILayout.Height(250));
 
             EditorGUILayout.Space();
 
@@ -136,12 +136,18 @@ namespace UnityIntelligenceMCP.Unity
             // Port configuration
             EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginChangeCheck();
-            int newPort = EditorGUILayout.IntField("Connection Port", settings.Port);
+            int newPort = EditorGUILayout.IntField("Connection Port", settings.Port, GUILayout.Width(250));
             if (EditorGUI.EndChangeCheck())
             {
                 _controller.ChangePort(newPort);
             }
             EditorGUILayout.EndHorizontal();
+            EditorGUI.BeginChangeCheck();
+            string newScriptsDir = EditorGUILayout.TextField("Scripts Directory", settings.ScriptsDir, GUILayout.Width(250));
+            if (EditorGUI.EndChangeCheck())
+            {
+                _controller.ChangeScriptsDir(newScriptsDir);
+            }
 
             EditorGUILayout.Space();
 

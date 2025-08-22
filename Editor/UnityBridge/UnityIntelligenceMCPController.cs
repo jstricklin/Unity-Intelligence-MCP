@@ -78,6 +78,12 @@ namespace UnityIntelligenceMCP.Unity
             }
         }
 
+        public void ChangeScriptsDir(string newScriptsDir)
+        {
+            _settings.ScriptsDir = newScriptsDir.Trim();
+            _settings.SaveSettings();
+        }
+
         public void SendTestMessage()
         {
             _server.Send("{\"event\":\"test\", \"data\":\"Hello from Unity Editor\"}");
@@ -91,11 +97,13 @@ namespace UnityIntelligenceMCP.Unity
         {
             var envDict = new Dictionary<string, string>();
             envDict["MCP_SERVER_PORT"] = _settings.Port.ToString();
-
-            if (_settings.AnalyzeProjectCode)
-                envDict["PROJECT_PATH"] = $"{Directory.GetParent(Application.dataPath).FullName}";
-            if (_settings.EmbeddUnityDocs)
-                envDict["EDITOR_PATH"] = $"{System.IO.Path.GetDirectoryName(EditorApplication.applicationPath)}";
+            
+            if (!string.IsNullOrEmpty(_settings.ScriptsDir))
+                envDict["SCRIPTS_DIR"] = _settings.ScriptsDir;
+            // if (_settings.AnalyzeProjectCode)
+            envDict["PROJECT_PATH"] = $"{Directory.GetParent(Application.dataPath).FullName}";
+            // if (_settings.EmbeddUnityDocs)
+            envDict["EDITOR_PATH"] = $"{System.IO.Path.GetDirectoryName(EditorApplication.applicationPath)}";
 
             var config = new Dictionary<string, object>
             {

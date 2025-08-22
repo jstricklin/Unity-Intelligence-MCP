@@ -9,8 +9,9 @@ namespace UnityIntelligenceMCP.Unity
         private const string SettingsKey = "UnityIntelligenceMCP.Settings";
         private const int DefaultPort = 5000;
         private const string DefaultServerUrl = "ws://localhost";
-        private const bool DefaultAnalyzeProjectCode = true;
-        private const bool DefaultEmbeddUnityDocs = true;
+        // private const bool DefaultAnalyzeProjectCode = true;
+        // private const bool DefaultEmbeddUnityDocs = true;
+        private const string DefaultScriptsDir = "";
 
         private static UnityIntelligenceMCPSettings _instance;
         public static UnityIntelligenceMCPSettings Instance
@@ -28,8 +29,9 @@ namespace UnityIntelligenceMCP.Unity
 
         public int Port = DefaultPort;
         public string ServerUrl = DefaultServerUrl;
-        public bool AnalyzeProjectCode = DefaultAnalyzeProjectCode;
-        public bool EmbeddUnityDocs = DefaultEmbeddUnityDocs;
+        // public bool AnalyzeProjectCode = DefaultAnalyzeProjectCode;
+        // public bool EmbeddUnityDocs = DefaultEmbeddUnityDocs;
+        public string ScriptsDir = DefaultScriptsDir;
 
         public void SaveSettings()
         {
