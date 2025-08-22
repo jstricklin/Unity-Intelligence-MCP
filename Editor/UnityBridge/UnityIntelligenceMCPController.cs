@@ -155,6 +155,12 @@ namespace UnityIntelligenceMCP.Unity
             _gameObjectService.Create(name, position);
             Debug.Log($"Created GameObject: {name}");
         }
+
+        public void CreatePrimitiveGameObject(PrimitiveType type, string name, Vector3 position)
+        {
+            _gameObjectService.CreatePrimitive(type, name, position);
+            Debug.Log($"Created primitive GameObject: {name} of type {type}");
+        }
         
         public GameObject FindGameObject(string name)
         {
