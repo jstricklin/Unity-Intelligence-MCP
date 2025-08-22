@@ -17,9 +17,9 @@ namespace UnityIntelligenceMCP.Core.Analysis.Patterns
             _registry = registry;
         }
 
-        public async Task<PatternMetrics> GetMetricsAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken)
+        public async Task<PatternMetrics> GetMetricsAsync(string projectPath, CancellationToken cancellationToken)
         {
-            var context = await _projectAnalyzer.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
+            var context = await _projectAnalyzer.AnalyzeProjectAsync(projectPath, cancellationToken);
             var detectors = _registry.GetAllDetectors();
             var patternCounts = new Dictionary<string, int>();
 

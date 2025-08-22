@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Models.Analysis;
 
@@ -22,20 +23,32 @@ namespace UnityIntelligenceMCP.Core.Analysis.Dependencies
         private static readonly Regex MetaGuidRegex = new(@"guid: ([a-f0-9]{32})", RegexOptions.Compiled);
         private static readonly Regex AssetGuidRegex = new(@"m_Script: {fileID: \d+, guid: ([a-f0-9]{32}), type: \d+}", RegexOptions.Compiled);
 
+        private readonly IConfigurationService _configurationService;
+
+        public UnityDependencyGraphAnalyzer(IConfigurationService configurationService)
+        {
+            _configurationService = configurationService;
+        }
+
         /// <summary>
         /// Builds the complete dependency graph for the project.
         /// </summary>
         /// <param name="projectPath">The root path of the Unity project.</param>
-        /// <param name="searchScope">The scope to search within (e.g., just the Assets folder).</param>
         /// <param name="compilation">The Roslyn compilation of the project's scripts.</param>
         /// <returns>A DependencyGraph instance representing project-wide relationships.</returns>
-        public async Task<DependencyGraph> BuildGraphAsync(string projectPath, SearchScope searchScope, Compilation compilation)
+        public async Task<DependencyGraph> BuildGraphAsync(string projectPath, Compilation compilation)
         {
             var graph = new DependencyGraph();
-            var searchPattern = Path.Combine(projectPath, searchScope == SearchScope.Assets ? "Assets" : "Packages");
+            var scriptsSubDir = _configurationService.UnitySettings.ScriptsDir;
+            var searchPath = string.IsNullOrEmpty(scriptsSubDir)
+                ? Path.Combine(projectPath, "Assets")
+                : Path.Combine(projectPath, "Assets", scriptsSubDir);
 
             // Run asset and script analysis concurrently.
-            await AnalyzeAssetToScriptDependenciesAsync(searchPattern, graph);
+            if (Directory.Exists(searchPath))
+            {
+                await AnalyzeAssetToScriptDependenciesAsync(searchPath, graph);
+            }
             AnalyzeScriptToScriptDependencies(compilation, graph);
 
             return graph;

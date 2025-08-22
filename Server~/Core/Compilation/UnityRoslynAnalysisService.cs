@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Core.IO;
 using UnityIntelligenceMCP.Models;
 
@@ -15,15 +16,17 @@ namespace UnityIntelligenceMCP.Core.RoslynServices
     public class UnityRoslynAnalysisService
     {
         private readonly UnityInstallationService _unityInstallationService;
+        private readonly IConfigurationService _configurationService;
         // Updated reference handling with caching
         private static readonly ConcurrentDictionary<string, MetadataReference> _referenceCache = new();
 
-        public UnityRoslynAnalysisService(UnityInstallationService unityInstallationService)
+        public UnityRoslynAnalysisService(UnityInstallationService unityInstallationService, IConfigurationService configurationService)
         {
             _unityInstallationService = unityInstallationService;
+            _configurationService = configurationService;
         }
 
-        public async Task<Compilation> CreateUnityCompilationAsync(string projectPath, SearchScope searchScope = SearchScope.AssetsAndPackages, CancellationToken cancellationToken = default)
+        public async Task<Compilation> CreateUnityCompilationAsync(string projectPath, CancellationToken cancellationToken = default)
         {
             var references = new List<MetadataReference>
             {
@@ -58,20 +61,12 @@ namespace UnityIntelligenceMCP.Core.RoslynServices
                 }
             }
 
-            var searchDirectories = new List<string>();
-            switch (searchScope)
-            {
-                case SearchScope.Assets:
-                    searchDirectories.Add(Path.Combine(projectPath, "Assets"));
-                    break;
-                case SearchScope.Packages:
-                    searchDirectories.Add(Path.Combine(projectPath, "Packages"));
-                    break;
-                case SearchScope.AssetsAndPackages:
-                    searchDirectories.Add(Path.Combine(projectPath, "Assets"));
-                    searchDirectories.Add(Path.Combine(projectPath, "Packages"));
-                    break;
-            }
+            var scriptsSubDir = _configurationService.UnitySettings.ScriptsDir;
+            var searchPath = string.IsNullOrEmpty(scriptsSubDir)
+                ? Path.Combine(projectPath, "Assets")
+                : Path.Combine(projectPath, "Assets", scriptsSubDir);
+
+            var searchDirectories = new List<string> { searchPath };
 
             var csFiles = new List<string>();
             foreach (var dir in searchDirectories.Where(Directory.Exists))

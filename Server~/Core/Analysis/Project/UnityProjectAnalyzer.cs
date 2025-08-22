@@ -40,9 +40,9 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
             _usageLogger = usageLogger;
         }
 
-        public async Task<ProjectContext> AnalyzeProjectAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken = default)
+        public async Task<ProjectContext> AnalyzeProjectAsync(string projectPath, CancellationToken cancellationToken = default)
         {
-            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, searchScope, cancellationToken);
+            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, cancellationToken);
             var monoBehaviourSymbol = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
 
             var scripts = new List<ScriptInfo>();
@@ -96,7 +96,7 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
                 var relationships = _relationshipAnalyzer.AnalyzeRelationships(scripts);
                 
                 // Build dependency graph
-                var dependencies = await _dependencyGraphAnalyzer.BuildGraphAsync(projectPath, searchScope, compilation);
+                var dependencies = await _dependencyGraphAnalyzer.BuildGraphAsync(projectPath, compilation);
                 wasSuccessful = true;
                 return new ProjectContext(
                     projectPath,

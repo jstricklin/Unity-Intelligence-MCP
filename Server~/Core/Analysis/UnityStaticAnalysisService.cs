@@ -26,14 +26,14 @@ namespace UnityIntelligenceMCP.Core.Analysis
             _messageAnalyzer = messageAnalyzer;
         }
 
-        public Task<ProjectContext> AnalyzeProjectAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken) =>
-            _projectAnalyzer.AnalyzeProjectAsync(projectPath, searchScope, cancellationToken);
+        public Task<ProjectContext> AnalyzeProjectAsync(string projectPath, CancellationToken cancellationToken) =>
+            _projectAnalyzer.AnalyzeProjectAsync(projectPath, cancellationToken);
 
-        public Task<IEnumerable<DetectedPattern>> FindPatternsAsync(string projectPath, List<string> patternTypes, SearchScope searchScope, CancellationToken cancellationToken) =>
-            _patternAnalyzer.FindPatternsAsync(projectPath, patternTypes, searchScope, cancellationToken);
+        public Task<IEnumerable<DetectedPattern>> FindPatternsAsync(string projectPath, List<string> patternTypes, CancellationToken cancellationToken) =>
+            _patternAnalyzer.FindPatternsAsync(projectPath, patternTypes, cancellationToken);
 
-        public Task<PatternMetrics> GetMetricsAsync(string projectPath, SearchScope searchScope, CancellationToken cancellationToken) =>
-            _patternMetricsAnalyzer.GetMetricsAsync(projectPath, searchScope, cancellationToken);
+        public Task<PatternMetrics> GetMetricsAsync(string projectPath, CancellationToken cancellationToken) =>
+            _patternMetricsAnalyzer.GetMetricsAsync(projectPath, cancellationToken);
 
         public Task<UnityMessagesAnalysisResult> AnalyzeMessagesAsync(string projectPath, IEnumerable<string> scriptPaths, CancellationToken cancellationToken) =>
             _messageAnalyzer.AnalyzeMessagesAsync(projectPath, scriptPaths, cancellationToken);
