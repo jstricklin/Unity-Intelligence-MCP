@@ -43,12 +43,12 @@ namespace UnityIntelligenceMCP.Unity
 
         public void Connect()
         {
-            _server.Connect($"{_settings.ServerUrl}:{_settings.Port}/mcp-bridge");
+            _server.Start(_settings.Port);
         }
 
         public void Disconnect()
         {
-            _server.Disconnect();
+            _server.Stop();
         }
 
         public void ChangeServerUrl(string newUrl)
@@ -63,11 +63,6 @@ namespace UnityIntelligenceMCP.Unity
             {
                 _settings.ServerUrl = newUrl;
                 _settings.SaveSettings();
-                if (_server.IsConnected)
-                {
-                    Disconnect();
-                    Connect();
-                }
             }
         }
 
@@ -83,7 +78,7 @@ namespace UnityIntelligenceMCP.Unity
             {
                 _settings.Port = newPort;
                 _settings.SaveSettings();
-                if (_server.IsConnected)
+                if (_server.IsListening)
                 {
                     Disconnect();
                     Connect();
