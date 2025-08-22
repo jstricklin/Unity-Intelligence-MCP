@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using UnityIntelligenceMCP.Configuration;
 
 namespace UnityIntelligenceMCP.Core.Services
 {
@@ -12,10 +13,14 @@ namespace UnityIntelligenceMCP.Core.Services
     public class EditorBridgeClientService : BackgroundService
     {
         private readonly ILogger<EditorBridgeClientService> _logger;
+        private readonly ConfigurationService _configurationService;
         private ClientWebSocket _ws = new();
         
-        public EditorBridgeClientService(ILogger<EditorBridgeClientService> logger)
+        public EditorBridgeClientService(
+            ConfigurationService configurationService,
+            ILogger<EditorBridgeClientService> logger)
         {
+            _configurationService = configurationService;
             _logger = logger;
         }
 
@@ -38,7 +43,7 @@ namespace UnityIntelligenceMCP.Core.Services
 
         private async Task ConnectAsync(CancellationToken ct)
         {
-            var uri = new Uri("ws://localhost:4649/mcp-bridge");
+            var uri = new Uri($"ws://localhost:{_configurationService.UnitySettings.SERVER_PORT}/mcp-bridge");
             await _ws.ConnectAsync(uri, ct);
             _logger.LogInformation("Connected to Unity Editor bridge");
         }
