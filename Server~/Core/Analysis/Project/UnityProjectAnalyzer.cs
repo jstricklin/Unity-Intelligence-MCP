@@ -113,7 +113,7 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
                 process.Refresh();
                 var peakMemoryMb = process.PeakWorkingSet64 / (1024 * 1024);
 
-                var parameters = new { projectPath, searchScope };
+                var parameters = new { projectPath };
                 var resultSummary = new { MimeType = "Binary", TextLength = "N/A" };
 
                 await _usageLogger.LogAsync(new ToolUsageLog

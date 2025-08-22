@@ -16,11 +16,11 @@ namespace UnityIntelligenceMCP.Core.RoslynServices
     public class UnityRoslynAnalysisService
     {
         private readonly UnityInstallationService _unityInstallationService;
-        private readonly IConfigurationService _configurationService;
+        private readonly ConfigurationService _configurationService;
         // Updated reference handling with caching
         private static readonly ConcurrentDictionary<string, MetadataReference> _referenceCache = new();
 
-        public UnityRoslynAnalysisService(UnityInstallationService unityInstallationService, IConfigurationService configurationService)
+        public UnityRoslynAnalysisService(UnityInstallationService unityInstallationService, ConfigurationService configurationService)
         {
             _unityInstallationService = unityInstallationService;
             _configurationService = configurationService;
@@ -61,7 +61,7 @@ namespace UnityIntelligenceMCP.Core.RoslynServices
                 }
             }
 
-            var scriptsSubDir = _configurationService.UnitySettings.ScriptsDir;
+            var scriptsSubDir = _configurationService.UnitySettings.SCRIPTS_DIR;
             var searchPath = string.IsNullOrEmpty(scriptsSubDir)
                 ? Path.Combine(projectPath, "Assets")
                 : Path.Combine(projectPath, "Assets", scriptsSubDir);

@@ -23,9 +23,9 @@ namespace UnityIntelligenceMCP.Core.Analysis.Dependencies
         private static readonly Regex MetaGuidRegex = new(@"guid: ([a-f0-9]{32})", RegexOptions.Compiled);
         private static readonly Regex AssetGuidRegex = new(@"m_Script: {fileID: \d+, guid: ([a-f0-9]{32}), type: \d+}", RegexOptions.Compiled);
 
-        private readonly IConfigurationService _configurationService;
+        private readonly ConfigurationService _configurationService;
 
-        public UnityDependencyGraphAnalyzer(IConfigurationService configurationService)
+        public UnityDependencyGraphAnalyzer(ConfigurationService configurationService)
         {
             _configurationService = configurationService;
         }
@@ -39,7 +39,7 @@ namespace UnityIntelligenceMCP.Core.Analysis.Dependencies
         public async Task<DependencyGraph> BuildGraphAsync(string projectPath, Compilation compilation)
         {
             var graph = new DependencyGraph();
-            var scriptsSubDir = _configurationService.UnitySettings.ScriptsDir;
+            var scriptsSubDir = _configurationService.UnitySettings.SCRIPTS_DIR;
             var searchPath = string.IsNullOrEmpty(scriptsSubDir)
                 ? Path.Combine(projectPath, "Assets")
                 : Path.Combine(projectPath, "Assets", scriptsSubDir);

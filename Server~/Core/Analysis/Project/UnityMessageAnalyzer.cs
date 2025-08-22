@@ -29,7 +29,7 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
 
         public async Task<UnityMessagesAnalysisResult> AnalyzeMessagesAsync(string projectPath, IEnumerable<string> scriptPaths, CancellationToken cancellationToken)
         {
-            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, Models.SearchScope.Assets, cancellationToken);
+            var compilation = await _roslynService.CreateUnityCompilationAsync(projectPath, cancellationToken);
             var scriptAnalyses = new List<UnityScriptMessageAnalysis>();
 
             var absoluteScriptPaths = scriptPaths.Select(p => System.IO.Path.GetFullPath(p, projectPath)).ToHashSet();
