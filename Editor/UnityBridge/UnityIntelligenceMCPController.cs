@@ -183,17 +183,26 @@ namespace UnityIntelligenceMCP.Unity
             Debug.Log($"{target.name} position updated");
         }
 
-        public void UndoLastAction()
+        public void UpdateScale(GameObject target, Vector3 newScale)
         {
-            if (_gameObjectService is GameObjectService service)
+            if (!target)
             {
-                service.UndoLast();
-                Debug.Log("Undone last GameObject operation");
+                Debug.LogError("Cannot scale - target is null");
+                return;
             }
-            else
+            _gameObjectService.UpdateScale(target, newScale);
+            Debug.Log($"{target.name} scale updated");
+        }
+
+        public void UpdateRotation(GameObject target, Quaternion newRotation)
+        {
+            if (!target)
             {
-                Debug.LogWarning("Undo not supported in current service implementation");
+                Debug.LogError("Cannot rotate - target is null");
+                return;
             }
+            _gameObjectService.UpdateRotation(target, newRotation);
+            Debug.Log($"{target.name} rotation updated");
         }
     }
 }
