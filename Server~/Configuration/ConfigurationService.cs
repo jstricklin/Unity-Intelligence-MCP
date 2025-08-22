@@ -23,6 +23,7 @@ namespace UnityIntelligenceMCP.Configuration
                 .Build();
 
             UnitySettings = configuration.Get<UnityAnalysisSettings>() ?? new UnityAnalysisSettings();
+            _logger.LogInformation($"Project Path: {UnitySettings.PROJECT_PATH}");
         }
 
         public string GetConfiguredProjectPath()
