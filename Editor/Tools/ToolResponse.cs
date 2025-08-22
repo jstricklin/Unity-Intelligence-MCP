@@ -16,12 +16,12 @@ namespace UnityIntelligenceMCP.Tools
         [JsonProperty("error", NullValueHandling = NullValueHandling.Ignore)]
         public string Error { get; private set; }
 
-        public static ToolResponse Success(string message, object data = null)
+        public static ToolResponse SuccessResponse(string message, object data = null)
         {
             return new ToolResponse { Success = true, Message = message, Data = data };
         }
 
-        public static ToolResponse Error(string errorMessage)
+        public static ToolResponse ErrorResponse(string errorMessage)
         {
             return new ToolResponse { Success = false, Error = errorMessage };
         }

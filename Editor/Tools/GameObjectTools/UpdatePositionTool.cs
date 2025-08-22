@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Tools;
 using UnityEngine;
+using UnityEditor;
 
 namespace UnityIntelligenceMCP.Tools.GameObjectTools
 {
@@ -16,7 +17,7 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
         public Task<ToolResponse> ExecuteAsync(JObject parameters)
         {
             if (!parameters.TryGetValue("target", out JToken targetToken))
-                return Task.FromResult(ToolResponse.Error("Missing 'target' parameter"));
+                return Task.FromResult(ToolResponse.ErrorResponse("Missing 'target' parameter"));
             
             // Support both name and instance ID lookup
             GameObject target = null;
@@ -26,18 +27,18 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
             }
             else if (targetToken.Type == JTokenType.Integer)
             {
-                target = GameObject.FindObjectFromInstanceID(targetToken.Value<int>());
+                target = (GameObject)EditorUtility.InstanceIDToObject(targetToken.Value<int>());
             }
             
             if (target == null)
-                return Task.FromResult(ToolResponse.Error("Target GameObject not found"));
+                return Task.FromResult(ToolResponse.ErrorResponse("Target GameObject not found"));
             
             if (!VectorParser.TryParsePosition(parameters["position"] as JObject, out Vector3 newPosition))
-                return Task.FromResult(ToolResponse.Error("Invalid position format"));
+                return Task.FromResult(ToolResponse.ErrorResponse("Invalid position format"));
             
             _service.UpdatePosition(target, newPosition);
             
-            return Task.FromResult(ToolResponse.Success(
+            return Task.FromResult(ToolResponse.SuccessResponse(
                 $"Updated position of {target.name}",
                 new {
                     position = new {

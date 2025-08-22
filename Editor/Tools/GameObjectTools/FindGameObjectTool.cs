@@ -17,13 +17,13 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
         {
             string name = parameters["name"]?.Value<string>()?.Trim();
             if (string.IsNullOrEmpty(name))
-                return Task.FromResult(ToolResponse.Error("Name parameter is required"));
+                return Task.FromResult(ToolResponse.ErrorResponse("Name parameter is required"));
             
             var obj = _service.Find(name);
             if (obj == null)
-                return Task.FromResult(ToolResponse.Error($"GameObject '{name}' not found"));
+                return Task.FromResult(ToolResponse.ErrorResponse($"GameObject '{name}' not found"));
                 
-            return Task.FromResult(ToolResponse.Success(
+            return Task.FromResult(ToolResponse.SuccessResponse(
                 $"Found {name}",
                 new {
                     instanceId = obj.GetInstanceID(),

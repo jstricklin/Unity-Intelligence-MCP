@@ -157,60 +157,60 @@ namespace UnityIntelligenceMCP.Unity
             Utilities.WriteFile(rooCodeDir, "mcp.json", jsonContent);
         }
 
-        public void CreateGameObject(string name, Vector3 position)
-        {
-            _gameObjectService.Create(name, position);
-            Debug.Log($"Created GameObject: {name}");
-        }
+        // public void CreateGameObject(string name, Vector3 position)
+        // {
+        //     _gameObjectService.Create(name, position);
+        //     Debug.Log($"Created GameObject: {name}");
+        // }
 
-        public void CreatePrimitiveGameObject(PrimitiveType type, string name, Vector3 position)
-        {
-            _gameObjectService.CreatePrimitive(type, name, position);
-            Debug.Log($"Created primitive GameObject: {name} of type {type}");
-        }
+        // public void CreatePrimitiveGameObject(PrimitiveType type, string name, Vector3 position)
+        // {
+        //     _gameObjectService.CreatePrimitive(type, name, position);
+        //     Debug.Log($"Created primitive GameObject: {name} of type {type}");
+        // }
         
-        public GameObject FindGameObject(string name)
-        {
-            var go = _gameObjectService.Find(name);
-            if (go == null)
-            {
-                Debug.LogWarning($"GameObject '{name}' not found");
-            }
-            return go;
-        }
+        // public GameObject FindGameObject(string name)
+        // {
+        //     var go = _gameObjectService.Find(name);
+        //     if (go == null)
+        //     {
+        //         Debug.LogWarning($"GameObject '{name}' not found");
+        //     }
+        //     return go;
+        // }
         
-        public void UpdatePosition(GameObject target, Vector3 newPosition)
-        {
-            if (target == null)
-            {
-                Debug.LogError("Cannot update position - target is null");
-                return;
-            }
-            _gameObjectService.UpdatePosition(target, newPosition);
-            Debug.Log($"{target.name} position updated");
-        }
+        // public void UpdatePosition(GameObject target, Vector3 newPosition)
+        // {
+        //     if (target == null)
+        //     {
+        //         Debug.LogError("Cannot update position - target is null");
+        //         return;
+        //     }
+        //     _gameObjectService.UpdatePosition(target, newPosition);
+        //     Debug.Log($"{target.name} position updated");
+        // }
 
-        public void UpdateScale(GameObject target, Vector3 newScale)
-        {
-            if (!target)
-            {
-                Debug.LogError("Cannot scale - target is null");
-                return;
-            }
-            _gameObjectService.UpdateScale(target, newScale);
-            Debug.Log($"{target.name} scale updated");
-        }
+        // public void UpdateScale(GameObject target, Vector3 newScale)
+        // {
+        //     if (!target)
+        //     {
+        //         Debug.LogError("Cannot scale - target is null");
+        //         return;
+        //     }
+        //     _gameObjectService.UpdateScale(target, newScale);
+        //     Debug.Log($"{target.name} scale updated");
+        // }
 
-        public void UpdateRotation(GameObject target, Quaternion newRotation)
-        {
-            if (!target)
-            {
-                Debug.LogError("Cannot rotate - target is null");
-                return;
-            }
-            _gameObjectService.UpdateRotation(target, newRotation);
-            Debug.Log($"{target.name} rotation updated");
-        }
+        // public void UpdateRotation(GameObject target, Quaternion newRotation)
+        // {
+        //     if (!target)
+        //     {
+        //         Debug.LogError("Cannot rotate - target is null");
+        //         return;
+        //     }
+        //     _gameObjectService.UpdateRotation(target, newRotation);
+        //     Debug.Log($"{target.name} rotation updated");
+        // }
 
         public async Task<ToolResponse> ExecuteTool(string command, JObject parameters)
         {

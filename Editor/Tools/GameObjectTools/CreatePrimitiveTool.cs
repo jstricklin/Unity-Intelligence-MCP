@@ -32,7 +32,7 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
                 
             var obj = _service.CreatePrimitive(type, name, position);
             
-            return Task.FromResult(ToolResponse.Success(
+            return Task.FromResult(ToolResponse.SuccessResponse(
                 $"Created primitive: {name}", 
                 new { 
                     instanceId = obj.GetInstanceID(),

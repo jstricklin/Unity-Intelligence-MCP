@@ -41,10 +41,10 @@ namespace UnityIntelligenceMCP.Tools
         public async Task<ToolResponse> Execute(string command, JObject parameters)
         {
             if (string.IsNullOrWhiteSpace(command))
-                return ToolResponse.Error("Command parameter is required");
+                return ToolResponse.ErrorResponse("Command parameter is required");
                 
             if (!_tools.TryGetValue(command, out ITool tool))
-                return ToolResponse.Error($"Unknown command: {command}");
+                return ToolResponse.ErrorResponse($"Unknown command: {command}");
 
             try
             {
@@ -53,7 +53,7 @@ namespace UnityIntelligenceMCP.Tools
             catch (Exception ex)
             {
                 Debug.LogError($"Tool '{command}' failed: {ex.Message}\n{ex.StackTrace}");
-                return ToolResponse.Error($"{command} failed: {ex.Message}");
+                return ToolResponse.ErrorResponse($"{command} failed: {ex.Message}");
             }
         }
     }

@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Tools;
 using UnityEngine;
+using UnityEditor;
 
 namespace UnityIntelligenceMCP.Tools.GameObjectTools
 {
@@ -16,16 +17,16 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
         public Task<ToolResponse> ExecuteAsync(JObject parameters)
         {
             if (!parameters.TryGetValue("target", out JToken targetToken))
-                return Task.FromResult(ToolResponse.Error("Missing 'target' parameter"));
+                return Task.FromResult(ToolResponse.ErrorResponse("Missing 'target' parameter"));
             
             GameObject target = FindTarget(targetToken);
             if (target == null)
-                return Task.FromResult(ToolResponse.Error("Target GameObject not found"));
+                return Task.FromResult(ToolResponse.ErrorResponse("Target GameObject not found"));
             
             string name = target.name;
             _service.Delete(target);
             
-            return Task.FromResult(ToolResponse.Success(
+            return Task.FromResult(ToolResponse.SuccessResponse(
                 $"Deleted GameObject: {name}",
                 new { deleted = true }
             ));
@@ -37,7 +38,7 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
                 return _service.Find(targetToken.Value<string>());
             
             if (targetToken.Type == JTokenType.Integer)
-                return GameObject.FindObjectFromInstanceID(targetToken.Value<int>());
+                return (GameObject)EditorUtility.InstanceIDToObject(targetToken.Value<int>());
             
             return null;
         }

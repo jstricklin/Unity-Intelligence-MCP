@@ -36,7 +36,7 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
                 if (string.IsNullOrEmpty(command) || parameters == null)
                 {
                     Send(JsonConvert.SerializeObject(
-                        ToolResponse.Error("Invalid format: must have 'command' and 'parameters'")
+                        ToolResponse.ErrorResponse("Invalid format: must have 'command' and 'parameters'")
                     ));
                     return;
                 }
@@ -50,14 +50,14 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
             catch (JsonException ex)
             {
                 Send(JsonConvert.SerializeObject(
-                    ToolResponse.Error($"JSON parse error: {ex.Message}")
+                    ToolResponse.ErrorResponse($"JSON parse error: {ex.Message}")
                 ));
             }
             catch (Exception ex)
             {
                 Debug.LogError($"Processing error: {ex.Message}\n{ex.StackTrace}");
                 Send(JsonConvert.SerializeObject(
-                    ToolResponse.Error($"Internal error: {ex.Message}")
+                    ToolResponse.ErrorResponse($"Internal error: {ex.Message}")
                 ));
             }
         };

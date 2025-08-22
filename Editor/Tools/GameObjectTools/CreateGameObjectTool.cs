@@ -17,14 +17,14 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
         {
             string name = parameters["name"]?.Value<string>()?.Trim();
             if (string.IsNullOrEmpty(name))
-                return Task.FromResult(ToolResponse.Error("Name parameter is required and cannot be empty"));
+                return Task.FromResult(ToolResponse.ErrorResponse("Name parameter is required and cannot be empty"));
             
             if (!VectorParser.TryParsePosition(parameters["position"] as JObject, out Vector3 position))
                 position = Vector3.zero;
                 
             var obj = _service.Create(name, position);
             
-            return Task.FromResult(ToolResponse.Success(
+            return Task.FromResult(ToolResponse.SuccessResponse(
                 $"Created {name}", 
                 new { 
                     instanceId = obj.GetInstanceID(),
