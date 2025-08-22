@@ -145,10 +145,10 @@ namespace UnityIntelligenceMCP.Unity
 
             EditorGUILayout.Space();
 
-            GUILayout.Label("Tool Settings", EditorStyles.boldLabel);
+            // GUILayout.Label("Tool Settings", EditorStyles.boldLabel);
             // Simple checkboxes
-            settings.AnalyzeProjectCode = EditorGUILayout.Toggle("Enable Code Analysis", settings.AnalyzeProjectCode);
-            settings.EmbeddUnityDocs = EditorGUILayout.Toggle("Build Unity RAG (~2GB)", settings.EmbeddUnityDocs);
+            // settings.AnalyzeProjectCode = EditorGUILayout.Toggle("Enable Code Analysis", settings.AnalyzeProjectCode);
+            // settings.EmbeddUnityDocs = EditorGUILayout.Toggle("Build Unity RAG (~2GB)", settings.EmbeddUnityDocs);
 
             EditorGUILayout.Space();
 
