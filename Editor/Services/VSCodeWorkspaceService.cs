@@ -65,7 +65,7 @@ namespace UnityIntelligenceMCP.Unity.Services
 
                 var workspacePath = Path.Combine(projectPath, $"{workspaceName}.code-workspace");
                 await File.WriteAllTextAsync(workspacePath, json);
-                
+                Debug.Log($"Workspace generation complete: {workspacePath}");
                 return workspacePath;
             }
             catch (Exception ex)

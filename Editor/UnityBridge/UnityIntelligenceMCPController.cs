@@ -2,6 +2,7 @@ using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
 using UnityIntelligenceMCP.Utils;
+using UnityIntelligenceMCP.Unity.Services;
 using Newtonsoft.Json;
 using UnityEditor;
 
@@ -11,6 +12,7 @@ namespace UnityIntelligenceMCP.Unity
     {
         private readonly UnityIntelligenceMCPServer _server;
         private readonly UnityIntelligenceMCPSettings _settings;
+        private readonly VSCodeWorkspaceService _vsCodeWorkspaceService;
         public enum MCP_IDE
         {
             VSCode,
@@ -26,6 +28,7 @@ namespace UnityIntelligenceMCP.Unity
         {
             _server = UnityIntelligenceMCPServer.Instance;
             _settings = UnityIntelligenceMCPSettings.Instance;
+            _vsCodeWorkspaceService = new VSCodeWorkspaceService();
         }
 
         public void Connect()
@@ -123,7 +126,7 @@ namespace UnityIntelligenceMCP.Unity
         }
         public void AddPackageCacheToWorkspace()
         {
-
+            _vsCodeWorkspaceService.GenerateWorkspaceAsync(Directory.GetParent(Application.dataPath).FullName);
         }
 
         public void ConfigureVSCode()
