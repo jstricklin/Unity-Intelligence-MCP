@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Core.Services;
 using ModelContextProtocol.Server;
 using System.Text.Json;
@@ -10,32 +11,27 @@ namespace UnityIntelligenceMCP.Tools
     [McpServerToolType]
     public class UnityTools
     {
-        private readonly EditorBridgeClientService _editorBridgeClientService;
-
-        public UnityTools(EditorBridgeClientService editorBridgeClientService)
-        {
-            _editorBridgeClientService = editorBridgeClientService;
-        }
-
         [McpServerTool(Name = "create_primitive"), Description("Create a primitive object in Unity.")]
         public async Task CreatePrimitive(
+            [Description("Primitive Type to create: Sphere, Capsule, Cylinder, Cube, Plane, Quad")]
             String type = "Sphere",
+            [Description("New GameObject Name")]
+            String name = "MCP Sphere",
+            [Description("Position: 0,0,0")]
+            String position = "0,0,0",
             CancellationToken cancellationToken = default)
         {
-            var command = new ToolRequest();
+            var command = new UnityToolRequest();
             command.command = "create_primitive";
-            command.parameters = new Dictionary<string, string> {
-                { "type", "Sphere" },
-                { "name", "MCP Sphere" },
-                { "position", Vector3.Zero.ToString() },
-            };
-            CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-            await _editorBridgeClientService.SendAsync(JsonSerializer.Serialize(command), cts.Token);
-        }
-        class ToolRequest 
-        {
-            public string command = "";
-            public Dictionary<string,string> parameters = null;
+            command.parameters["type"] = type;
+            command.parameters["name"] = name;
+            try {
+                var splitPos = position.Split(',');
+                command.parameters["position"] = new { x = float.Parse(splitPos[0]), y = float.Parse(splitPos[1]), z = float.Parse(splitPos[2]) };
+            } catch {
+                command.parameters["position"] = new { x = 0, y = 0, z = 0 };
+            }
+            await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
     }
 }

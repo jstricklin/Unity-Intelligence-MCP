@@ -9,19 +9,20 @@ using UnityIntelligenceMCP.Configuration;
 
 namespace UnityIntelligenceMCP.Core.Services
 {
-    // This class exists as an alternative to the current architecture where this MCP server acts as a client to Unity Engine Websocket Server
     public class EditorBridgeClientService : BackgroundService
     {
         private readonly ILogger<EditorBridgeClientService> _logger;
         private readonly ConfigurationService _configurationService;
-        private ClientWebSocket? _ws;
-        
+        private ClientWebSocket _ws = new();
+        delegate Task UnityMessageHandler(string jsonPayload, CancellationToken cts);
+        static event UnityMessageHandler? HandleMessageToUnity;
         public EditorBridgeClientService(
             ConfigurationService configurationService,
             ILogger<EditorBridgeClientService> logger)
         {
             _configurationService = configurationService;
             _logger = logger;
+            HandleMessageToUnity += SendAsync;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -64,9 +65,14 @@ namespace UnityIntelligenceMCP.Core.Services
                 }
             }
         }
-
+        public static Task SendMessageToUnity(string jsonPayload)
+        {
+            CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            return HandleMessageToUnity?.Invoke(jsonPayload, cts.Token) ?? throw new Exception("Unity Editor Bridge has not been configured.");
+        }
         public async Task SendAsync(string jsonPayload, CancellationToken ct)
         {
+            _logger.LogInformation("Sending: {0}", jsonPayload);
             var bytes = Encoding.UTF8.GetBytes(jsonPayload);
             await _ws.SendAsync(bytes, WebSocketMessageType.Text, true, ct);
         }
