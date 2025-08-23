@@ -14,7 +14,7 @@ namespace UnityIntelligenceMCP.Core.Services
     {
         private readonly ILogger<EditorBridgeClientService> _logger;
         private readonly ConfigurationService _configurationService;
-        private ClientWebSocket _ws = new();
+        private ClientWebSocket? _ws;
         
         public EditorBridgeClientService(
             ConfigurationService configurationService,
@@ -43,7 +43,10 @@ namespace UnityIntelligenceMCP.Core.Services
 
         private async Task ConnectAsync(CancellationToken ct)
         {
+
             var uri = new Uri($"ws://localhost:{_configurationService.UnitySettings.SERVER_PORT}/mcp-bridge");
+            _ws?.Dispose();
+            _ws = new ClientWebSocket();
             await _ws.ConnectAsync(uri, ct);
             _logger.LogInformation("Connected to Unity Editor bridge");
         }
@@ -66,6 +69,12 @@ namespace UnityIntelligenceMCP.Core.Services
         {
             var bytes = Encoding.UTF8.GetBytes(jsonPayload);
             await _ws.SendAsync(bytes, WebSocketMessageType.Text, true, ct);
+        }
+
+        public override void Dispose()
+        {
+            _ws?.Dispose();
+            base.Dispose();
         }
     }
 }
