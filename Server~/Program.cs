@@ -23,7 +23,7 @@ var mcpServerBuilder = builder.Services
 
 builder.Services.AddCoreUnityServices();
 builder.Services.AddDatabaseServices();
-builder.Services.AddWebSocketServices();
+builder.Services.AddEditorBridgeServices();
 builder.Services.AddUnityAnalysisServices();
 builder.Services.AddUnityDocumentationServices();
 

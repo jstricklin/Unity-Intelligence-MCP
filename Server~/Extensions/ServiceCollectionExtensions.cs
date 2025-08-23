@@ -78,10 +78,6 @@ namespace UnityIntelligenceMCP.Extensions
         public static IServiceCollection AddEditorBridgeServices(this IServiceCollection services)
         {
             services.AddHostedService<EditorBridgeClientService>();
-            return services;
-        }
-        public static IServiceCollection AddWebSocketServices(this IServiceCollection services)
-        {
             services.AddSingleton<IMessageHandler, MessageHandler>();
             services.AddSingleton<WebSocketService>();
             return services;

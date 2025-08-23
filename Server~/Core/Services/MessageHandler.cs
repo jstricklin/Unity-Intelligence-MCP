@@ -16,7 +16,7 @@ namespace UnityIntelligenceMCP.Core.Services
 
         public Task ProcessMessageAsync(string message, WebSocket socket)
         {
-            _logger.LogInformation("Processing message from client: {message}", message);
+            _logger.LogInformation("Processing message from server: {message}", message);
             // Message processing logic will go here.
             return Task.CompletedTask;
         }
