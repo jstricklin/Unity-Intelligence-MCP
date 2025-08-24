@@ -12,7 +12,7 @@ namespace UnityIntelligenceMCP.Tools
     public class UnityTools
     {
         [McpServerTool(Name = "create_primitive"), Description("Create a primitive object in Unity.")]
-        public async Task CreatePrimitive(
+        public async Task<string> CreatePrimitive(
             [Description("Primitive Type to create: Sphere, Capsule, Cylinder, Cube, Plane, Quad")]
             String type,
             [Description("New GameObject Name")]
@@ -31,11 +31,11 @@ namespace UnityIntelligenceMCP.Tools
             } catch {
                 command.parameters["position"] = new { x = 0, y = 0, z = 0 };
             }
-            await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
         [McpServerTool(Name = "find_gameobject"), Description("Find a GameObject in the scene by name or instance ID.")]
-        public async Task FindGameObject(
+        public async Task<string> FindGameObject(
             [Description("Name or path of the GameObject, e.g., 'MyObject' or 'Parent/Child'.")]
             string target = null,
             [Description("Instance ID of the GameObject to find.")]
@@ -48,11 +48,11 @@ namespace UnityIntelligenceMCP.Tools
             };
             command.parameters["target"] = target;
             command.parameters["instanceId"] = instanceId;
-            await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
         [McpServerTool(Name = "update_position"), Description("Update the position of a GameObject.")]
-        public async Task UpdatePosition(
+        public async Task<string> UpdatePosition(
             [Description("New position: x,y,z")]
             string position,
             [Description("Name or path of the target GameObject.")]
@@ -76,11 +76,11 @@ namespace UnityIntelligenceMCP.Tools
             {
                 command.parameters["position"] = new { x = 0, y = 0, z = 0 };
             }
-            await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
         [McpServerTool(Name = "update_scale"), Description("Update the scale of a GameObject.")]
-        public async Task UpdateScale(
+        public async Task<string> UpdateScale(
             [Description("New scale: x,y,z")]
             string scale,
             [Description("Name or path of the target GameObject.")]
@@ -104,11 +104,11 @@ namespace UnityIntelligenceMCP.Tools
             {
                 command.parameters["scale"] = new { x = 1, y = 1, z = 1 };
             }
-            await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
         [McpServerTool(Name = "update_rotation"), Description("Update the rotation of a GameObject using Euler angles or a Quaternion.")]
-        public async Task UpdateRotation(
+        public async Task<string> UpdateRotation(
             [Description("New rotation. Euler angles: 'x,y,z'. Quaternion: 'x,y,z,w'.")]
             string rotation,
             [Description("Name or path of the target GameObject.")]
@@ -152,11 +152,11 @@ namespace UnityIntelligenceMCP.Tools
             {
                 command.parameters["rotation"] = new { x = 0f, y = 0f, z = 0f, w = 1f };
             }
-            await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
         [McpServerTool(Name = "delete_gameobject"), Description("Delete a GameObject from the scene.")]
-        public async Task DeleteGameObject(
+        public async Task<string> DeleteGameObject(
             [Description("Name or path of the GameObject to delete.")]
             string target = null,
             [Description("Instance ID of the GameObject to delete.")]
@@ -169,7 +169,7 @@ namespace UnityIntelligenceMCP.Tools
             };
             command.parameters["target"] = target;
             command.parameters["instanceId"] = instanceId;
-            await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
     }
 }
