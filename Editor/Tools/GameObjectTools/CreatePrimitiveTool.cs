@@ -22,11 +22,11 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
             {
                 type = PrimitiveType.Cube;
             }
-            
+
             string name = parameters["name"]?.Value<string>()?.Trim();
             if (string.IsNullOrEmpty(name))
                 name = type.ToString();
-                
+
             if (!VectorParser.TryParsePosition(parameters["position"] as JObject, out Vector3 position))
                 position = Vector3.zero;
                 
