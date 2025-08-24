@@ -55,10 +55,10 @@ namespace UnityIntelligenceMCP.Tools
         public async Task UpdatePosition(
             [Description("Name or Instance ID of the target GameObject")]
             String target,
-            [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy = "name",
             [Description("New position: x,y,z")]
             String position,
+            [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
+            String searchBy = "name",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -83,10 +83,10 @@ namespace UnityIntelligenceMCP.Tools
         public async Task UpdateScale(
             [Description("Name or Instance ID of the target GameObject")]
             String target,
-            [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy = "name",
             [Description("New scale: x,y,z")]
             String scale,
+            [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
+            String searchBy = "name",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -111,10 +111,10 @@ namespace UnityIntelligenceMCP.Tools
         public async Task UpdateRotation(
             [Description("Name or Instance ID of the target GameObject")]
             String target,
-            [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy = "name",
             [Description("New rotation. Euler angles: 'x,y,z'. Quaternion: 'x,y,z,w'.")]
             String rotation,
+            [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
+            String searchBy = "name",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
