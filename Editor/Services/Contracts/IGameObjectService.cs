@@ -6,7 +6,7 @@ namespace UnityIntelligenceMCP.Unity.Services.Contracts
     {
         GameObject Create(string name, Vector3 position);
         GameObject CreatePrimitive(PrimitiveType type, string name, Vector3 position);
-        GameObject Find(string value, string searchBy, string path);
+        GameObject Find(string target, string instanceId);
         void UpdatePosition(GameObject target, Vector3 newPosition);
         void UpdateScale(GameObject target, Vector3 newScale);
         void UpdateRotation(GameObject target, Quaternion newRotation);

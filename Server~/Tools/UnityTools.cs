@@ -34,14 +34,12 @@ namespace UnityIntelligenceMCP.Tools
             await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
-        [McpServerTool(Name = "find_gameobject"), Description("Find a GameObject in the scene by name.")]
+        [McpServerTool(Name = "find_gameobject"), Description("Find a GameObject in the scene by name or instance ID.")]
         public async Task FindGameObject(
-            [Description("Name or Instance ID of the GameObject to find")]
-            String target,
-            [Description("Hierarchical path of the GameObject, e.g., 'Parent/Child'.")]
-            String path = null,
-            [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy = "name",
+            [Description("Name or path of the GameObject, e.g., 'MyObject' or 'Parent/Child'.")]
+            string target = null,
+            [Description("Instance ID of the GameObject to find.")]
+            string instanceId = null,
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -49,21 +47,18 @@ namespace UnityIntelligenceMCP.Tools
                 command = "find_gameobject"
             };
             command.parameters["target"] = target;
-            command.parameters["path"] = path;
-            command.parameters["searchBy"] = searchBy;
+            command.parameters["instanceId"] = instanceId;
             await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
         [McpServerTool(Name = "update_position"), Description("Update the position of a GameObject.")]
         public async Task UpdatePosition(
-            [Description("Name or Instance ID of the target GameObject")]
-            String target,
             [Description("New position: x,y,z")]
-            String position,
-            [Description("Hierarchical path of the GameObject, e.g., 'Parent/Child'.")]
-            String path = null,
-            [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy = "name",
+            string position,
+            [Description("Name or path of the target GameObject.")]
+            string target = null,
+            [Description("Instance ID of the target GameObject.")]
+            string instanceId = null,
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -71,8 +66,7 @@ namespace UnityIntelligenceMCP.Tools
                 command = "update_position"
             };
             command.parameters["target"] = target;
-            command.parameters["path"] = path;
-            command.parameters["searchBy"] = searchBy;
+            command.parameters["instanceId"] = instanceId;
             try
             {
                 var splitPos = position.Split(',');
@@ -87,14 +81,12 @@ namespace UnityIntelligenceMCP.Tools
 
         [McpServerTool(Name = "update_scale"), Description("Update the scale of a GameObject.")]
         public async Task UpdateScale(
-            [Description("Name or Instance ID of the target GameObject")]
-            String target,
             [Description("New scale: x,y,z")]
-            String scale,
-            [Description("Hierarchical path of the GameObject, e.g., 'Parent/Child'.")]
-            String path = null,
-            [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy = "name",
+            string scale,
+            [Description("Name or path of the target GameObject.")]
+            string target = null,
+            [Description("Instance ID of the target GameObject.")]
+            string instanceId = null,
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -102,8 +94,7 @@ namespace UnityIntelligenceMCP.Tools
                 command = "update_scale"
             };
             command.parameters["target"] = target;
-            command.parameters["path"] = path;
-            command.parameters["searchBy"] = searchBy;
+            command.parameters["instanceId"] = instanceId;
             try
             {
                 var splitScale = scale.Split(',');
@@ -118,14 +109,12 @@ namespace UnityIntelligenceMCP.Tools
 
         [McpServerTool(Name = "update_rotation"), Description("Update the rotation of a GameObject using Euler angles or a Quaternion.")]
         public async Task UpdateRotation(
-            [Description("Name or Instance ID of the target GameObject")]
-            String target,
             [Description("New rotation. Euler angles: 'x,y,z'. Quaternion: 'x,y,z,w'.")]
-            String rotation,
-            [Description("Hierarchical path of the GameObject, e.g., 'Parent/Child'.")]
-            String path = null,
-            [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy = "name",
+            string rotation,
+            [Description("Name or path of the target GameObject.")]
+            string target = null,
+            [Description("Instance ID of the target GameObject.")]
+            string instanceId = null,
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -133,8 +122,7 @@ namespace UnityIntelligenceMCP.Tools
                 command = "update_rotation"
             };
             command.parameters["target"] = target;
-            command.parameters["path"] = path;
-            command.parameters["searchBy"] = searchBy;
+            command.parameters["instanceId"] = instanceId;
             try
             {
                 var splitRot = rotation.Split(',');
@@ -169,12 +157,10 @@ namespace UnityIntelligenceMCP.Tools
 
         [McpServerTool(Name = "delete_gameobject"), Description("Delete a GameObject from the scene.")]
         public async Task DeleteGameObject(
-            [Description("Name or Instance ID of the GameObject to delete")]
-            String target,
-            [Description("Hierarchical path of the GameObject, e.g., 'Parent/Child'.")]
-            String path = null,
-            [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy = "name",
+            [Description("Name or path of the GameObject to delete.")]
+            string target = null,
+            [Description("Instance ID of the GameObject to delete.")]
+            string instanceId = null,
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -182,8 +168,7 @@ namespace UnityIntelligenceMCP.Tools
                 command = "delete_gameobject"
             };
             command.parameters["target"] = target;
-            command.parameters["path"] = path;
-            command.parameters["searchBy"] = searchBy;
+            command.parameters["instanceId"] = instanceId;
             await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
     }

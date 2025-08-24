@@ -15,26 +15,23 @@ namespace UnityIntelligenceMCP.Tools
             target = null;
             errorResponse = null;
 
-            if (!parameters.TryGetValue("target", out var targetToken))
+            parameters.TryGetValue("target", out var targetToken);
+            var targetValue = targetToken?.Value<string>();
+
+            parameters.TryGetValue("instanceId", out var instanceIdToken);
+            var instanceIdValue = instanceIdToken?.Value<string>();
+
+            if (string.IsNullOrEmpty(targetValue) && string.IsNullOrEmpty(instanceIdValue))
             {
-                errorResponse = ToolResponse.ErrorResponse("Missing 'target' parameter");
+                errorResponse = ToolResponse.ErrorResponse("At least one of 'target' or 'instanceId' must be provided.");
                 return false;
             }
-            if (!parameters.TryGetValue("searchBy", out var searchByToken))
-            {
-                errorResponse = ToolResponse.ErrorResponse("Missing 'searchBy' parameter. Use 'name' or 'instanceId'.");
-                return false;
-            }
-
-            parameters.TryGetValue("path", out var pathToken);
-            var pathValue = pathToken?.Value<string>();
-
-            var targetValue = targetToken.Value<string>();
-            target = service.Find(targetValue, searchByToken.Value<string>(), pathValue);
+            
+            target = service.Find(targetValue, instanceIdValue);
             
             if (target == null)
             {
-                errorResponse = ToolResponse.ErrorResponse($"GameObject '{targetValue}' not found");
+                errorResponse = ToolResponse.ErrorResponse("GameObject not found with the provided criteria.");
                 return false;
             }
 

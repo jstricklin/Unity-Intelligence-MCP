@@ -26,27 +26,23 @@ namespace UnityIntelligenceMCP.Unity.Services
             return go;
         }
 
-        public GameObject Find(string value, string searchBy, string path)
+        public GameObject Find(string target, string instanceId)
         {
             GameObject go = null;
-            if (string.Equals(searchBy, "instanceId", System.StringComparison.OrdinalIgnoreCase))
+            
+            // Priority 1: Instance ID
+            if (!string.IsNullOrEmpty(instanceId))
             {
-                if (int.TryParse(value, out int instanceId))
+                if (int.TryParse(instanceId, out var id))
                 {
-                    go = EditorUtility.InstanceIDToObject(instanceId) as GameObject;
+                    go = EditorUtility.InstanceIDToObject(id) as GameObject;
                 }
             }
-            else // Presuming "name"
-            {
-                if (!string.IsNullOrEmpty(path))
-                {
-                    go = GameObject.Find($"{path}/{value}");
-                }
 
-                if (go == null)
-                {
-                    go = GameObject.Find(value);
-                }
+            // Priority 2: Name or Path
+            if (go == null && !string.IsNullOrEmpty(target))
+            {
+                go = GameObject.Find(target);
             }
             
             if (go) Selection.activeObject = go;
