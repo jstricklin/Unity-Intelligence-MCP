@@ -1,12 +1,13 @@
 using System;
+using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using UnityIntelligenceMCP.Configuration;
-using UnityIntelligenceMCP.Tools;
 
 namespace UnityIntelligenceMCP.Core.Services
 {
@@ -15,15 +16,15 @@ namespace UnityIntelligenceMCP.Core.Services
         private readonly ILogger<EditorBridgeClientService> _logger;
         private readonly ConfigurationService _configurationService;
         private ClientWebSocket _ws = new();
-        delegate Task UnityMessageHandler(string jsonPayload, CancellationToken cts);
-        static event UnityMessageHandler? HandleMessageToUnity;
+        private static EditorBridgeClientService? _instance;
+        private readonly ConcurrentDictionary<string, TaskCompletionSource<string>> _pendingRequests = new();
         public EditorBridgeClientService(
             ConfigurationService configurationService,
             ILogger<EditorBridgeClientService> logger)
         {
             _configurationService = configurationService;
             _logger = logger;
-            HandleMessageToUnity += SendAsync;
+            _instance = this;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -61,21 +62,77 @@ namespace UnityIntelligenceMCP.Core.Services
                 var result = await _ws.ReceiveAsync(buffer, ct);
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
-                    _logger.LogInformation("Received: {0}", 
-                        Encoding.UTF8.GetString(buffer, 0, result.Count));
+                    var responseJson = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                    _logger.LogInformation("Received: {0}", responseJson);
+
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(responseJson);
+                        if (doc.RootElement.TryGetProperty("request_id", out var requestIdElement))
+                        {
+                            var requestId = requestIdElement.GetString();
+                            if (requestId != null && _pendingRequests.TryRemove(requestId, out var tcs))
+                            {
+                                tcs.SetResult(responseJson);
+                            }
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogError(ex, "Failed to parse incoming JSON message from Unity.");
+                    }
                 }
             }
         }
-        public static Task SendMessageToUnity(string jsonPayload)
+        public static Task<string> SendMessageToUnity(string jsonPayload)
         {
-            CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            return HandleMessageToUnity?.Invoke(jsonPayload, cts.Token) ?? throw new Exception("Unity Editor Bridge has not been configured.");
+            if (_instance == null)
+            {
+                throw new InvalidOperationException("Editor Bridge is not initialized.");
+            }
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            return _instance.SendRequestAsync(jsonPayload, cts.Token);
         }
-        public async Task SendAsync(string jsonPayload, CancellationToken ct)
+        public async Task<string> SendRequestAsync(string jsonPayload, CancellationToken ct)
         {
-            _logger.LogInformation("Sending: {0}", jsonPayload);
-            var bytes = Encoding.UTF8.GetBytes(jsonPayload);
-            await _ws.SendAsync(bytes, WebSocketMessageType.Text, true, ct);
+            var requestId = Guid.NewGuid().ToString();
+            var tcs = new TaskCompletionSource<string>();
+
+            if (!_pendingRequests.TryAdd(requestId, tcs))
+            {
+                throw new InvalidOperationException("Could not register a pending request.");
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(jsonPayload);
+                using var ms = new System.IO.MemoryStream();
+                using (var writer = new Utf8JsonWriter(ms))
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("request_id", requestId);
+                    foreach (var prop in doc.RootElement.EnumerateObject())
+                    {
+                        prop.WriteTo(writer);
+                    }
+                    writer.WriteEndObject();
+                }
+                
+                var bytes = ms.ToArray();
+                var messageWithId = Encoding.UTF8.GetString(bytes);
+
+                _logger.LogInformation("Sending: {0}", messageWithId);
+                await _ws.SendAsync(bytes, WebSocketMessageType.Text, true, ct);
+
+                using (ct.Register(() => tcs.TrySetCanceled()))
+                {
+                    return await tcs.Task;
+                }
+            }
+            finally
+            {
+                _pendingRequests.TryRemove(requestId, out _);
+            }
         }
 
         public override void Dispose()
