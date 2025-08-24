@@ -38,6 +38,8 @@ namespace UnityIntelligenceMCP.Tools
         public async Task FindGameObject(
             [Description("Name or Instance ID of the GameObject to find")]
             String target,
+            [Description("Hierarchical path of the GameObject, e.g., 'Parent/Child'.")]
+            String path = null,
             [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
             String searchBy = "name",
             CancellationToken cancellationToken = default)
@@ -47,6 +49,7 @@ namespace UnityIntelligenceMCP.Tools
                 command = "find_gameobject"
             };
             command.parameters["target"] = target;
+            command.parameters["path"] = path;
             command.parameters["searchBy"] = searchBy;
             await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
@@ -57,6 +60,8 @@ namespace UnityIntelligenceMCP.Tools
             String target,
             [Description("New position: x,y,z")]
             String position,
+            [Description("Hierarchical path of the GameObject, e.g., 'Parent/Child'.")]
+            String path = null,
             [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
             String searchBy = "name",
             CancellationToken cancellationToken = default)
@@ -66,6 +71,7 @@ namespace UnityIntelligenceMCP.Tools
                 command = "update_position"
             };
             command.parameters["target"] = target;
+            command.parameters["path"] = path;
             command.parameters["searchBy"] = searchBy;
             try
             {
@@ -85,6 +91,8 @@ namespace UnityIntelligenceMCP.Tools
             String target,
             [Description("New scale: x,y,z")]
             String scale,
+            [Description("Hierarchical path of the GameObject, e.g., 'Parent/Child'.")]
+            String path = null,
             [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
             String searchBy = "name",
             CancellationToken cancellationToken = default)
@@ -94,6 +102,7 @@ namespace UnityIntelligenceMCP.Tools
                 command = "update_scale"
             };
             command.parameters["target"] = target;
+            command.parameters["path"] = path;
             command.parameters["searchBy"] = searchBy;
             try
             {
@@ -113,6 +122,8 @@ namespace UnityIntelligenceMCP.Tools
             String target,
             [Description("New rotation. Euler angles: 'x,y,z'. Quaternion: 'x,y,z,w'.")]
             String rotation,
+            [Description("Hierarchical path of the GameObject, e.g., 'Parent/Child'.")]
+            String path = null,
             [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
             String searchBy = "name",
             CancellationToken cancellationToken = default)
@@ -122,6 +133,7 @@ namespace UnityIntelligenceMCP.Tools
                 command = "update_rotation"
             };
             command.parameters["target"] = target;
+            command.parameters["path"] = path;
             command.parameters["searchBy"] = searchBy;
             try
             {
@@ -159,6 +171,8 @@ namespace UnityIntelligenceMCP.Tools
         public async Task DeleteGameObject(
             [Description("Name or Instance ID of the GameObject to delete")]
             String target,
+            [Description("Hierarchical path of the GameObject, e.g., 'Parent/Child'.")]
+            String path = null,
             [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
             String searchBy = "name",
             CancellationToken cancellationToken = default)
@@ -168,6 +182,7 @@ namespace UnityIntelligenceMCP.Tools
                 command = "delete_gameobject"
             };
             command.parameters["target"] = target;
+            command.parameters["path"] = path;
             command.parameters["searchBy"] = searchBy;
             await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }

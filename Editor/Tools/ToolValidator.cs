@@ -26,8 +26,11 @@ namespace UnityIntelligenceMCP.Tools
                 return false;
             }
 
+            parameters.TryGetValue("path", out var pathToken);
+            var pathValue = pathToken?.Value<string>();
+
             var targetValue = targetToken.Value<string>();
-            target = service.Find(targetValue, searchByToken.Value<string>());
+            target = service.Find(targetValue, searchByToken.Value<string>(), pathValue);
             
             if (target == null)
             {
