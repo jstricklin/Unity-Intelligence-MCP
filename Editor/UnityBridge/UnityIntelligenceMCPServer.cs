@@ -26,6 +26,11 @@ namespace UnityIntelligenceMCP.Unity
         {
             if (IsListening) return;
 
+            if (Application.isEditor)
+            {
+                Application.runInBackground = true;
+            }
+
             try
             {
                 _wsserver = new WebSocketServer($"ws://localhost:{port}");

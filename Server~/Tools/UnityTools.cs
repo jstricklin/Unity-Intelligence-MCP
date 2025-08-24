@@ -14,11 +14,11 @@ namespace UnityIntelligenceMCP.Tools
         [McpServerTool(Name = "create_primitive"), Description("Create a primitive object in Unity.")]
         public async Task<string> CreatePrimitive(
             [Description("Primitive Type to create: Sphere, Capsule, Cylinder, Cube, Plane, Quad")]
-            String type,
+            String type = "",
             [Description("New GameObject Name")]
-            String name,
+            String name = "",
             [Description("Position: 0,0,0")]
-            String position,
+            String position = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest();
@@ -37,9 +37,9 @@ namespace UnityIntelligenceMCP.Tools
         [McpServerTool(Name = "find_gameobject"), Description("Find a GameObject in the scene by name or instance ID.")]
         public async Task<string> FindGameObject(
             [Description("Name or path of the GameObject, e.g., 'MyObject' or 'Parent/Child'.")]
-            string target = null,
+            string target = "",
             [Description("Instance ID of the GameObject to find.")]
-            string instanceId = null,
+            string instanceId = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -56,9 +56,9 @@ namespace UnityIntelligenceMCP.Tools
             [Description("New position: x,y,z")]
             string position,
             [Description("Name or path of the target GameObject.")]
-            string target = null,
+            string target = "",
             [Description("Instance ID of the target GameObject.")]
-            string instanceId = null,
+            string instanceId = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -84,9 +84,9 @@ namespace UnityIntelligenceMCP.Tools
             [Description("New scale: x,y,z")]
             string scale,
             [Description("Name or path of the target GameObject.")]
-            string target = null,
+            string target = "",
             [Description("Instance ID of the target GameObject.")]
-            string instanceId = null,
+            string instanceId = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -112,9 +112,9 @@ namespace UnityIntelligenceMCP.Tools
             [Description("New rotation. Euler angles: 'x,y,z'. Quaternion: 'x,y,z,w'.")]
             string rotation,
             [Description("Name or path of the target GameObject.")]
-            string target = null,
+            string target = "",
             [Description("Instance ID of the target GameObject.")]
-            string instanceId = null,
+            string instanceId = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -158,9 +158,9 @@ namespace UnityIntelligenceMCP.Tools
         [McpServerTool(Name = "delete_gameobject"), Description("Delete a GameObject from the scene.")]
         public async Task<string> DeleteGameObject(
             [Description("Name or path of the GameObject to delete.")]
-            string target = null,
+            string target = "",
             [Description("Instance ID of the GameObject to delete.")]
-            string instanceId = null,
+            string instanceId = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
