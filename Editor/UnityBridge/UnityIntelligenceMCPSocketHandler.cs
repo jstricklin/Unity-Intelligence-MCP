@@ -5,6 +5,8 @@ using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using WebSocketSharp;
+using System.Threading.Tasks;
+using UnityIntelligenceMCP.Editor.Services.ResourceServices;
 using WebSocketSharp.Server;
 using UnityIntelligenceMCP.Tools;
 using UnityIntelligenceMCP.Unity;
@@ -26,30 +28,29 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
 
     protected override void OnMessage(MessageEventArgs e)
     {
-        UnityEditor.EditorApplication.delayCall += async () => 
+        UnityEditor.EditorApplication.delayCall += async () =>
         {
             Debug.Log($"Request received: {e.Data}");
             
             try
             {
-                // Parse JSON message
                 var message = JsonConvert.DeserializeObject<JObject>(e.Data);
-                string command = message["command"]?.Value<string>();
-                JObject parameters = message["parameters"] as JObject;
-                
-                if (string.IsNullOrEmpty(command) || parameters == null)
+            
+                string type = message?["type"]?.ToString();
+                string requestId = message?["request_id"]?.ToString();
+            
+                switch (type)
                 {
-                    Send(JsonConvert.SerializeObject(
-                        ToolResponse.ErrorResponse("Invalid format: must have 'command' and 'parameters'")
-                    ));
-                    return;
+                    case "resource_request":
+                        HandleResourceRequest(message, requestId);
+                        break;
+                    case "command":
+                        await HandleCommand(message, requestId);
+                        break;
+                    default:
+                        SendError("Unsupported message type", requestId);
+                        break;
                 }
-                
-                // Execute command through controller
-                var response = await UnityIntelligenceMCPController.Instance
-                    .ExecuteTool(command, parameters);
-                
-                Send(JsonConvert.SerializeObject(response));
             }
             catch (JsonException ex)
             {
@@ -65,6 +66,59 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
                 ));
             }
         };
+    }
+
+    private void HandleResourceRequest(JObject message, string requestId)
+    {
+        string resourceUri = message["resource_uri"]?.ToString();
+        JObject parameters = message["parameters"] as JObject;
+
+        if (string.IsNullOrEmpty(resourceUri))
+        {
+            SendError("Missing resource_uri", requestId);
+            return;
+        }
+
+        var response = ResourceRouter.HandleRequest(resourceUri, parameters);
+        var responseObject = JObject.FromObject(response);
+        if (!string.IsNullOrEmpty(requestId))
+        {
+            responseObject["request_id"] = requestId;
+        }
+        Send(JsonConvert.SerializeObject(responseObject));
+    }
+
+    private async Task HandleCommand(JObject message, string requestId)
+    {
+        string command = message["command"]?.Value<string>();
+        JObject parameters = message["parameters"] as JObject;
+                
+        if (string.IsNullOrEmpty(command) || parameters == null)
+        {
+            SendError("Invalid format: must have 'command' and 'parameters'", requestId);
+            return;
+        }
+                
+        var response = await UnityIntelligenceMCPController.Instance
+            .ExecuteTool(command, parameters);
+        
+        var responseObject = JObject.FromObject(response);
+        if (!string.IsNullOrEmpty(requestId))
+        {
+            responseObject["request_id"] = requestId;
+        }
+        Send(JsonConvert.SerializeObject(responseObject));
+    }
+    
+    private void SendError(string errorMessage, string requestId)
+    {
+        var errorResponse = ToolResponse.ErrorResponse(errorMessage);
+        var responseObject = JObject.FromObject(errorResponse);
+        if (!string.IsNullOrEmpty(requestId))
+        {
+            responseObject["request_id"] = requestId;
+        }
+        Send(JsonConvert.SerializeObject(responseObject));
     }
 
     protected override void OnError(ErrorEventArgs e)
