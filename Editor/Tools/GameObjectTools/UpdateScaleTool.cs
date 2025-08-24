@@ -16,10 +16,12 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
         
         public Task<ToolResponse> ExecuteAsync(JObject parameters)
         {
-            if (!parameters.TryGetValue("target", out JToken targetToken))
+            if (!parameters.TryGetValue("target", out var targetToken))
                 return Task.FromResult(ToolResponse.ErrorResponse("Missing 'target' parameter"));
-            
-            GameObject target = FindTarget(targetToken);
+            if (!parameters.TryGetValue("searchBy", out var searchByToken))
+                return Task.FromResult(ToolResponse.ErrorResponse("Missing 'searchBy' parameter. Use 'name' or 'instanceId'."));
+
+            GameObject target = _service.Find(targetToken.Value<string>(), searchByToken.Value<string>());
             if (target == null)
                 return Task.FromResult(ToolResponse.ErrorResponse("Target GameObject not found"));
             
@@ -41,17 +43,6 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
                     }
                 }
             ));
-        }
-        
-        private GameObject FindTarget(JToken targetToken)
-        {
-            if (targetToken.Type == JTokenType.String)
-                return _service.Find(targetToken.Value<string>());
-            
-            if (targetToken.Type == JTokenType.Integer)
-                return (GameObject)EditorUtility.InstanceIDToObject(targetToken.Value<int>());
-            
-            return null;
         }
     }
 }

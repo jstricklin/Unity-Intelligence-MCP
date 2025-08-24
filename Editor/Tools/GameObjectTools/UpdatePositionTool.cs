@@ -16,20 +16,12 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
         
         public Task<ToolResponse> ExecuteAsync(JObject parameters)
         {
-            if (!parameters.TryGetValue("target", out JToken targetToken))
+            if (!parameters.TryGetValue("target", out var targetToken))
                 return Task.FromResult(ToolResponse.ErrorResponse("Missing 'target' parameter"));
-            
-            // Support both name and instance ID lookup
-            GameObject target = null;
-            if (targetToken.Type == JTokenType.String)
-            {
-                target = _service.Find(targetToken.Value<string>());
-            }
-            else if (targetToken.Type == JTokenType.Integer)
-            {
-                target = (GameObject)EditorUtility.InstanceIDToObject(targetToken.Value<int>());
-            }
-            
+            if (!parameters.TryGetValue("searchBy", out var searchByToken))
+                return Task.FromResult(ToolResponse.ErrorResponse("Missing 'searchBy' parameter. Use 'name' or 'instanceId'."));
+
+            var target = _service.Find(targetToken.Value<string>(), searchByToken.Value<string>());
             if (target == null)
                 return Task.FromResult(ToolResponse.ErrorResponse("Target GameObject not found"));
             
