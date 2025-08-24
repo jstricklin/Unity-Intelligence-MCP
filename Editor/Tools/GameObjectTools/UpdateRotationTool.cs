@@ -16,14 +16,8 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
         
         public Task<ToolResponse> ExecuteAsync(JObject parameters)
         {
-            if (!parameters.TryGetValue("target", out var targetToken))
-                return Task.FromResult(ToolResponse.ErrorResponse("Missing 'target' parameter"));
-            if (!parameters.TryGetValue("searchBy", out var searchByToken))
-                return Task.FromResult(ToolResponse.ErrorResponse("Missing 'searchBy' parameter. Use 'name' or 'instanceId'."));
-
-            GameObject target = _service.Find(targetToken.Value<string>(), searchByToken.Value<string>());
-            if (target == null)
-                return Task.FromResult(ToolResponse.ErrorResponse("Target GameObject not found"));
+            if (!ToolValidator.TryFindTarget(parameters, _service, out var target, out var errorResponse))
+                return Task.FromResult(errorResponse);
             
             if (!VectorParser.TryParseRotation(parameters["rotation"] as JObject, out Quaternion newRotation))
                 return Task.FromResult(ToolResponse.ErrorResponse("Invalid rotation format"));

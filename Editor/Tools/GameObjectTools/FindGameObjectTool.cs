@@ -15,15 +15,8 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
         
         public Task<ToolResponse> ExecuteAsync(JObject parameters)
         {
-            if (!parameters.TryGetValue("target", out var targetToken))
-                return Task.FromResult(ToolResponse.ErrorResponse("Missing 'target' parameter"));
-            if (!parameters.TryGetValue("searchBy", out var searchByToken))
-                return Task.FromResult(ToolResponse.ErrorResponse("Missing 'searchBy' parameter. Use 'name' or 'instanceId'."));
-
-            var targetValue = targetToken.Value<string>();
-            var obj = _service.Find(targetValue, searchByToken.Value<string>());
-            if (obj == null)
-                return Task.FromResult(ToolResponse.ErrorResponse($"GameObject '{targetValue}' not found"));
+            if (!ToolValidator.TryFindTarget(parameters, _service, out var obj, out var errorResponse))
+                return Task.FromResult(errorResponse);
                 
             return Task.FromResult(ToolResponse.SuccessResponse(
                 $"Found {obj.name}",
