@@ -14,11 +14,11 @@ namespace UnityIntelligenceMCP.Tools
         [McpServerTool(Name = "create_primitive"), Description("Create a primitive object in Unity.")]
         public async Task CreatePrimitive(
             [Description("Primitive Type to create: Sphere, Capsule, Cylinder, Cube, Plane, Quad")]
-            String type = "Sphere",
+            String type,
             [Description("New GameObject Name")]
-            String name = "MCP Sphere",
+            String name,
             [Description("Position: 0,0,0")]
-            String position = "0,0,0",
+            String position,
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest();
@@ -39,7 +39,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("Name or Instance ID of the GameObject to find")]
             String target,
             [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy,
+            String searchBy = "name",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -56,7 +56,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("Name or Instance ID of the target GameObject")]
             String target,
             [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy,
+            String searchBy = "name",
             [Description("New position: x,y,z")]
             String position,
             CancellationToken cancellationToken = default)
@@ -84,7 +84,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("Name or Instance ID of the target GameObject")]
             String target,
             [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy,
+            String searchBy = "name",
             [Description("New scale: x,y,z")]
             String scale,
             CancellationToken cancellationToken = default)
@@ -112,7 +112,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("Name or Instance ID of the target GameObject")]
             String target,
             [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy,
+            String searchBy = "name",
             [Description("New rotation. Euler angles: 'x,y,z'. Quaternion: 'x,y,z,w'.")]
             String rotation,
             CancellationToken cancellationToken = default)
@@ -160,7 +160,7 @@ namespace UnityIntelligenceMCP.Tools
             [Description("Name or Instance ID of the GameObject to delete")]
             String target,
             [Description("How to search for the target. Can be 'name' or 'instanceId'.")]
-            String searchBy,
+            String searchBy = "name",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
