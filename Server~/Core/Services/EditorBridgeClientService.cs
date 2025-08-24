@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using UnityIntelligenceMCP.Configuration;
+using UnityIntelligenceMCP.Tools;
 
 namespace UnityIntelligenceMCP.Core.Services
 {
