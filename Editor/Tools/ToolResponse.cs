@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 
 namespace UnityIntelligenceMCP.Tools

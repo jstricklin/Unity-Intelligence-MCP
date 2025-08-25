@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace UnityIntelligenceMCP.Editor.Core
 {
-    [DEPRECATED]
+    // [DEPRECATED]
     public static class UnityThreadDispatcher
     {
         public static T Execute<T>(Func<T> action)
@@ -30,7 +30,6 @@ namespace UnityIntelligenceMCP.Editor.Core
                     tcs.SetException(ex);
                 }
             };
-
             return tcs.Task.Result;
         }
     }

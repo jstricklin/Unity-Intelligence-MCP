@@ -42,7 +42,7 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
                 switch (type)
                 {
                     case "resource_request":
-                        HandleResourceRequest(message, requestId);
+                        await HandleResourceRequest(message, requestId);
                         break;
                     case "command":
                         await HandleCommand(message, requestId);
@@ -68,7 +68,7 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
         };
     }
 
-    private void HandleResourceRequest(JObject message, string requestId)
+    private async Task HandleResourceRequest(JObject message, string requestId)
     {
         string resourceUri = message["resource_uri"]?.ToString();
         JObject parameters = message["parameters"] as JObject;
@@ -107,7 +107,6 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
         {
             responseObject["request_id"] = requestId;
         }
-        Send(JsonConvert.SerializeObject(responseObject));
     }
     
     private void SendError(string errorMessage, string requestId)

@@ -129,9 +129,9 @@ namespace UnityIntelligenceMCP.Unity
             
             return JsonConvert.SerializeObject(config, Formatting.Indented);
         }
-        public void AddPackageCacheToWorkspace()
+        public async void AddPackageCacheToWorkspace()
         {
-            _vsCodeWorkspaceService.GenerateWorkspaceAsync(Directory.GetParent(Application.dataPath).FullName);
+            await _vsCodeWorkspaceService.GenerateWorkspaceAsync(Directory.GetParent(Application.dataPath).FullName);
         }
 
         public void ConfigureVSCode()

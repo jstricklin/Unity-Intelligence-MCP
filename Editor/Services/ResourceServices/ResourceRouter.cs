@@ -14,6 +14,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
         static ResourceRouter()
         {
             RegisterHandler(new ProjectInfoHandler());
+            RegisterHandler(new SceneHierarchyHandler());
             // Add other handlers later
         }
 
@@ -36,10 +37,10 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
                     return ToolResponse.ErrorResponse($"Resource not supported: {resourceUri}");
                 }
 
-                // Execute on main thread (safe for Unity API access)
                 return handler.HandleRequest(parameters);
+                // Execute on main thread (safe for Unity API access)
                 // return UnityThreadDispatcher.Execute(() => 
-                //     handler.HandleRequest(parameters));
+                    // handler.HandleRequest(parameters));
             }
             catch (Exception ex)
             {
