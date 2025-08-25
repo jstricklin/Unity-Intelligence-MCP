@@ -26,7 +26,7 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
         Connections.Remove(ID);
     }
 
-    protected override void OnMessage(MessageEventArgs e)
+    protected override async void OnMessage(MessageEventArgs e)
     {
         UnityEditor.EditorApplication.delayCall += async () =>
         {

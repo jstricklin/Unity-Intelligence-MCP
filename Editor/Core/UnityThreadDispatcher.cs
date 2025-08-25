@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 namespace UnityIntelligenceMCP.Editor.Core
 {
+    [DEPRECATED]
     public static class UnityThreadDispatcher
     {
         public static T Execute<T>(Func<T> action)
@@ -14,7 +15,7 @@ namespace UnityIntelligenceMCP.Editor.Core
                 // Already on main thread
                 return action();
             }
-
+            // FIXME: DEADLOCK CAUSED BY TASK RESULT BEFORE TASK COMPLETION
             // Schedule to run on main thread
             var tcs = new TaskCompletionSource<T>();
             EditorApplication.delayCall += () =>

@@ -36,8 +36,8 @@ namespace UnityIntelligenceMCP.Resources
             {
                 var request = new
                 {
-                    type = "resource",
-                    resource = "unity://project/info"
+                    type = "resource_request",
+                    resource_uri = "unity://project/info"
                 };
                 var jsonPayload = JsonSerializer.Serialize(request);
                 var jsonResponse = await EditorBridgeClientService.SendMessageToUnity(jsonPayload);
@@ -45,13 +45,14 @@ namespace UnityIntelligenceMCP.Resources
                 using var doc = JsonDocument.Parse(jsonResponse);
                 var root = doc.RootElement;
 
-                if (root.TryGetProperty("status", out var statusElement) && statusElement.GetString() == "Success")
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
                 {
                     var data = root.GetProperty("data").GetRawText();
                     result = new TextResourceContents
                     {
+                        Uri  = request.resource_uri,
                         Text = data,
-                        MimeType = "text/json"
+                        MimeType = "application/json"
                     };
                     wasSuccessful = true;
                     return result;
@@ -89,3 +90,4 @@ namespace UnityIntelligenceMCP.Resources
         }
     }
 }
+    

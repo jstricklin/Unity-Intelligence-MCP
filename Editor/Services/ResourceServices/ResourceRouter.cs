@@ -37,8 +37,9 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
                 }
 
                 // Execute on main thread (safe for Unity API access)
-                return UnityThreadDispatcher.Execute(() => 
-                    handler.HandleRequest(parameters));
+                return handler.HandleRequest(parameters);
+                // return UnityThreadDispatcher.Execute(() => 
+                //     handler.HandleRequest(parameters));
             }
             catch (Exception ex)
             {
