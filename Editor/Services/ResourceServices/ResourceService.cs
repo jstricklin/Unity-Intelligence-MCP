@@ -16,6 +16,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
         {
             RegisterHandler(new ProjectInfoHandler());
             RegisterHandler(new SceneHierarchyHandler());
+            RegisterHandler(new EditorMenuHandler());
             // Add other handlers later
         }
 
