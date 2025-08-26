@@ -74,16 +74,24 @@ namespace UnityIntelligenceMCP.Unity
 
             // Server status
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Status:", GUILayout.Width(120));
+            EditorGUILayout.LabelField("Status:", GUILayout.Width(75));
             string statusText = mcpUnityServer.IsListening ? "Server Online" : "Server Offline";
             Color statusColor = mcpUnityServer.IsListening ? Color.green : Color.red;
             GUIStyle statusStyle = new GUIStyle(EditorStyles.boldLabel);
             statusStyle.normal.textColor = statusColor;
-            EditorGUILayout.LabelField(statusText, statusStyle);
+            EditorGUILayout.LabelField(statusText, statusStyle, GUILayout.Width(120));
+
+            if (mcpUnityServer.IsListening)
+            {
+                string clientText = UnityIntelligenceMCPSocketHandler.ClientsConnected ? "Client Connected" : "Awaiting Client Connection...";
+                Color clientColor = UnityIntelligenceMCPSocketHandler.ClientsConnected ? Color.green : Color.yellow;
+                GUIStyle clientStyle = new GUIStyle(EditorStyles.boldLabel);
+                clientStyle.normal.textColor = clientColor;
+                EditorGUILayout.LabelField(clientText, clientStyle);
+            }
+
             EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.Space();
-
 
             // Server controls
             EditorGUILayout.BeginHorizontal();

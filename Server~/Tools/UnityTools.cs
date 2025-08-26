@@ -51,6 +51,44 @@ namespace UnityIntelligenceMCP.Tools
             command.parameters["instanceId"] = instanceId;
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
+
+        [McpServerTool(Name = "modify_gameobject"), Description("Modify properties of a GameObject, such as its name, tag, layer, and active state.")]
+        public async Task<string> ModifyGameObject(
+            [Description("Name or path of the target GameObject.")]
+            string target = "",
+            [Description("Instance ID of the target GameObject.")]
+            string instanceId = "",
+            [Description("Optional. The new name for the GameObject.")]
+            string name = "",
+            [Description("Optional. The new tag for the GameObject.")]
+            string tag = "",
+            [Description("Optional. The new layer for the GameObject.")]
+            int? layer = null,
+            [Description("Optional. The new active state for the GameObject.")]
+            bool? isActive = null,
+            [Description("Optional. The new static state for the GameObject.")]
+            bool? isStatic = null,
+            [Description("Optional. The path of the scene to move the GameObject to.")]
+            string scenePath = "",
+            CancellationToken cancellationToken = default)
+        {
+            var command = new UnityToolRequest
+            {
+                command = "modify_gameobject"
+            };
+            command.parameters["target"] = target;
+            command.parameters["instanceId"] = instanceId;
+
+            if (name != null) command.parameters["name"] = name;
+            if (tag != null) command.parameters["tag"] = tag;
+            if (layer.HasValue) command.parameters["layer"] = layer.Value;
+            if (isActive.HasValue) command.parameters["is_active"] = isActive.Value;
+            if (isStatic.HasValue) command.parameters["is_static"] = isStatic.Value;
+            if (scenePath != null) command.parameters["scene_path"] = scenePath;
+
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+        }
+
         [McpServerTool(Name = "update_transform"), Description("Update the transform (position, rotation, scale) of a GameObject by name or instance ID.")]
         public async Task<string> UpdateTransform(
             [Description("Name or path of the target GameObject.")]

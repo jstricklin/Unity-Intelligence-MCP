@@ -21,7 +21,8 @@ namespace UnityIntelligenceMCP.Tools.EditorTools
                 return ToolResponse.ErrorResponse("Menu item 'path' parameter is required.");
             }
 
-            var tcs = new TaskCompletionSource<(bool success, System.Collections.Generic.List<string> opened, System.Collections.Generic.List<string> closed)>();
+            // var tcs = new TaskCompletionSource<(bool success, System.Collections.Generic.List<string> opened, System.Collections.Generic.List<string> closed)>();
+            var tcs = new TaskCompletionSource<bool>();
 
             // Unity Editor APIs must be called from the main thread.
             // We use delayCall to schedule the work on the next editor update tick.
@@ -36,7 +37,8 @@ namespace UnityIntelligenceMCP.Tools.EditorTools
                     // var openedWindows = windowsAfter.Except(windowsBefore).ToList();
                     // var closedWindows = windowsBefore.Except(windowsAfter).ToList();
 
-                    tcs.SetResult((success, openedWindows, closedWindows));
+                    // tcs.SetResult((success, openedWindows, closedWindows));
+                    tcs.SetResult(success);
                 }
                 catch (Exception ex)
                 {
@@ -46,7 +48,7 @@ namespace UnityIntelligenceMCP.Tools.EditorTools
 
             var result = await tcs.Task;
 
-            if (!result.success)
+            if (!result)
             {
                 return ToolResponse.ErrorResponse($"Failed to execute menu item: '{path}'. It may not exist or is currently disabled.");
             }

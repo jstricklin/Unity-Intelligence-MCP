@@ -13,20 +13,21 @@ using UnityIntelligenceMCP.Unity;
 
 public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
 {
-    public static List<string> Connections = new List<string>();
+    static List<string> _connections = new List<string>();
+    public static bool ClientsConnected => _connections.Count > 0;
     protected override void OnOpen()
     {
         Debug.Log($"New MCP client Started: {ID}");
-        Connections.Add(ID);
+        _connections.Add(ID);
     }
 
     protected override void OnClose(CloseEventArgs e)
     {
         Debug.Log($"MCP client disconnected: {ID}");
-        Connections.Remove(ID);
+        _connections.Remove(ID);
     }
 
-    protected override async void OnMessage(MessageEventArgs e)
+    protected override void OnMessage(MessageEventArgs e)
     {
         UnityEditor.EditorApplication.delayCall += async () =>
         {
