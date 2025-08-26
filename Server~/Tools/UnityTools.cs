@@ -132,6 +132,20 @@ z = float.Parse(splitScale[2]) };
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
+        [McpServerTool(Name = "execute_menu_item"), Description("Executes a Unity Editor menu item by its path, e.g., 'File/Save Project'.")]
+        public async Task<string> ExecuteMenuItem(
+            [Description("The path of the menu item to execute.")]
+            string path,
+            CancellationToken cancellationToken = default)
+        {
+            var command = new UnityToolRequest
+            {
+                command = "execute_menu_item"
+            };
+            command.parameters["path"] = path;
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+        }
+
 
         [McpServerTool(Name = "delete_gameobject"), Description("Delete a GameObject from the scene.")]
         public async Task<string> DeleteGameObject(

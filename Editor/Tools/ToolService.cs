@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Tools.GameObjectTools;
+using UnityIntelligenceMCP.Tools.EditorTools;
 
 namespace UnityIntelligenceMCP.Tools
 {
@@ -29,6 +30,9 @@ namespace UnityIntelligenceMCP.Tools
             RegisterTool(new DeleteGameObjectTool(_gameObjectService));
             RegisterTool(new UpdateTransformTool(_gameObjectService));
             
+            // Editor Tools
+            RegisterTool(new ExecuteMenuItemTool());
+
             // Will add more tools later (analysis, docs, etc)
         }
 
