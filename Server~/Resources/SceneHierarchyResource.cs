@@ -79,7 +79,7 @@ namespace UnityIntelligenceMCP.Resources
 
                 await _usageLogger.LogAsync(new ToolUsageLog
                 {
-                    ToolName = "get_project_info",
+                    ToolName = "get_scene_hierarchy",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     ResultSummaryJson = JsonSerializer.Serialize(resultSummary),
                     ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
