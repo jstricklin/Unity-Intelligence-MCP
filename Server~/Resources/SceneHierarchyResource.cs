@@ -36,7 +36,7 @@ namespace UnityIntelligenceMCP.Resources
             {
                 var request = new
                 {
-                    type = "resource_request",
+                    type = "resource",
                     resource_uri = "unity://scene/hierarchy"
                 };
                 var jsonPayload = JsonSerializer.Serialize(request);

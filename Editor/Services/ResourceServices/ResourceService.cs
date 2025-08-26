@@ -1,17 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using UnityIntelligenceMCP.Tools;
 using UnityEngine;
+using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Editor.Core;
 
 namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
 {
-    public static class ResourceRouter
+    public static class ResourceService
     {
         private static readonly Dictionary<string, IResourceHandler> _handlers = new();
 
-        static ResourceRouter()
+        static ResourceService()
         {
             RegisterHandler(new ProjectInfoHandler());
             RegisterHandler(new SceneHierarchyHandler());
@@ -28,31 +29,21 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             _handlers.Add(handler.ResourceURI, handler);
         }
 
-        public static ToolResponse HandleRequest(string resourceUri, JObject parameters = null)
+        public static async Task<ToolResponse> HandleRequest(string resourceUri, JObject parameters = null)
         {
             try
             {
                 if (!_handlers.TryGetValue(resourceUri, out var handler))
                 {
-                    return ToolResponse.ErrorResponse($"Resource not supported: {resourceUri}");
+                    return await Task.FromResult(ToolResponse.ErrorResponse($"Resource not supported: {resourceUri}"));
                 }
-
-                return handler.HandleRequest(parameters);
-                // Execute on main thread (safe for Unity API access)
-                // return UnityThreadDispatcher.Execute(() => 
-                    // handler.HandleRequest(parameters));
+                return await handler.HandleRequest(parameters);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"Resource error: {ex.Message}\n{ex.StackTrace}");
-                return ToolResponse.ErrorResponse($"Internal error: {ex.Message}");
+                return await Task.FromResult(ToolResponse.ErrorResponse($"Internal error: {ex.Message}"));
             }
         }
-    }
-
-    public interface IResourceHandler
-    {
-        string ResourceURI { get; }
-        ToolResponse HandleRequest(JObject parameters);
     }
 }

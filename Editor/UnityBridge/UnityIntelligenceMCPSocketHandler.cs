@@ -8,7 +8,7 @@ using WebSocketSharp;
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Editor.Services.ResourceServices;
 using WebSocketSharp.Server;
-using UnityIntelligenceMCP.Tools;
+using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Unity;
 
 public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
@@ -41,8 +41,8 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
             
                 switch (type)
                 {
-                    case "resource_request":
-                        await HandleResourceRequest(message, requestId);
+                    case "resource":
+                        await HandleResource(message, requestId);
                         break;
                     case "command":
                         await HandleCommand(message, requestId);
@@ -68,7 +68,7 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
         };
     }
 
-    private async Task HandleResourceRequest(JObject message, string requestId)
+    private async Task HandleResource(JObject message, string requestId)
     {
         string resourceUri = message["resource_uri"]?.ToString();
         JObject parameters = message["parameters"] as JObject;
@@ -79,7 +79,8 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
             return;
         }
 
-        var response = ResourceRouter.HandleRequest(resourceUri, parameters);
+        var response = await UnityIntelligenceMCPController.Instance
+            .HandleResource(resourceUri, parameters);
         var responseObject = JObject.FromObject(response);
         if (!string.IsNullOrEmpty(requestId))
         {

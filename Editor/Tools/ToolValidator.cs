@@ -1,5 +1,6 @@
 using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
+using UnityIntelligenceMCP.Editor.Models;
 using UnityEngine;
 
 namespace UnityIntelligenceMCP.Tools

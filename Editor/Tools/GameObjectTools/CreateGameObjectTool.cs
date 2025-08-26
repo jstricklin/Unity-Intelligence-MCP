@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
-using UnityIntelligenceMCP.Tools;
+using UnityIntelligenceMCP.Editor.Models;
 using UnityEngine;
 
 namespace UnityIntelligenceMCP.Tools.GameObjectTools

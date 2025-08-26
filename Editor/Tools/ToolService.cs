@@ -2,8 +2,9 @@ using System;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityEngine;
+using UnityIntelligenceMCP.Unity.Services.Contracts;
+using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Tools.GameObjectTools;
 
 namespace UnityIntelligenceMCP.Tools

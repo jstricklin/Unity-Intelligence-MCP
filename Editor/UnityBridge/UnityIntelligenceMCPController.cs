@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using UnityIntelligenceMCP.Utils;
 using UnityIntelligenceMCP.Unity.Services;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
+using UnityIntelligenceMCP.Editor.Services.ResourceServices;
 using Newtonsoft.Json;
 using UnityEditor;
+using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Tools;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -207,6 +209,10 @@ namespace UnityIntelligenceMCP.Unity
         //     Debug.Log($"{target.name} rotation updated");
         // }
 
+        public async Task<ToolResponse> HandleResource(string resourceUri, JObject parameters)
+        {
+            return await ResourceService.HandleRequest(resourceUri, parameters);
+        }
         public async Task<ToolResponse> ExecuteTool(string command, JObject parameters)
         {
             return await _toolService.Execute(command, parameters);
