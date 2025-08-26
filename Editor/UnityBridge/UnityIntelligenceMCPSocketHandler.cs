@@ -108,6 +108,7 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
         {
             responseObject["request_id"] = requestId;
         }
+        Send(JsonConvert.SerializeObject(responseObject));
     }
     
     private void SendError(string errorMessage, string requestId)

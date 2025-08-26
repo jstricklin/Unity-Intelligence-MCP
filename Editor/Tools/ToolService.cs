@@ -26,10 +26,8 @@ namespace UnityIntelligenceMCP.Tools
             RegisterTool(new CreateGameObjectTool(_gameObjectService));
             RegisterTool(new CreatePrimitiveTool(_gameObjectService));
             RegisterTool(new FindGameObjectTool(_gameObjectService));
-            RegisterTool(new UpdatePositionTool(_gameObjectService));
-            RegisterTool(new UpdateScaleTool(_gameObjectService));
-            RegisterTool(new UpdateRotationTool(_gameObjectService));
             RegisterTool(new DeleteGameObjectTool(_gameObjectService));
+            RegisterTool(new UpdateTransformTool(_gameObjectService));
             
             // Will add more tools later (analysis, docs, etc)
         }
