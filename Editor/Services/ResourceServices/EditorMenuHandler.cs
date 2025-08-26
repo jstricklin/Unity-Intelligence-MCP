@@ -23,7 +23,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
                 {
                     path = menuItem.menuItem,
                     priority = menuItem.priority,
-                    isValidation = menuItem.validate
+                    isAvailable = menuItem.validate
                 })
                 .ToList();
 

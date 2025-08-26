@@ -12,6 +12,7 @@ namespace UnityIntelligenceMCP.Tools.EditorTools
     {
         public string CommandName => "execute_menu_item";
 
+        // TODO update with working window awareness
         public async Task<ToolResponse> ExecuteAsync(JObject parameters)
         {
             var path = parameters?["path"]?.ToString();
@@ -28,12 +29,12 @@ namespace UnityIntelligenceMCP.Tools.EditorTools
             {
                 try
                 {
-                    var windowsBefore = Resources.FindObjectsOfTypeAll<EditorWindow>().Select(w => w.titleContent.text).ToList();
+                    // var windowsBefore = Resources.FindObjectsOfTypeAll<EditorWindow>().Select(w => w.titleContent.text).ToList();
                     var success = EditorApplication.ExecuteMenuItem(path);
-                    var windowsAfter = Resources.FindObjectsOfTypeAll<EditorWindow>().Select(w => w.titleContent.text).ToList();
+                    // var windowsAfter = Resources.FindObjectsOfTypeAll<EditorWindow>().Select(w => w.titleContent.text).ToList();
 
-                    var openedWindows = windowsAfter.Except(windowsBefore).ToList();
-                    var closedWindows = windowsBefore.Except(windowsAfter).ToList();
+                    // var openedWindows = windowsAfter.Except(windowsBefore).ToList();
+                    // var closedWindows = windowsBefore.Except(windowsAfter).ToList();
 
                     tcs.SetResult((success, openedWindows, closedWindows));
                 }
@@ -51,12 +52,12 @@ namespace UnityIntelligenceMCP.Tools.EditorTools
             }
 
             return ToolResponse.SuccessResponse(
-                $"Successfully executed menu item: '{path}'.",
-                new
-                {
-                    opened_windows = result.opened,
-                    closed_windows = result.closed
-                }
+                $"Successfully executed menu item: '{path}'."
+                // new
+                // {
+                //     opened_windows = result.opened,
+                //     closed_windows = result.closed
+                // }
             );
         }
     }
