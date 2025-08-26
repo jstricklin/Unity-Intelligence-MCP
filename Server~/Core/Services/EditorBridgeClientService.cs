@@ -57,30 +57,40 @@ namespace UnityIntelligenceMCP.Core.Services
         private async Task ProcessMessagesAsync(CancellationToken ct)
         {
             var buffer = new byte[4096];
+            var stringBuilder = new StringBuilder();
+            WebSocketReceiveResult result;
+            string responseJson = "";
             while (_ws.State == WebSocketState.Open)
             {
-                var result = await _ws.ReceiveAsync(buffer, ct);
-                if (result.MessageType == WebSocketMessageType.Text)
+                do
                 {
-                    var responseJson = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    _logger.LogInformation("Received: {0}", responseJson);
-
-                    try
+                    result = await _ws.ReceiveAsync(buffer, ct);
+                    if (result.MessageType == WebSocketMessageType.Text)
                     {
-                        using var doc = JsonDocument.Parse(responseJson);
-                        if (doc.RootElement.TryGetProperty("request_id", out var requestIdElement))
+                        stringBuilder.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));
+                    }
+                } while (!result.EndOfMessage);
+                try
+                {
+                    responseJson = stringBuilder.ToString();
+                    _logger.LogInformation("Received: {0}", responseJson);
+                    using var doc = JsonDocument.Parse(responseJson);
+                    if (doc.RootElement.TryGetProperty("request_id", out var requestIdElement))
+                    {
+                        var requestId = requestIdElement.GetString();
+                        if (requestId != null && _pendingRequests.TryRemove(requestId, out var tcs))
                         {
-                            var requestId = requestIdElement.GetString();
-                            if (requestId != null && _pendingRequests.TryRemove(requestId, out var tcs))
-                            {
-                                tcs.SetResult(responseJson);
-                            }
+                            tcs.SetResult(responseJson);
                         }
                     }
-                    catch (JsonException ex)
-                    {
-                        _logger.LogError(ex, "Failed to parse incoming JSON message from Unity.");
-                    }
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "Failed to parse incoming JSON message from Unity.");
+                }
+                finally
+                {
+                    stringBuilder.Clear();
                 }
             }
         }

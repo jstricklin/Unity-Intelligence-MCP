@@ -23,16 +23,17 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             JArray scenes = new JArray();
             for (int i = 0; i < SceneManager.sceneCount; i++)
             {
-                var scene = SceneManager.GetSceneAt(i);
+                Scene scene = SceneManager.GetSceneAt(i);
                 var hierarchy = await Task.WhenAll(scene
                     .GetRootGameObjects()
                     .Select(async (go) => await AddGameObjectNode(go)));
-                scenes.Add(new JObject {
+                scenes.Add(new JObject
+                {
                     ["scene"] = scene.name,
                     ["hierarchy"] = new JArray(hierarchy),
                 });
             }
-            return ToolResponse.SuccessResponse("Scene hierarchy retrieved", new JObject { ["sceneHierarchies"] = scenes });
+            return ToolResponse.SuccessResponse("Scene hierarchy retrieved", new JObject { ["activeScene"] = SceneManager.GetActiveScene().name, ["sceneHierarchies"] = scenes });
         }
 
         async Task<JObject> AddGameObjectNode(GameObject go)
@@ -54,7 +55,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             JArray children = new JArray();
             for (int i = 0; i < parent.childCount; i++)
             {
-                var child = parent.GetChild(i);
+                Transform child = parent.GetChild(i);
                 children.Add(await AddGameObjectNode(child.gameObject));
             }
             return children;
