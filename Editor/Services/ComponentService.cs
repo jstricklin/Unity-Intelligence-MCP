@@ -4,6 +4,7 @@ using System.Reflection;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
+using UnityIntelligenceMCP.Tools;
 
 namespace UnityIntelligenceMCP.Unity.Services
 {
@@ -30,7 +31,8 @@ namespace UnityIntelligenceMCP.Unity.Services
         {
             foreach (var property in properties.Properties())
             {
-                var propInfo = component.GetType().GetProperty(property.Name, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                var propInfo = component.GetType().GetProperty(property.Name, BindingFlags.IgnoreCase |
+BindingFlags.Public | BindingFlags.Instance);
                 if (propInfo != null && propInfo.CanWrite)
                 {
                     var value = ParseValue(property.Value, propInfo.PropertyType);
@@ -38,7 +40,8 @@ namespace UnityIntelligenceMCP.Unity.Services
                     continue;
                 }
 
-                var fieldInfo = component.GetType().GetField(property.Name, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                var fieldInfo = component.GetType().GetField(property.Name, BindingFlags.IgnoreCase |
+BindingFlags.Public | BindingFlags.Instance);
                 if (fieldInfo != null)
                 {
                     var value = ParseValue(property.Value, fieldInfo.FieldType);
@@ -54,27 +57,27 @@ namespace UnityIntelligenceMCP.Unity.Services
                 return Enum.Parse(targetType, token.ToString(), true);
             }
 
-            if (token.Type == JTokenType.Object)
+            if (targetType == typeof(Vector2) && VectorParser.TryParseVector2(token, out var v2))
+                return v2;
+
+            if (targetType == typeof(Vector3) && VectorParser.TryParseVector3(token, out var v3))
+                return v3;
+
+            if (targetType == typeof(Vector4) && VectorParser.TryParseVector4(token, out var v4))
+                return v4;
+
+            if (targetType == typeof(Quaternion))
             {
-                if (targetType == typeof(Vector2))
-                    return new Vector2(token["x"].Value<float>(), token["y"].Value<float>());
-                
-                if (targetType == typeof(Vector3))
-                    return new Vector3(token["x"].Value<float>(), token["y"].Value<float>(), token["z"].Value<float>());
-
-                if (targetType == typeof(Vector4) || targetType == typeof(Quaternion))
-                {
-                    var x = token["x"].Value<float>();
-                    var y = token["y"].Value<float>();
-                    var z = token["z"].Value<float>();
-                    var w = token["w"].Value<float>();
-                    return targetType == typeof(Quaternion) ? new Quaternion(x, y, z, w) : new Vector4(x, y, z, w);
-                }
-
-                if (targetType == typeof(Color))
-                    return new Color(token["r"].Value<float>(), token["g"].Value<float>(), token["b"].Value<float>(), token.Value<float?>("a") ?? 1f);
+                if (token is JObject jObj && VectorParser.TryParseRotation(jObj, out var q))
+                    return q;
+                if (VectorParser.TryParseVector4(token, out var v4q))
+                    return new Quaternion(v4q.x, v4q.y, v4q.z, v4q.w);
             }
-            
+
+            if (token is JObject jObjColor && targetType == typeof(Color))
+                return new Color(jObjColor["r"].Value<float>(), jObjColor["g"].Value<float>(),
+jObjColor["b"].Value<float>(), jObjColor.Value<float?>("a") ?? 1f);
+
             return token.ToObject(targetType);
         }
     }

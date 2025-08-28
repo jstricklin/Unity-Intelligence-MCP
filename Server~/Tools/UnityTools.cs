@@ -110,7 +110,7 @@ namespace UnityIntelligenceMCP.Tools
             command.parameters["component_type"] = componentType;
             try
             {
-                command.parameters["properties"] = JsonSerializer.Deserialize<object>(properties);
+                command.parameters["properties"] = JsonSerializer.Deserialize<object>(properties)!;
             }
             catch (JsonException ex)
             {
