@@ -7,6 +7,7 @@ using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Tools.GameObjectTools;
 using UnityIntelligenceMCP.Tools.EditorTools;
+using UnityIntelligenceMCP.Unity.Services;
 
 namespace UnityIntelligenceMCP.Tools
 {
@@ -14,10 +15,12 @@ namespace UnityIntelligenceMCP.Tools
     {
         private readonly Dictionary<string, ITool> _tools = new(StringComparer.OrdinalIgnoreCase);
         private readonly IGameObjectService _gameObjectService;
+        private readonly IComponentService _componentService;
 
         public ToolService(IGameObjectService gameObjectService)
         {
             _gameObjectService = gameObjectService;
+            _componentService = new ComponentService();
             RegisterTools();
         }
 
@@ -30,7 +33,7 @@ namespace UnityIntelligenceMCP.Tools
             RegisterTool(new DeleteGameObjectTool(_gameObjectService));
             RegisterTool(new UpdateTransformTool(_gameObjectService));
             RegisterTool(new ModifyGameObjectTool(_gameObjectService));
-            RegisterTool(new ModifyComponentTool(_gameObjectService));
+            RegisterTool(new ModifyComponentTool(_gameObjectService, _componentService));
             
             // Editor Tools
             RegisterTool(new ExecuteMenuItemTool());

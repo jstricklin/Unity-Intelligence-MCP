@@ -1,10 +1,7 @@
 using System;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
-using UnityEngine;
 using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 
@@ -13,18 +10,13 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
     public class ModifyComponentTool : ITool
     {
         private readonly IGameObjectService _gameObjectService;
+        private readonly IComponentService _componentService;
         public string CommandName => "modify_component";
 
-        public ModifyComponentTool(IGameObjectService gameObjectService)
+        public ModifyComponentTool(IGameObjectService gameObjectService, IComponentService componentService)
         {
             _gameObjectService = gameObjectService;
-        }
-
-        private static Type FindType(string name)
-        {
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a => a.GetTypes())
-                .FirstOrDefault(t => t.FullName != null && t.FullName.Equals(name, StringComparison.OrdinalIgnoreCase));
+            _componentService = componentService;
         }
 
         public async Task<ToolResponse> ExecuteAsync(JObject parameters)
@@ -52,36 +44,15 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
             {
                 try
                 {
-                    var componentType = FindType(componentTypeName);
+                    var componentType = _componentService.FindType(componentTypeName);
                     if (componentType == null)
                     {
                         throw new InvalidOperationException($"Component type '{componentTypeName}' not found.");
                     }
 
-                    var component = target.GetComponent(componentType);
-                    if (component == null)
-                    {
-                        component = target.AddComponent(componentType);
-                    }
+                    var component = _componentService.GetOrAddComponent(target, componentType);
+                    _componentService.ApplyProperties(component, properties);
 
-                    foreach (var property in properties.Properties())
-                    {
-                        var propInfo = component.GetType().GetProperty(property.Name, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-                        if (propInfo != null && propInfo.CanWrite)
-                        {
-                            var value = property.Value.ToObject(propInfo.PropertyType);
-                            propInfo.SetValue(component, value);
-                        }
-                        else
-                        {
-                            var fieldInfo = component.GetType().GetField(property.Name, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-                            if (fieldInfo != null)
-                            {
-                                var value = property.Value.ToObject(fieldInfo.FieldType);
-                                fieldInfo.SetValue(component, value);
-                            }
-                        }
-                    }
                     tcs.SetResult(true);
                 }
                 catch (Exception ex)
