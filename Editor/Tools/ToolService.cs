@@ -30,6 +30,7 @@ namespace UnityIntelligenceMCP.Tools
             RegisterTool(new DeleteGameObjectTool(_gameObjectService));
             RegisterTool(new UpdateTransformTool(_gameObjectService));
             RegisterTool(new ModifyGameObjectTool(_gameObjectService));
+            RegisterTool(new ModifyComponentTool(_gameObjectService));
             
             // Editor Tools
             RegisterTool(new ExecuteMenuItemTool());

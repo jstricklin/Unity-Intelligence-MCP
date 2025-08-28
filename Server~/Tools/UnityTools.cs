@@ -89,6 +89,37 @@ namespace UnityIntelligenceMCP.Tools
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
+        [McpServerTool(Name = "modify_component"), Description("Modify properties of a component on a GameObject. Adds the component if it doesn't exist.")]
+        public async Task<string> ModifyComponent(
+            [Description("Name or path of the target GameObject.")]
+            string target = "",
+            [Description("Instance ID of the target GameObject.")]
+            string instanceId = "",
+            [Description("The full name of the component type, e.g., 'UnityEngine.Rigidbody'.")]
+            string componentType = "",
+            [Description("A JSON string of properties to set, e.g., '{\"mass\": 5, \"useGravity\": false}'.")]
+            string properties = "{}",
+            CancellationToken cancellationToken = default)
+        {
+            var command = new UnityToolRequest
+            {
+                command = "modify_component"
+            };
+            command.parameters["target"] = target;
+            command.parameters["instanceId"] = instanceId;
+            command.parameters["component_type"] = componentType;
+            try
+            {
+                command.parameters["properties"] = JsonSerializer.Deserialize<object>(properties);
+            }
+            catch (JsonException ex)
+            {
+                return JsonSerializer.Serialize(new { status = "error", message = $"Invalid JSON in 'properties' parameter: {ex.Message}" });
+            }
+
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+        }
+
         [McpServerTool(Name = "update_transform"), Description("Update the transform (position, rotation, scale) of a GameObject by name or instance ID.")]
         public async Task<string> UpdateTransform(
             [Description("Name or path of the target GameObject.")]
