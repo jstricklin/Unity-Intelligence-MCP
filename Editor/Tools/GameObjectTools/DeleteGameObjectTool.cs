@@ -1,31 +1,29 @@
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Editor.Models;
 using UnityEngine;
-using UnityEditor;
+using UnityIntelligenceMCP.Tools.Base;
 
 namespace UnityIntelligenceMCP.Tools.GameObjectTools
 {
-    public class DeleteGameObjectTool : ITool
+    public class DeleteGameObjectTool : GameObjectTool
     {
-        private readonly IGameObjectService _service;
-        public string CommandName => "delete_gameobject";
-        
-        public DeleteGameObjectTool(IGameObjectService service) => _service = service;
-        
-        public Task<ToolResponse> ExecuteAsync(JObject parameters)
+        public override string CommandName => "delete_gameobject";
+
+        public DeleteGameObjectTool(IGameObjectService service)
         {
-            if (!ToolValidator.TryFindTarget(parameters, _service, out var target, out var errorResponse))
-                return Task.FromResult(errorResponse);
-            
-            string name = target.name;
-            _service.Delete(target);
-            
-            return Task.FromResult(ToolResponse.SuccessResponse(
+            GameObjectService = service;
+        }
+
+        protected override ToolResponse ExecuteOnMainThread(GameObject target, JObject parameters)
+        {
+            var name = target.name;
+            GameObjectService.Delete(target);
+
+            return ToolResponse.SuccessResponse(
                 $"Deleted GameObject: {name}",
                 new { deleted = true }
-            ));
+            );
         }
     }
 }

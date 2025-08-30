@@ -1,45 +1,48 @@
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Editor.Models;
 using UnityEngine;
+using UnityIntelligenceMCP.Tools.Base;
+using UnityIntelligenceMCP.Unity.Services.Contracts;
 
 namespace UnityIntelligenceMCP.Tools.GameObjectTools
 {
-    public class FindGameObjectTool : ITool
+    public class FindGameObjectTool : GameObjectTool
     {
-        private readonly IGameObjectService _service;
-        public string CommandName => "find_gameobject";
-        
-        public FindGameObjectTool(IGameObjectService service) => _service = service;
-        
-        public Task<ToolResponse> ExecuteAsync(JObject parameters)
+        public override string CommandName => "find_gameobject";
+
+        public FindGameObjectTool(IGameObjectService service)
         {
-            if (!ToolValidator.TryFindTarget(parameters, _service, out var obj, out var errorResponse))
-                return Task.FromResult(errorResponse);
-                
-            return Task.FromResult(ToolResponse.SuccessResponse(
-                $"Found {obj.name}",
-                new {
-                    instanceId = obj.GetInstanceID(),
-                    position = new {
-                        x = obj.transform.position.x,
-                        y = obj.transform.position.y,
-                        z = obj.transform.position.z
+            GameObjectService = service;
+        }
+
+        protected override ToolResponse ExecuteOnMainThread(GameObject target, JObject parameters)
+        {
+            return ToolResponse.SuccessResponse(
+                $"Found {target.name}",
+                new
+                {
+                    instanceId = target.GetInstanceID(),
+                    position = new
+                    {
+                        x = target.transform.position.x,
+                        y = target.transform.position.y,
+                        z = target.transform.position.z
                     },
-                    scale = new {
-                        x = obj.transform.localScale.x,
-                        y = obj.transform.localScale.y,
-                        z = obj.transform.localScale.z
+                    scale = new
+                    {
+                        x = target.transform.localScale.x,
+                        y = target.transform.localScale.y,
+                        z = target.transform.localScale.z
                     },
-                    rotation = new {
-                        x = obj.transform.rotation.x,
-                        y = obj.transform.rotation.y,
-                        z = obj.transform.rotation.z,
-                        w = obj.transform.rotation.w
+                    rotation = new
+                    {
+                        x = target.transform.rotation.x,
+                        y = target.transform.rotation.y,
+                        z = target.transform.rotation.z,
+                        w = target.transform.rotation.w
                     }
                 }
-            ));
+            );
         }
     }
 }
