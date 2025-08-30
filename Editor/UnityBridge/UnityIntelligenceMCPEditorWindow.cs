@@ -16,6 +16,7 @@ namespace UnityIntelligenceMCP.Unity
         private Vector2 _serverTabScrollPosition = Vector2.zero;
         private Vector2 _configurationTabScrollPosition = Vector2.zero;
         private UnityIntelligenceMCPController _controller;
+        private bool connectionStarted = false;
 
         [MenuItem("Tools/Unity Intelligence MCP/Server Window", false, 1)]
         public static void ShowWindow()
@@ -97,23 +98,26 @@ namespace UnityIntelligenceMCP.Unity
             EditorGUILayout.BeginHorizontal();
             if (!mcpUnityServer.IsListening)
             {
-                if (GUILayout.Button("Start Server", GUILayout.Height(30)))
+                if (settings.AutoStart || connectionStarted)
                 {
                     _controller.StartServer();
+                    connectionStarted = true;
+                }
+                else if (GUILayout.Button("Start Server", GUILayout.Height(30)))
+                {
+                    _controller.StartServer();
+                    connectionStarted = true;
                 }
             }
             else
             {
-                if (GUILayout.Button("Stop Server", GUILayout.Height(30)))
+                if (!settings.AutoStart && GUILayout.Button("Stop Server", GUILayout.Height(30)))
                 {
                     _controller.StopServer();
+                    connectionStarted = false;
                 }
             }
 
-            if (GUILayout.Button("Send Test Message", GUILayout.Height(30)))
-            {
-                _controller.SendTestMessage();
-            }
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
@@ -159,8 +163,14 @@ namespace UnityIntelligenceMCP.Unity
 
             EditorGUILayout.Space();
 
-            // GUILayout.Label("Tool Settings", EditorStyles.boldLabel);
+            GUILayout.Label("Tool Settings", EditorStyles.boldLabel);
             // Simple checkboxes
+            EditorGUI.BeginChangeCheck();
+            settings.AutoStart = EditorGUILayout.Toggle("Automatically start server", settings.AutoStart);
+            if (EditorGUI.EndChangeCheck())
+            {
+                settings.SaveSettings();
+            }
             // settings.AnalyzeProjectCode = EditorGUILayout.Toggle("Enable Code Analysis", settings.AnalyzeProjectCode);
             // settings.EmbeddUnityDocs = EditorGUILayout.Toggle("Build Unity RAG (~2GB)", settings.EmbeddUnityDocs);
 
