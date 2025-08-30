@@ -1,14 +1,11 @@
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using UnityIntelligenceMCP.Core.Data.Contracts;
 using UnityIntelligenceMCP.Core.Services;
-using UnityIntelligenceMCP.Models.Database;
 
 namespace UnityIntelligenceMCP.Resources
 {
@@ -16,21 +13,16 @@ namespace UnityIntelligenceMCP.Resources
     public class SceneHierarchyResource
     {
         private readonly ILogger<UnityProjectResource> _logger;
-        private readonly IToolUsageLogger _usageLogger;
 
-        public SceneHierarchyResource(ILogger<UnityProjectResource> logger, IToolUsageLogger usageLogger)
+        public SceneHierarchyResource(ILogger<UnityProjectResource> logger)
         {
             _logger = logger;
-            _usageLogger = usageLogger;
         }
 
         [McpServerResource(Name = "get_scene_hierarchy")]
         [Description("Retrieves current scene hierarchy (GameObjects and their relationships) from the Unity Editor.")]
         public async Task<TextResourceContents> GetSceneHierarchyAsync()
         {
-            var stopwatch = Stopwatch.StartNew();
-            TextResourceContents? result = null;
-
             try
             {
                 var request = new
@@ -48,13 +40,12 @@ namespace UnityIntelligenceMCP.Resources
                 if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
                 {
                     var data = root.GetProperty("data").GetRawText();
-                    result = new TextResourceContents
+                    return new TextResourceContents
                     {
                         Uri  = request.resource_uri,
                         Text = data,
                         MimeType = "application/json"
                     };
-                    return result;
                 }
                 
                 var message = root.TryGetProperty("message", out var msgEl) ? msgEl.GetString() : "Unknown error from Unity Editor.";

@@ -122,7 +122,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             CREATE TABLE IF NOT EXISTS tool_usage_log (
                 id BIGINT PRIMARY KEY DEFAULT nextval('tool_usage_log_id_seq'),
                 event_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                usage_type VARCHAR,
+                usage_type VARCHAR NOT NULL,
                 operation_name VARCHAR NOT NULL,
                 resource_uri VARCHAR,
                 parameters_json VARCHAR,

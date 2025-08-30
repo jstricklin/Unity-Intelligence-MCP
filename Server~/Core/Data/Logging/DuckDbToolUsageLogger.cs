@@ -18,24 +18,44 @@ namespace UnityIntelligenceMCP.Core.Data.Logging
         {
             var usageLog = log ?? new ToolUsageLog();
             using var doc = JsonDocument.Parse(toolData);
-            foreach (var prop in doc.RootElement.EnumerateObject())
+            var root = doc.RootElement;
+
+            if (log == null) // This is a request
+            {
+                usageLog.UsageType = root.TryGetProperty("type", out var typeElement) && typeElement.GetString() == "resource"
+                    ? "resource"
+                    : "tool";
+                if (usageLog.UsageType == "resource" && root.TryGetProperty("resource_uri", out var uriElement))
+                {
+                    usageLog.ResourceUri = uriElement.GetString();
+                }
+            }
+
+            foreach (var prop in root.EnumerateObject())
             {
                 switch (prop.Name)
                 {
-                    case "type":
-                        usageLog.UsageType = prop.Value.ToString();
-                        break;
                     case "command":
                         usageLog.OperationName = prop.Value.ToString();
-                        break;
-                    case "resource_uri":
-                        usageLog.ResourceUri = prop.Value.ToString();
                         break;
                     case "parameters":
                         usageLog.ParametersJson = prop.Value.ToString();
                         break;
                     case "data":
-                        usageLog.ResultSummaryJson = prop.Value.ToString();
+                        if (usageLog.UsageType == "resource")
+                        {
+                            var summary = new
+                            {
+                                MimeType = "application/json",
+                                TextLength = prop.Value.ToString().Length,
+                                ResourceUri = usageLog.ResourceUri
+                            };
+                            usageLog.ResultSummaryJson = JsonSerializer.Serialize(summary);
+                        }
+                        else
+                        {
+                            usageLog.ResultSummaryJson = prop.Value.ToString();
+                        }
                         break;
                     case "success":
                         usageLog.WasSuccessful = prop.Value.GetBoolean();
