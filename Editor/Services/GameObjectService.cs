@@ -7,16 +7,20 @@ namespace UnityIntelligenceMCP.Unity.Services
 {
     public class GameObjectService : IGameObjectService
     {
-        public GameObject Create(string name, Vector3 position)
+        public GameObject Create(string name, Vector3 position, GameObject parent = null)
         {
             var go = new GameObject(name);
             go.transform.position = position;
+            if (parent != null)
+            {
+                go.transform.SetParent(parent.transform, true);
+            }
             Undo.RegisterCreatedObjectUndo(go, $"Create '{name}'");
             Selection.activeObject = go;
             return go;
         }
 
-        public GameObject CreatePrimitive(PrimitiveType type, string name, Vector3 position)
+        public GameObject CreatePrimitive(PrimitiveType type, string name, Vector3 position, GameObject parent = null)
         {
             var go = GameObject.CreatePrimitive(type);
             go.name = name;
@@ -70,11 +74,16 @@ namespace UnityIntelligenceMCP.Unity.Services
             target.transform.rotation = newRotation;
         }
 
-        public void UpdateParent(GameObject target, GameObject newParent, bool keepPosition = true)
+        public void UpdateParent(GameObject target, GameObject newParent)
         {
             if (!target) return;
-            Undo.RecordObject(target.transform, $"Update Parent '{target.name}'");
-            target.transform.SetParent(newParent.transform, keepPosition);
+            Undo.SetTransformParent(target.transform, newParent.transform, $"Update Parent '{target.name}'");
+        }
+
+        public void ClearParent(GameObject target)
+        {
+            if (!target) return;
+            Undo.SetTransformParent(target.transform, null, $"Clear Parent '{target.name}'");
         }
 
         public void Delete(GameObject target)
