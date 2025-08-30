@@ -13,6 +13,7 @@ using System.Text.Json;
 using UnityIntelligenceMCP.Utilities;
 using UnityIntelligenceMCP.Core.Data.Contracts;
 using UnityIntelligenceMCP.Models.Database;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace UnityIntelligenceMCP.Resources
 {
@@ -42,8 +43,6 @@ namespace UnityIntelligenceMCP.Resources
             string relativePath
             )
         {
-            var stopwatch = Stopwatch.StartNew();
-            bool wasSuccessful = false;
             TextResourceContents? result = null;
             try
             {
@@ -63,47 +62,24 @@ namespace UnityIntelligenceMCP.Resources
                 }
 
                 var parser = new UnityDocumentationParser();
-                UnityDocumentationData docData = parser.Parse(fullPath);
+                UnityDocumentationData docData = await Task.FromResult(Task.Run(() => parser.Parse(fullPath))).Result;
 
                 result = new TextResourceContents
                 {
                     Text = JsonSerializer.Serialize(docData),
                     MimeType = "text/json"
                 };
-                wasSuccessful = true;
                 return result;
             }
             catch (DirectoryNotFoundException ex)
             {
-                wasSuccessful = false;
                  _logger.LogError(ex, "Documentation directory not found.");
                 throw new InvalidOperationException($"Configuration error: {ex.Message}", ex);
             }
             catch (IOException ex)
             {
-                wasSuccessful = false;
                 _logger.LogError(ex, "Failed to read documentation file.");
                 throw new InvalidOperationException($"File access error: {ex.Message}", ex);
-            }
-            finally
-            {
-                stopwatch.Stop();
-                var process = Process.GetCurrentProcess();
-                process.Refresh();
-                var peakMemoryMb = process.PeakWorkingSet64 / (1024 * 1024);
-
-                var parameters = new { relativePath };
-                var resultSummary = new { MimeType = result?.MimeType, TextLength = result?.Text.Length ?? 0 };
-
-                await _usageLogger.LogAsync(new ToolUsageLog
-                {
-                    ToolName = "get_script_reference_page",
-                    ParametersJson = JsonSerializer.Serialize(parameters),
-                    ResultSummaryJson = JsonSerializer.Serialize(resultSummary),
-                    ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
-                    WasSuccessful = wasSuccessful,
-                    PeakProcessMemoryMb = peakMemoryMb
-                });
             }
         }
     }
