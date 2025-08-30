@@ -9,7 +9,7 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
     public class CreatePrimitiveTool : GameObjectTool
     {
         public override string CommandName => "create_primitive";
-
+        protected override bool findTarget { get; set; } = false;
         public CreatePrimitiveTool(IGameObjectService service)
         {
             GameObjectService = service;
@@ -52,12 +52,6 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
                     type = type.ToString()
                 }
             );
-        }
-        
-        protected override ToolResponse ExecuteOnMainThread(GameObject target, JObject parameters)
-        {
-            // This tool creates a new object, so this method is not applicable.
-            throw new System.NotImplementedException();
         }
     }
 }

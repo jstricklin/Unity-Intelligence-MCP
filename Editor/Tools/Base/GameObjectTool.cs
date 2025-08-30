@@ -12,7 +12,8 @@ namespace UnityIntelligenceMCP.Tools.Base
     {
         protected IGameObjectService GameObjectService;
         protected IComponentService ComponentService;
-
+        protected virtual bool findTarget { get; set; } = true;
+        protected GameObject target = null;
         protected GameObjectTool() {}
 
         protected GameObjectTool(IGameObjectService gameObjectService, IComponentService componentService)
@@ -23,7 +24,7 @@ namespace UnityIntelligenceMCP.Tools.Base
 
         public override async Task<ToolResponse> ExecuteAsync(JObject parameters)
         {
-            if (!ToolValidator.TryFindTarget(parameters, GameObjectService, out var target, out var errorResponse))
+            if (findTarget && !ToolValidator.TryFindTarget(parameters, GameObjectService, out target, out var errorResponse))
             {
                 return errorResponse;
             }
@@ -34,7 +35,11 @@ namespace UnityIntelligenceMCP.Tools.Base
             {
                 try
                 {
-                    var response = ExecuteOnMainThread(target, parameters);
+                    ToolResponse response;
+                    if (target != null)
+                        response = ExecuteOnMainThread(target, parameters);
+                    else
+                        response = ExecuteOnMainThread(parameters);
                     tcs.SetResult(response);
                 }
                 catch (Exception ex)
@@ -46,6 +51,7 @@ namespace UnityIntelligenceMCP.Tools.Base
             return await tcs.Task;
         }
 
-        protected abstract ToolResponse ExecuteOnMainThread(GameObject target, JObject parameters);
+        protected virtual ToolResponse ExecuteOnMainThread(JObject parameters) { throw new System.NotImplementedException(); }
+        protected virtual ToolResponse ExecuteOnMainThread(GameObject target, JObject parameters) { throw new System.NotImplementedException(); }
     }
 }
