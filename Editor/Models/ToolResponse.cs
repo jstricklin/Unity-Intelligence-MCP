@@ -16,6 +16,14 @@ namespace UnityIntelligenceMCP.Editor.Models
 
         [JsonProperty("error", NullValueHandling = NullValueHandling.Ignore)]
         public string Error { get; private set; }
+        [JsonProperty("execution_time", NullValueHandling = NullValueHandling.Ignore)]
+        public float ExecutionTime { get; private set; }
+
+        public static ToolResponse FinalizeResponse(ToolResponse response, float executeTime)
+        {
+            response.ExecutionTime = executeTime;
+            return response;
+        }
 
         public static ToolResponse SuccessResponse(string message, object data = null)
         {

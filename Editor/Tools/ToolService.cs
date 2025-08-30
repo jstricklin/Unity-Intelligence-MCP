@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -56,11 +57,14 @@ namespace UnityIntelligenceMCP.Tools
 
             try
             {
-                return await tool.ExecuteAsync(parameters);
+                var stopwatch = Stopwatch.StartNew();
+                var response = await tool.ExecuteAsync(parameters);
+                stopwatch.Stop();
+                return ToolResponse.FinalizeResponse(response, stopwatch.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Tool '{command}' failed: {ex.Message}\n{ex.StackTrace}");
+                UnityEngine.Debug.LogError($"Tool '{command}' failed: {ex.Message}\n{ex.StackTrace}");
                 return ToolResponse.ErrorResponse($"{command} failed: {ex.Message}");
             }
         }

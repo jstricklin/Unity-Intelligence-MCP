@@ -8,22 +8,29 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using UnityIntelligenceMCP.Configuration;
+using UnityIntelligenceMCP.Models.Database;
+using UnityIntelligenceMCP.Core.Data.Logging;
+using System.Net.NetworkInformation;
+using UnityIntelligenceMCP.Core.Data.Contracts;
 
 namespace UnityIntelligenceMCP.Core.Services
 {
     public class EditorBridgeClientService : BackgroundService
     {
         private readonly ILogger<EditorBridgeClientService> _logger;
+        private readonly IToolUsageLogger _toolLogger;
         private readonly ConfigurationService _configurationService;
         private ClientWebSocket _ws = new();
         private static EditorBridgeClientService? _instance;
-        private readonly ConcurrentDictionary<string, TaskCompletionSource<string>> _pendingRequests = new();
+        private readonly ConcurrentDictionary<string, (ToolUsageLog usageLog, TaskCompletionSource<string> tcs)> _pendingRequests = new();
         public EditorBridgeClientService(
             ConfigurationService configurationService,
+            IToolUsageLogger toolLogger,
             ILogger<EditorBridgeClientService> logger)
         {
             _configurationService = configurationService;
             _logger = logger;
+            _toolLogger = toolLogger;
             _instance = this;
         }
 
@@ -78,9 +85,11 @@ namespace UnityIntelligenceMCP.Core.Services
                     if (doc.RootElement.TryGetProperty("request_id", out var requestIdElement))
                     {
                         var requestId = requestIdElement.GetString();
-                        if (requestId != null && _pendingRequests.TryRemove(requestId, out var tcs))
+                        if (requestId != null && _pendingRequests.TryRemove(requestId, out var request))
                         {
-                            tcs.SetResult(responseJson);
+                            request.tcs.SetResult(responseJson);
+                            _toolLogger.Parse(responseJson, request.usageLog);
+                            await _toolLogger.LogAsync(request.usageLog);
                         }
                     }
                 }
@@ -107,8 +116,9 @@ namespace UnityIntelligenceMCP.Core.Services
         {
             var requestId = Guid.NewGuid().ToString();
             var tcs = new TaskCompletionSource<string>();
+            var usageLog = _toolLogger.Parse(jsonPayload);
 
-            if (!_pendingRequests.TryAdd(requestId, tcs))
+            if (!_pendingRequests.TryAdd(requestId, (usageLog, tcs)))
             {
                 throw new InvalidOperationException("Could not register a pending request.");
             }

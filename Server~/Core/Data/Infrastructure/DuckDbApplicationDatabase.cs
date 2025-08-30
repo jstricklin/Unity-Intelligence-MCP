@@ -126,8 +126,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 parameters_json VARCHAR,
                 result_summary_json VARCHAR,
                 execution_time_ms BIGINT,
-                was_successful BOOLEAN,
-                peak_process_memory_mb BIGINT
+                was_successful BOOLEAN
             );
         ";
 

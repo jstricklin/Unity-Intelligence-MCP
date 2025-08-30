@@ -4,6 +4,7 @@ using UnityIntelligenceMCP.Core.Services;
 using ModelContextProtocol.Server;
 using System.Text.Json;
 using System.Numerics;
+using System.Reflection.Metadata;
 
 namespace UnityIntelligenceMCP.Tools
 {
@@ -11,7 +12,7 @@ namespace UnityIntelligenceMCP.Tools
     [McpServerToolType]
     public class UnityTools
     {
-        // TODO extract these to individual files and build new tool request error and response models
+    // TODO extract these to individual files and build new tool request error and response models
         [McpServerTool(Name = "create_primitive"), Description("Create a primitive object in Unity.")]
         public async Task<string> CreatePrimitive(
             [Description("Primitive Type to create: Sphere, Capsule, Cylinder, Cube, Plane, Quad")]
@@ -85,37 +86,6 @@ namespace UnityIntelligenceMCP.Tools
             if (isActive.HasValue) command.parameters["is_active"] = isActive.Value;
             if (isStatic.HasValue) command.parameters["is_static"] = isStatic.Value;
             if (scenePath != null) command.parameters["scene_path"] = scenePath;
-
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
-        }
-
-        [McpServerTool(Name = "modify_component"), Description("Modify properties of a component on a GameObject. Adds the component if it doesn't exist.")]
-        public async Task<string> ModifyComponent(
-            [Description("Name or path of the target GameObject.")]
-            string target = "",
-            [Description("Instance ID of the target GameObject.")]
-            string instanceId = "",
-            [Description("The full name of the component type, e.g., 'UnityEngine.Rigidbody'.")]
-            string componentType = "",
-            [Description("A JSON string of properties to set, e.g., '{\"mass\": 5, \"useGravity\": false}'.")]
-            string properties = "{}",
-            CancellationToken cancellationToken = default)
-        {
-            var command = new UnityToolRequest
-            {
-                command = "modify_component"
-            };
-            command.parameters["target"] = target;
-            command.parameters["instanceId"] = instanceId;
-            command.parameters["component_type"] = componentType;
-            try
-            {
-                command.parameters["properties"] = JsonSerializer.Deserialize<object>(properties)!;
-            }
-            catch (JsonException ex)
-            {
-                return JsonSerializer.Serialize(new { status = "error", message = $"Invalid JSON in 'properties' parameter: {ex.Message}" });
-            }
 
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }

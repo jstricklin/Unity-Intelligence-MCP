@@ -37,6 +37,7 @@ namespace UnityIntelligenceMCP.Resources
                 var request = new
                 {
                     type = "resource",
+                    command = "get_project_info",
                     resource_uri = "unity://project/info"
                 };
                 var jsonPayload = JsonSerializer.Serialize(request);

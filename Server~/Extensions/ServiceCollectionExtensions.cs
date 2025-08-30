@@ -17,10 +17,11 @@ using UnityIntelligenceMCP.Resources;
 using UnityIntelligenceMCP.Configuration;
 using UnityIntelligenceMCP.Utilities;
 using UnityIntelligenceMCP.Models;
+using UnityIntelligenceMCP.Core.Data.Logging;
 using UnityIntelligenceMCP.Core.Data.Services;
+using UnityIntelligenceMCP.Core.Services.Contracts;
 using UnityIntelligenceMCP.Core.Services;
 using System.Data.Common;
-using UnityIntelligenceMCP.Core.Services.Contracts;
 
 namespace UnityIntelligenceMCP.Extensions
 {

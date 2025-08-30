@@ -15,6 +15,7 @@ namespace UnityIntelligenceMCP.Resources
         {
             var request = new
             {
+                command = "get_editor_menu_items",
                 type = "resource",
                 resource_uri = "unity://editor/menuitems"
             };
