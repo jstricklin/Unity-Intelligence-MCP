@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
+using UnityEditor;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Tools;
 
@@ -12,17 +13,54 @@ namespace UnityIntelligenceMCP.Unity.Services
     {
         public Type FindType(string name)
         {
-            return AppDomain.CurrentDomain.GetAssemblies()
+            Type type = Type.GetType(name);
+            if (type != null)
+                return type;
+
+            type = TryFindInUnityAssemblies(name);
+            if (type != null)
+                return type;
+
+            type = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(a => a.GetTypes())
-                .FirstOrDefault(t => t.FullName != null && t.FullName.Equals(name, StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault(t => t.Name != null && t.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (type != null)
+                return type;
+
+            throw new InvalidOperationException($"Component type '{name}' not found.");
         }
 
-        public Component GetOrAddComponent(GameObject target, Type componentType)
+        public bool RemoveComponent(GameObject target, string componentTypeName)
         {
+            bool success = false;
+
+            var componentType = FindType(componentTypeName);
+            try 
+            {
+                var component = target.GetComponent(componentType);
+
+                if (component != null)
+                {
+                    Undo.DestroyObjectImmediate(component);
+                    success = true;
+                }
+            } 
+            catch  
+            {
+                success = false;
+            }
+            return success;
+        }
+
+        public Component GetOrAddComponent(GameObject target, string componentTypeName)
+        {
+
+            var componentType = FindType(componentTypeName);
             var component = target.GetComponent(componentType);
+
             if (component == null)
             {
-                component = target.AddComponent(componentType);
+                component = Undo.AddComponent(target, componentType);
             }
             return component;
         }
@@ -35,6 +73,7 @@ namespace UnityIntelligenceMCP.Unity.Services
 BindingFlags.Public | BindingFlags.Instance);
                 if (propInfo != null && propInfo.CanWrite)
                 {
+                    Undo.RecordObject(component, $"Update Property {property.Name} '{component.GetType().Name}'");
                     var value = ParseValue(property.Value, propInfo.PropertyType);
                     propInfo.SetValue(component, value);
                     continue;
@@ -44,9 +83,11 @@ BindingFlags.Public | BindingFlags.Instance);
 BindingFlags.Public | BindingFlags.Instance);
                 if (fieldInfo != null)
                 {
+                    Undo.RecordObject(component, $"Update Field {property.Name} '{component.GetType().Name}'");
                     var value = ParseValue(property.Value, fieldInfo.FieldType);
                     fieldInfo.SetValue(component, value);
                 }
+
             }
         }
 
@@ -75,10 +116,45 @@ BindingFlags.Public | BindingFlags.Instance);
             }
 
             if (token is JObject jObjColor && targetType == typeof(Color))
-                return new Color(jObjColor["r"].Value<float>(), jObjColor["g"].Value<float>(),
-jObjColor["b"].Value<float>(), jObjColor.Value<float?>("a") ?? 1f);
+                return new Color(jObjColor["r"].Value<float>(), jObjColor["g"].Value<float>(), jObjColor["b"].Value<float>(), jObjColor.Value<float?>("a") ?? 1f);
 
             return token.ToObject(targetType);
+        }
+
+        private Type TryFindInUnityAssemblies(string name)
+        {
+            // Common Unity assembly names to check first
+            // TODO resolve TMPro component support
+            string[] unityAssemblyNames = {
+                "UnityEngine",
+                "UnityEngine.CoreModule", 
+                "UnityEngine.PhysicsModule",
+                "UnityEngine.UI",
+                "UnityEngine.UIModule",
+                "UnityEngine.UIElements",
+                "Assembly-CSharp",
+                "TMPro"
+            };
+
+            foreach (var assemblyName in unityAssemblyNames)
+            {
+                try
+                {
+                    Type type = Type.GetType($"{assemblyName}.{name}, {assemblyName}");
+                    if (type != null)
+                    {
+                        // Debug.Log("Unity Assembly Found: " + type.FullName);
+                        return type;
+                    }
+                }
+                catch (ReflectionTypeLoadException)
+                {
+                    // Skip assemblies that can't be loaded
+                    continue;
+                }
+            }
+            
+            return null;
         }
     }
 }

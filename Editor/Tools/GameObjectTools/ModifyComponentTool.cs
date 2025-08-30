@@ -9,13 +9,12 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
 {
     public class ModifyComponentTool : GameObjectTool
     {
-        private readonly IComponentService _componentService;
         public override string CommandName => "modify_component";
 
         public ModifyComponentTool(IGameObjectService gameObjectService, IComponentService componentService)
         {
             GameObjectService = gameObjectService;
-            _componentService = componentService;
+            ComponentService = componentService;
         }
 
         protected override ToolResponse ExecuteOnMainThread(GameObject target, JObject parameters)
@@ -32,14 +31,8 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
                 return ToolResponse.ErrorResponse("Parameter 'properties' must be a valid JSON object.");
             }
 
-            var componentType = _componentService.FindType(componentTypeName);
-            if (componentType == null)
-            {
-                throw new InvalidOperationException($"Component type '{componentTypeName}' not found.");
-            }
-
-            var component = _componentService.GetOrAddComponent(target, componentType);
-            _componentService.ApplyProperties(component, properties);
+            var component = ComponentService.GetOrAddComponent(target, componentTypeName);
+            ComponentService.ApplyProperties(component, properties);
 
             return ToolResponse.SuccessResponse(
                 $"Successfully modified component '{componentTypeName}' on GameObject '{target.name}'.");

@@ -7,7 +7,8 @@ namespace UnityIntelligenceMCP.Unity.Services.Contracts
     public interface IComponentService
     {
         Type FindType(string name);
-        Component GetOrAddComponent(GameObject target, Type componentType);
+        Component GetOrAddComponent(GameObject target, string componentTypeName);
+        bool RemoveComponent(GameObject target, string componentTypeName);
         void ApplyProperties(Component component, JObject properties);
     }
 }

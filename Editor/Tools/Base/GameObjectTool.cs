@@ -11,12 +11,14 @@ namespace UnityIntelligenceMCP.Tools.Base
     public abstract class GameObjectTool : EditorTool
     {
         protected IGameObjectService GameObjectService;
+        protected IComponentService ComponentService;
 
         protected GameObjectTool() {}
 
-        protected GameObjectTool(IGameObjectService gameObjectService)
+        protected GameObjectTool(IGameObjectService gameObjectService, IComponentService componentService)
         {
             GameObjectService = gameObjectService;
+            ComponentService = componentService;
         }
 
         public override async Task<ToolResponse> ExecuteAsync(JObject parameters)

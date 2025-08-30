@@ -24,9 +24,9 @@ namespace UnityIntelligenceMCP.Utils
                 File.WriteAllText(filePath, content);
                 Debug.Log($"Successfully created VSCode configuration at: {filePath}");
             }
-            catch (System.Exception e)
+            catch (System.Exception ex)
             {
-                Debug.LogError($"[ERROR]: {e.Message}");
+                Debug.LogError($"[ERROR]: {ex.Message}");
             }
         }
         public static string GetMcpServerPath()

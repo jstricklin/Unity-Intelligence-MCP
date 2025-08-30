@@ -70,6 +70,13 @@ namespace UnityIntelligenceMCP.Unity.Services
             target.transform.rotation = newRotation;
         }
 
+        public void UpdateParent(GameObject target, GameObject newParent, bool keepPosition = true)
+        {
+            if (!target) return;
+            Undo.RecordObject(target.transform, $"Update Parent '{target.name}'");
+            target.transform.SetParent(newParent.transform, keepPosition);
+        }
+
         public void Delete(GameObject target)
         {
             if (!target) return;

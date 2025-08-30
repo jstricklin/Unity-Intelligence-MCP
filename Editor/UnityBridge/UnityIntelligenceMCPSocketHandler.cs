@@ -32,7 +32,6 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
         UnityEditor.EditorApplication.delayCall += async () =>
         {
             Debug.Log($"Request received: {e.Data}");
-            
             try
             {
                 var message = JsonConvert.DeserializeObject<JObject>(e.Data);

@@ -33,9 +33,9 @@ namespace UnityIntelligenceMCP.Unity
                 _wsserver.Start();
                 Debug.Log($"Unity Intelligence MCP WebSocket server started on port {port}");
             }
-            catch (System.Exception e)
+            catch (System.Exception ex)
             {
-                Debug.LogError($"Failed to start WebSocket server: {e.Message}");
+                Debug.LogError($"Failed to start WebSocket server: {ex.Message}");
             }
         }
 

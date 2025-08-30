@@ -95,7 +95,7 @@ namespace UnityIntelligenceMCP.Tools
             string target = "",
             [Description("Instance ID of the target GameObject.")]
             string instanceId = "",
-            [Description("The full name of the component type, e.g., 'UnityEngine.Rigidbody'.")]
+            [Description("The name of the component type (full name optional for specificity), e.g., 'UnityEngine.Rigidbody'.")]
             string componentType = "",
             [Description("A JSON string of properties to set, e.g., '{\"mass\": 5, \"useGravity\": false}'.")]
             string properties = "{}",
@@ -116,6 +116,27 @@ namespace UnityIntelligenceMCP.Tools
             {
                 return JsonSerializer.Serialize(new { status = "error", message = $"Invalid JSON in 'properties' parameter: {ex.Message}" });
             }
+
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+        }
+
+        [McpServerTool(Name = "remove_component"), Description("Removes a component from a GameObject.")]
+        public async Task<string> RemoveComponent(
+            [Description("Name or path of the target GameObject.")]
+            string target = "",
+            [Description("Instance ID of the target GameObject.")]
+            string instanceId = "",
+            [Description("The name of the component type (full name optional for specificity), e.g., 'UnityEngine.Rigidbody'.")]
+            string componentType = "",
+            CancellationToken cancellationToken = default)
+        {
+            var command = new UnityToolRequest
+            {
+                command = "remove_component"
+            };
+            command.parameters["target"] = target;
+            command.parameters["instanceId"] = instanceId;
+            command.parameters["component_type"] = componentType;
 
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
@@ -145,8 +166,7 @@ namespace UnityIntelligenceMCP.Tools
                 try
                 {
                     var splitPos = position.Split(',');
-                    command.parameters["position"] = new { x = float.Parse(splitPos[0]), y = float.Parse(splitPos[1]), z
-= float.Parse(splitPos[2]) };
+                    command.parameters["position"] = new { x = float.Parse(splitPos[0]), y = float.Parse(splitPos[1]), z = float.Parse(splitPos[2]) };
                 }
                 catch 
                 {
@@ -159,8 +179,7 @@ namespace UnityIntelligenceMCP.Tools
                 try
                 {
                     var splitScale = scale.Split(',');
-                    command.parameters["scale"] = new { x = float.Parse(splitScale[0]), y = float.Parse(splitScale[1]),
-z = float.Parse(splitScale[2]) };
+                    command.parameters["scale"] = new { x = float.Parse(splitScale[0]), y = float.Parse(splitScale[1]), z = float.Parse(splitScale[2]) };
                 }
                 catch 
                 { 
