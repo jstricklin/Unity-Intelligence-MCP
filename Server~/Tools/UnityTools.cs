@@ -4,6 +4,7 @@ using UnityIntelligenceMCP.Core.Services;
 using ModelContextProtocol.Server;
 using System.Text.Json;
 using System.Numerics;
+using System.Linq;
 
 namespace UnityIntelligenceMCP.Tools
 {
@@ -24,6 +25,8 @@ namespace UnityIntelligenceMCP.Tools
             string parentTarget = "",
             [Description("Optional. Instance ID of the parent GameObject.")]
             string parentInstanceId = "",
+            [Description("Optional. A comma-separated list of component names to add.")]
+            string components = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest();
@@ -71,6 +74,11 @@ namespace UnityIntelligenceMCP.Tools
             if (!string.IsNullOrWhiteSpace(parentTarget) || !string.IsNullOrWhiteSpace(parentInstanceId))
             {
                 command.parameters["parent"] = new { target = parentTarget, instanceId = parentInstanceId };
+            }
+            
+            if (!string.IsNullOrWhiteSpace(components))
+            {
+                command.parameters["components"] = components.Split(',').Select(c => c.Trim()).ToArray();
             }
 
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));

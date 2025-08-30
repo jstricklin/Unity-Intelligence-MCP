@@ -9,10 +9,12 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
     public class CreateGameObjectTool : GameObjectTool
     {
         public override string CommandName => "create_gameobject";
+        private readonly IComponentService _componentService;
 
-        public CreateGameObjectTool(IGameObjectService service)
+        public CreateGameObjectTool(IGameObjectService gameObjectService, IComponentService componentService)
         {
-            GameObjectService = service;
+            GameObjectService = gameObjectService;
+            _componentService = componentService;
         }
 
         protected override ToolResponse ExecuteOnMainThread(JObject parameters)
@@ -34,6 +36,26 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
             }
 
             var obj = GameObjectService.Create(name, position, parent);
+
+            if (parameters.TryGetValue("components", out var componentsToken) && componentsToken is JArray components)
+            {
+                foreach (var componentNameToken in components)
+                {
+                    var componentName = componentNameToken.Value<string>();
+                    if (!string.IsNullOrEmpty(componentName))
+                    {
+                        try
+                        {
+                            _componentService.GetOrAddComponent(obj, componentName.Trim());
+                        }
+                        catch (System.InvalidOperationException ex)
+                        {
+                            Object.DestroyImmediate(obj);
+                            return ToolResponse.ErrorResponse($"Failed to add component '{componentName}': {ex.Message}");
+                        }
+                    }
+                }
+            }
 
             return ToolResponse.SuccessResponse(
                 $"Created {name}",
