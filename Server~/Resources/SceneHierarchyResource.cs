@@ -29,7 +29,6 @@ namespace UnityIntelligenceMCP.Resources
         public async Task<TextResourceContents> GetSceneHierarchyAsync()
         {
             var stopwatch = Stopwatch.StartNew();
-            // bool wasSuccessful = false;
             TextResourceContents? result = null;
 
             try
@@ -55,7 +54,6 @@ namespace UnityIntelligenceMCP.Resources
                         Text = data,
                         MimeType = "application/json"
                     };
-                    // wasSuccessful = true;
                     return result;
                 }
                 
@@ -64,30 +62,9 @@ namespace UnityIntelligenceMCP.Resources
             }
             catch (Exception ex)
             {
-                // wasSuccessful = false;
                 _logger.LogError(ex, "Failed to get project info from Unity Editor.");
                 throw new InvalidOperationException($"Error communicating with Unity Editor: {ex.Message}", ex);
             }
-            // finally
-            // {
-                // stopwatch.Stop();
-                // var process = Process.GetCurrentProcess();
-                // process.Refresh();
-                // var peakMemoryMb = process.PeakWorkingSet64 / (1024 * 1024);
-
-                // var parameters = new { };
-                // var resultSummary = new { MimeType = result?.MimeType, TextLength = result?.Text.Length ?? 0 };
-
-                // await _usageLogger.LogAsync(new ToolUsageLog
-                // {
-                //     ToolName = "get_scene_hierarchy",
-                //     ParametersJson = JsonSerializer.Serialize(parameters),
-                //     ResultSummaryJson = JsonSerializer.Serialize(resultSummary),
-                //     ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
-                //     WasSuccessful = wasSuccessful,
-                //     PeakProcessMemoryMb = peakMemoryMb
-                // });
-            // }
         }
     }
 }

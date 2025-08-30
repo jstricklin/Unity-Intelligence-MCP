@@ -22,8 +22,14 @@ namespace UnityIntelligenceMCP.Core.Data.Logging
             {
                 switch (prop.Name)
                 {
+                    case "type":
+                        usageLog.UsageType = prop.Value.ToString();
+                        break;
                     case "command":
-                        usageLog.ToolName = prop.Value.ToString();
+                        usageLog.OperationName = prop.Value.ToString();
+                        break;
+                    case "resource_uri":
+                        usageLog.ResourceUri = prop.Value.ToString();
                         break;
                     case "parameters":
                         usageLog.ParametersJson = prop.Value.ToString();
@@ -50,14 +56,18 @@ namespace UnityIntelligenceMCP.Core.Data.Logging
                 using var cmd = connection.CreateCommand();
                 cmd.CommandText = @"
                     INSERT INTO tool_usage_log (
-                        tool_name, 
+                        usage_type,
+                        operation_name,
+                        resource_uri,
                         parameters_json, 
                         result_summary_json, 
                         execution_time_ms, 
-                        was_successful, 
-                    ) VALUES ($tool_name, $parameters, $summary, $execution_time, $success);
+                        was_successful
+                    ) VALUES ($usage_type, $operation_name, $resource_uri, $parameters, $summary, $execution_time, $success);
                 ";
-                cmd.Parameters.Add(new DuckDBParameter("tool_name", log.ToolName));
+                cmd.Parameters.Add(new DuckDBParameter("usage_type", log.UsageType));
+                cmd.Parameters.Add(new DuckDBParameter("operation_name", log.OperationName));
+                cmd.Parameters.Add(new DuckDBParameter("resource_uri", log.ResourceUri));
                 cmd.Parameters.Add(new DuckDBParameter("parameters", log.ParametersJson));
                 cmd.Parameters.Add(new DuckDBParameter("summary", log.ResultSummaryJson));
                 cmd.Parameters.Add(new DuckDBParameter("execution_time", log.ExecutionTimeMs));
