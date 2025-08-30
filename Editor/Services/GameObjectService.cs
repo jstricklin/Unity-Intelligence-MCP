@@ -25,6 +25,10 @@ namespace UnityIntelligenceMCP.Unity.Services
             var go = GameObject.CreatePrimitive(type);
             go.name = name;
             go.transform.position = position;
+            if (parent != null)
+            {
+                go.transform.SetParent(parent.transform, true);
+            }
             Undo.RegisterCreatedObjectUndo(go, $"Create '{name}' ({type})");
             Selection.activeObject = go;
             return go;
