@@ -43,6 +43,19 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
                 GameObjectService.UpdateScale(target, newScale);
             }
 
+            if (parameters.TryGetValue("clearParent", out var clearParentToken) && clearParentToken.Type == JTokenType.Boolean && clearParentToken.Value<bool>())
+            {
+                GameObjectService.ClearParent(target);
+            }
+            else if (parameters.TryGetValue("parent", out var parentToken) && parentToken is JObject parentParams)
+            {
+                if (!ToolValidator.TryFindTarget(parentParams, GameObjectService, out var parent, out var errorResponse))
+                {
+                    return errorResponse;
+                }
+                GameObjectService.UpdateParent(target, parent);
+            }
+
             return ToolResponse.SuccessResponse(
                 $"Updated transform of {target.name}",
                 new
