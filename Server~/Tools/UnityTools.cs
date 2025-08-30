@@ -20,6 +20,10 @@ namespace UnityIntelligenceMCP.Tools
             String name = "",
             [Description("Position: 0,0,0")]
             String position = "",
+            [Description("Optional. Name or path of the parent GameObject.")]
+            string parentTarget = "",
+            [Description("Optional. Instance ID of the parent GameObject.")]
+            string parentInstanceId = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest();
@@ -32,6 +36,43 @@ namespace UnityIntelligenceMCP.Tools
             } catch {
                 command.parameters["position"] = new { x = 0, y = 0, z = 0 };
             }
+            if (!string.IsNullOrWhiteSpace(parentTarget) || !string.IsNullOrWhiteSpace(parentInstanceId))
+            {
+                command.parameters["parent"] = new { target = parentTarget, instanceId = parentInstanceId };
+            }
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+        }
+
+        [McpServerTool(Name = "create_gameobject"), Description("Create a new, empty GameObject in Unity.")]
+        public async Task<string> CreateGameObject(
+            [Description("New GameObject Name")]
+            string name = "",
+            [Description("Position: 0,0,0")]
+            string position = "",
+            [Description("Optional. Name or path of the parent GameObject.")]
+            string parentTarget = "",
+            [Description("Optional. Instance ID of the parent GameObject.")]
+            string parentInstanceId = "",
+            CancellationToken cancellationToken = default)
+        {
+            var command = new UnityToolRequest();
+            command.command = "create_gameobject";
+            command.parameters["name"] = name;
+            try
+            {
+                var splitPos = position.Split(',');
+                command.parameters["position"] = new { x = float.Parse(splitPos[0]), y = float.Parse(splitPos[1]), z = float.Parse(splitPos[2]) };
+            }
+            catch
+            {
+                command.parameters["position"] = new { x = 0, y = 0, z = 0 };
+            }
+
+            if (!string.IsNullOrWhiteSpace(parentTarget) || !string.IsNullOrWhiteSpace(parentInstanceId))
+            {
+                command.parameters["parent"] = new { target = parentTarget, instanceId = parentInstanceId };
+            }
+
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
@@ -141,7 +182,7 @@ namespace UnityIntelligenceMCP.Tools
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
-        [McpServerTool(Name = "update_transform"), Description("Update the transform (position, rotation, scale) of a GameObject by name or instance ID.")]
+        [McpServerTool(Name = "update_transform"), Description("Update the transform (position, rotation, scale, parent) of a GameObject by name or instance ID.")]
         public async Task<string> UpdateTransform(
             [Description("Name or path of the target GameObject.")]
             string target = "",
@@ -153,6 +194,12 @@ namespace UnityIntelligenceMCP.Tools
             string rotation = "",
             [Description("Optional. New scale: x,y,z")]
             string scale = "",
+            [Description("Optional. Name or path of the new parent GameObject.")]
+            string parentTarget = "",
+            [Description("Optional. Instance ID of the new parent GameObject.")]
+            string parentInstanceId = "",
+            [Description("Optional. Set to true to clear the GameObject's parent.")]
+            bool clearParent = false,
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
@@ -216,6 +263,14 @@ namespace UnityIntelligenceMCP.Tools
                 { 
                     return JsonSerializer.Serialize(new { status = "error", message = "Malformed 'rotation' received. Expected 'x,y,z' or 'x,y,z,w'" });
                 }
+            }
+            if (clearParent)
+            {
+                command.parameters["clearParent"] = true;
+            }
+            else if (!string.IsNullOrWhiteSpace(parentTarget) || !string.IsNullOrWhiteSpace(parentInstanceId))
+            {
+                command.parameters["parent"] = new { target = parentTarget, instanceId = parentInstanceId };
             }
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
