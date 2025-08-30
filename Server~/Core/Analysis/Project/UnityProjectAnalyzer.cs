@@ -118,12 +118,11 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
 
                 await _usageLogger.LogAsync(new ToolUsageLog
                 {
-                    ToolName = "analyze_unity_project",
+                    OperationName = "analyze_unity_project",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     ResultSummaryJson = JsonSerializer.Serialize(resultSummary),
                     ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
                     WasSuccessful = wasSuccessful,
-                    PeakProcessMemoryMb = peakMemoryMb
                 });
             }
         }

@@ -12,7 +12,7 @@ namespace UnityIntelligenceMCP.Tools
     [McpServerToolType]
     public class UnityTools
     {
-    // TODO extract these to individual files and build new tool request error and response models
+    // TODO extract these to individual files and build new tool request error and response models with proper optional usagetype var 
         [McpServerTool(Name = "create_primitive"), Description("Create a primitive object in Unity.")]
         public async Task<string> CreatePrimitive(
             [Description("Primitive Type to create: Sphere, Capsule, Cylinder, Cube, Plane, Quad")]

@@ -231,12 +231,12 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
                 _ = _usageLogger.LogAsync(new ToolUsageLog
                 {
-                    ToolName = "hybrid_semantic_docs_search",
+                    OperationName = "hybrid_semantic_docs_search",
+                    UsageType = "tool",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     ResultSummaryJson = JsonSerializer.Serialize(resultSummary),
                     ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
                     WasSuccessful = wasSuccessful,
-                    PeakProcessMemoryMb = peakMemoryMb
                 });
             }
         }
