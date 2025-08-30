@@ -23,8 +23,8 @@ namespace UnityIntelligenceMCP.Tools
             _configurationService = configurationService;
         }
 
-        [McpServerTool(Name = "get_asset_indexing_status"), Description("Get current status of documentation database indexing.")]
-        public async Task<IndexingStatus> SearchDocumentation(
+        [McpServerTool(Name = "get_doc_indexing_status"), Description("Get current status of documentation database indexing.")]
+        public async Task<IndexingStatus> GetDocIndexingStatus(
             CancellationToken cancellationToken = default)
         {
             return await _indexingService.GetIndexingStatusAsync();
