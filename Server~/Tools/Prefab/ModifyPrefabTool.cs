@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Core.Services;
 using ModelContextProtocol.Server;
+using UnityIntelligenceMCP.Models;
+using System.Text.Json;
 
 namespace UnityIntelligenceMCP.Tools.Prefab
 {
@@ -14,16 +16,23 @@ namespace UnityIntelligenceMCP.Tools.Prefab
             [Description("The asset path of the prefab to modify.")] string prefabPath,
             [Description("A JSON string representing an array of modifications to apply.")] string modifications)
         {
-            var request = new JObject
+            // var request = new JObject
+            // {
+            //     ["command"] = "modify_prefab",
+            //     ["parameters"] = new JObject
+            //     {
+            //         ["prefab_path"] = prefabPath,
+            //         ["modifications"] = JArray.Parse(modifications)
+            //     }
+            // };
+            var command = new UnityToolRequest
             {
-                ["tool"] = "modify_prefab",
-                ["parameters"] = new JObject
-                {
-                    ["prefab_path"] = prefabPath,
-                    ["modifications"] = JArray.Parse(modifications)
-                }
+                command = "modify_prefab"
             };
-            return await EditorBridgeClientService.SendMessageToUnity(request.ToString());
+            command.parameters["prefab_path"] = prefabPath;
+            command.parameters["modifications"] = modifications;
+            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            // return await EditorBridgeClientService.SendMessageToUnity(request.ToString());
         }
     }
 }

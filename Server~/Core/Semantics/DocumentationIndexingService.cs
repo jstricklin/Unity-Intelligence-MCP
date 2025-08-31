@@ -170,7 +170,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
 
             var parsedDataMap = new ConcurrentDictionary<string, UnityDocumentationData>();
             var docKeyToIdMap = new ConcurrentDictionary<string, long>();
-            // var logMessages = new ConcurrentBag<string>();
+            var logMessages = new ConcurrentBag<string>();
             
             // Load existing tracking data FIRST
             var trackingData = await _repository.GetDocumentTrackingAsync(unityVersion);
@@ -257,8 +257,9 @@ namespace UnityIntelligenceMCP.Core.Semantics
                             // logMessages.Add($"{Path.GetFileName(filePath)}:HasCodeExamples={parsedData.Examples.Count() > 0}");
                             // if (parsedData.Examples.Count() > 0)
                             // {
-                            // logMessages.Add($"{Path.GetFileName(filePath)}:ExampleCount={parsedDadoc.Count()}");
+                            // logMessages.Add($"{Path.GetFileName(filePath)}:ExampleCount={parsedData.Examples.Count()}");
                             // }
+                            logMessages.Add($"{Path.GetFileName(filePath)}");
                             parsedDataMap.TryAdd(filePath, parsedData);
                             parsedData.UnityVersion = unityVersion;
 
@@ -291,6 +292,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
                         catch (Exception ex)
                         {
                             _logger.LogError($"[ERROR] {Path.GetFileName(filePath)}: {ex.Message}");
+                            logMessages.Add($"[ERROR] {Path.GetFileName(filePath)}:Error={ex.Message}");
                             await _repository.MarkDocumentFailedAsync(filePath, unityVersion);
                         }
                     }
@@ -340,16 +342,20 @@ namespace UnityIntelligenceMCP.Core.Semantics
                         catch (Exception ex)
                         {
                             _logger.LogError($"[ERROR] Batch insert failed: {ex.Message}");
+                            logMessages.Add($"[ERROR] Database Batch Insert Failed - Error={ex.Message}");
+                            logMessages.Add($"Docs in failed batch:");
                             foreach (var filePath in processedInBatch)
                             {
+                                logMessages.Add($"  - {Path.GetFileName(filePath)}");
                                 await _repository.MarkDocumentFailedAsync(filePath, unityVersion);
                             }
+                            logMessages.Add($"End of batch.");
                         }
                     }
                 });
             
             sw.Stop();
-            // await File.WriteAllLinesAsync("indexing_log.txt", logMessages);
+            await File.WriteAllLinesAsync("document_indexing.log", logMessages);
             await ProcessRelationshipsAsync(parsedDataMap, docKeyToIdMap, CancellationToken.None);
             _logger.LogInformation($"[COMPLETE] Document Indexing finished in {TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds).ToString(@"hh\:mm\:ss")}s");
         }

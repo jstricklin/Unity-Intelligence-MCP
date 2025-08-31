@@ -4,7 +4,7 @@ using UnityIntelligenceMCP.Editor.Models;
 using UnityEngine;
 using UnityIntelligenceMCP.Tools.Base;
 
-namespace UnityIntelligenceMCP.Tools.GameObjectTools
+namespace UnityIntelligenceMCP.Tools.GameObjects
 {
     public class DeleteGameObjectTool : GameObjectTool
     {

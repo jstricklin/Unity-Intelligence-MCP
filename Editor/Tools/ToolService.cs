@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Editor.Models;
-using UnityIntelligenceMCP.Tools.GameObjectTools;
-using UnityIntelligenceMCP.Tools.EditorTools;
+using UnityIntelligenceMCP.Tools.GameObjects;
+using UnityIntelligenceMCP.Tools.Prefab;
+using UnityIntelligenceMCP.Tools.Editor;
 using UnityIntelligenceMCP.Unity.Services;
 
 namespace UnityIntelligenceMCP.Tools
@@ -37,6 +38,11 @@ namespace UnityIntelligenceMCP.Tools
             RegisterTool(new UpdateTransformTool(_gameObjectService));
             RegisterTool(new ModifyGameObjectTool(_gameObjectService));
             
+            // Prefab tools
+            RegisterTool(new CreatePrefabTool());
+            RegisterTool(new ModifyPrefabTool());
+            RegisterTool(new SpawnPrefabTool(_gameObjectService));
+
             // Editor Tools
             RegisterTool(new ExecuteMenuItemTool());
 

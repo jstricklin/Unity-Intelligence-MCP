@@ -4,7 +4,7 @@ using UnityIntelligenceMCP.Tools.Base;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityEngine;
 
-namespace UnityIntelligenceMCP.Tools.GameObjectTools
+namespace UnityIntelligenceMCP.Tools.GameObjects
 {
     public class RemoveComponentTool : GameObjectTool
     {

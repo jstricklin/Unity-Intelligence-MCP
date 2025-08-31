@@ -33,6 +33,7 @@ project.assets.json
 
 # Log files
 *.log
+*.log.meta
 
 # OS-generated files
 .DS_Store

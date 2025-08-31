@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityIntelligenceMCP.Tools.Base;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 
-namespace UnityIntelligenceMCP.Tools.GameObjectTools
+namespace UnityIntelligenceMCP.Tools.GameObjects
 {
     public class FindGameObjectTool : GameObjectTool
     {

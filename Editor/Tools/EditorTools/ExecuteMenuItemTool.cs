@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityIntelligenceMCP.Editor.Models;
 
-namespace UnityIntelligenceMCP.Tools.EditorTools
+namespace UnityIntelligenceMCP.Tools.Editor
 {
     public class ExecuteMenuItemTool : ITool
     {

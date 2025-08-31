@@ -5,7 +5,7 @@ using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Utils;
 using UnityEngine;
 
-namespace UnityIntelligenceMCP.Tools.GameObjectTools
+namespace UnityIntelligenceMCP.Tools.GameObjects
 {
     public class CreateGameObjectTool : GameObjectTool
     {
