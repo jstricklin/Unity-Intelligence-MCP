@@ -10,6 +10,7 @@ namespace UnityIntelligenceMCP.Tools.GameObjectTools
     {
         public override string CommandName => "create_gameobject";
         private readonly IComponentService _componentService;
+        protected override bool findTarget { get; set; } = false;
 
         public CreateGameObjectTool(IGameObjectService gameObjectService, IComponentService componentService)
         {

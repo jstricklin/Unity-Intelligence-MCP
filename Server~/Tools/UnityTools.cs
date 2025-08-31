@@ -25,8 +25,6 @@ namespace UnityIntelligenceMCP.Tools
             string parentTarget = "",
             [Description("Optional. Instance ID of the parent GameObject.")]
             string parentInstanceId = "",
-            [Description("Optional. A comma-separated list of component names to add.")]
-            string components = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest();
@@ -56,6 +54,8 @@ namespace UnityIntelligenceMCP.Tools
             string parentTarget = "",
             [Description("Optional. Instance ID of the parent GameObject.")]
             string parentInstanceId = "",
+            [Description("Optional. A comma-separated list of component names to add.")]
+            string components = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest();

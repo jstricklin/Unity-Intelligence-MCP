@@ -28,14 +28,14 @@ namespace UnityIntelligenceMCP.Tools
         private void RegisterTools()
         {
             // Game Object Tools
-            RegisterTool(new CreateGameObjectTool(_gameObjectService));
+            RegisterTool(new CreateGameObjectTool(_gameObjectService, _componentService));
+            RegisterTool(new ModifyComponentTool(_gameObjectService, _componentService));
+            RegisterTool(new RemoveComponentTool(_gameObjectService, _componentService));
             RegisterTool(new CreatePrimitiveTool(_gameObjectService));
             RegisterTool(new FindGameObjectTool(_gameObjectService));
             RegisterTool(new DeleteGameObjectTool(_gameObjectService));
             RegisterTool(new UpdateTransformTool(_gameObjectService));
             RegisterTool(new ModifyGameObjectTool(_gameObjectService));
-            RegisterTool(new ModifyComponentTool(_gameObjectService, _componentService));
-            RegisterTool(new RemoveComponentTool(_gameObjectService, _componentService));
             
             // Editor Tools
             RegisterTool(new ExecuteMenuItemTool());
