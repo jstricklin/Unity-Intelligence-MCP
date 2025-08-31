@@ -39,9 +39,9 @@ namespace UnityIntelligenceMCP.Tools
             RegisterTool(new ModifyGameObjectTool(_gameObjectService));
             
             // Prefab tools
-            RegisterTool(new CreatePrefabTool());
-            RegisterTool(new ModifyPrefabTool());
             RegisterTool(new SpawnPrefabTool(_gameObjectService));
+            RegisterTool(new CreatePrefabTool(_gameObjectService));
+            RegisterTool(new ModifyPrefabTool());
 
             // Editor Tools
             RegisterTool(new ExecuteMenuItemTool());

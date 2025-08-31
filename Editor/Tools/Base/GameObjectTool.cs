@@ -24,6 +24,10 @@ namespace UnityIntelligenceMCP.Tools.Base
 
         public override async Task<ToolResponse> ExecuteAsync(JObject parameters)
         {
+            if (findTarget && GameObjectService == null)
+            {
+                return ToolResponse.ErrorResponse("Editor Tool improperly configured - GameObjectService must be injected when 'findTarget' is true.");
+            }
             if (findTarget && !ToolValidator.TryFindTarget(parameters, GameObjectService, out target, out var errorResponse))
             {
                 return errorResponse;

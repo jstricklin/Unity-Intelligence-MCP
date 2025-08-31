@@ -16,15 +16,6 @@ namespace UnityIntelligenceMCP.Tools.Prefab
             [Description("The asset path of the prefab to modify.")] string prefabPath,
             [Description("A JSON string representing an array of modifications to apply, ie. [{ 'operation':'update_transform', 'data': { 'target':'targetName', 'position':'1,2,3' }}]")] string modifications)
         {
-            // var request = new JObject
-            // {
-            //     ["command"] = "modify_prefab",
-            //     ["parameters"] = new JObject
-            //     {
-            //         ["prefab_path"] = prefabPath,
-            //         ["modifications"] = JArray.Parse(modifications)
-            //     }
-            // };
             var command = new UnityToolRequest
             {
                 command = "modify_prefab"
@@ -32,7 +23,6 @@ namespace UnityIntelligenceMCP.Tools.Prefab
             command.parameters["prefab_path"] = prefabPath;
             command.parameters["modifications"] = JArray.Parse(modifications);
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
-            // return await EditorBridgeClientService.SendMessageToUnity(request.ToString());
         }
     }
 }

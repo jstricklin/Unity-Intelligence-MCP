@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityIntelligenceMCP.Editor.Models;
+using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Tools.Base;
 
 namespace UnityIntelligenceMCP.Tools.Prefab
@@ -12,7 +13,11 @@ namespace UnityIntelligenceMCP.Tools.Prefab
         public override string CommandName => "create_prefab";
         // This tool requires a target GameObject from the scene.
         protected override bool findTarget { get; set; } = true;
-        
+
+        public CreatePrefabTool(IGameObjectService service)
+        {
+            GameObjectService = service;
+        }
         protected override ToolResponse ExecuteOnMainThread(GameObject target, JObject parameters)
         {
             var savePath = parameters["save_path"]?.Value<string>();
@@ -24,12 +29,12 @@ namespace UnityIntelligenceMCP.Tools.Prefab
             {
                 return ToolResponse.ErrorResponse("Save path must end with .prefab");
             }
-
             var directory = Path.GetDirectoryName(savePath);
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
-            }
+            } else
+                savePath = AssetDatabase.GenerateUniqueAssetPath(savePath);
 
             var replaceOriginal = parameters["replace_original"]?.Value<bool>() ?? false;
             GameObject prefabAsset;

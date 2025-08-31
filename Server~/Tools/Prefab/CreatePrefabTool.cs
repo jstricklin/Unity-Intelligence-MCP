@@ -13,26 +13,21 @@ namespace UnityIntelligenceMCP.Tools.Prefab
     {
         [McpServerTool(Name = "create_prefab"), Description("Creates a new prefab from a GameObject in the scene.")]
         public async Task<string> CreatePrefab(
-            [Description("The instance ID of the source GameObject.")] string sourceGameObjectId,
-            [Description("The asset path where the new prefab will be saved.")] string savePath,
-            [Description("If true, replaces the source GameObject with an instance of the new prefab.")] bool replaceOriginal = false)
+            [Description("Prefab save path. ie, 'Assets/Prefabs/Cube.prefab'")] 
+            string savePath,
+            [Description("Name or path of the source GameObject.")]
+            string target = "",
+            [Description("Instance ID of the source GameObject.")]
+            string instanceId = "",
+            [Description("If true, replaces the source GameObject with an instance of the new prefab.")] 
+            bool replaceOriginal = false)
         {
-            // var request = new JObject
-            // {
-            //     ["command"] = "create_prefab",
-            //     ["parameters"] = new JObject
-            //     {
-            //         ["source_game_object_id"] = sourceGameObjectId,
-            //         ["save_path"] = savePath,
-            //         ["replace_original"] = replaceOriginal
-            //     }
-            // };
-            // return await EditorBridgeClientService.SendMessageToUnity(request.ToString());
             var command = new UnityToolRequest
             {
                 command = "create_prefab"
             };
-            command.parameters["source_game_object_id"] = sourceGameObjectId;
+            command.parameters["target"] = target;
+            command.parameters["instanceId"] = instanceId;
             command.parameters["save_path"] = savePath;
             command.parameters["replace_original"] = replaceOriginal;
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
