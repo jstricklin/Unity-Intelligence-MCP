@@ -26,6 +26,7 @@ namespace UnityIntelligenceMCP.Tools.Prefab
             }
 
             var modifications = parameters["modifications"] as JArray;
+            Debug.Log("modifications check: " + parameters["modififactions"]);
             if (modifications == null || modifications.Count == 0)
             {
                 return ToolResponse.ErrorResponse("No modifications provided.");
@@ -84,13 +85,13 @@ namespace UnityIntelligenceMCP.Tools.Prefab
                 switch (operation)
                 {
                     // TODO properly leverage existing Component Service for these actions where relevant
-                    case "updateTransform":
+                    case "update_transform":
                         if (VectorParser.TryParsePosition(data["position"], out var pos)) root.transform.localPosition = pos;
                         if (VectorParser.TryParseRotation(data["rotation"], out var rot)) root.transform.localRotation = rot;
                         if (VectorParser.TryParseScale(data["scale"], out var scale)) root.transform.localScale = scale;
                         return new { success = true, operation };
 
-                    case "addComponent":
+                    case "add_component":
                         var componentTypeStr = data["componentType"]?.Value<string>();
                         var type = Type.GetType(componentTypeStr);
                         if (type == null) return new { success = false, operation, error = $"Component type '{componentTypeStr}' not found." };
@@ -98,7 +99,7 @@ namespace UnityIntelligenceMCP.Tools.Prefab
                         ApplyProperties(newComponent, data["properties"] as JObject);
                         return new { success = true, operation, componentType = componentTypeStr };
                     
-                    case "removeComponent":
+                    case "remove_component":
                         componentTypeStr = data["componentType"]?.Value<string>();
                         type = Type.GetType(componentTypeStr);
                         if (type == null) return new { success = false, operation, error = $"Component type '{componentTypeStr}' not found." };
