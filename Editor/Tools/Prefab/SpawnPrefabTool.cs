@@ -1,9 +1,8 @@
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityIntelligenceMCP.Editor.Models;
-using UnityIntelligenceMCP.Editor.Utils;
+using UnityIntelligenceMCP.Tools;
 using UnityIntelligenceMCP.Tools.Base;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 
@@ -53,17 +52,17 @@ namespace UnityIntelligenceMCP.Tools.Prefab
                 instance.name = instanceName;
             }
 
-            if (JsonUtils.TryParseVector3(parameters["position"], out var pos))
+            if (VectorParser.TryParsePosition(parameters["position"], out var pos))
             {
                 instance.transform.localPosition = pos;
             }
 
-            if (JsonUtils.TryParseVector3(parameters["rotation"], out var rot))
+            if (VectorParser.TryParseRotation(parameters["rotation"], out var rot))
             {
-                instance.transform.localEulerAngles = rot;
+                instance.transform.localRotation = rot;
             }
 
-            if (JsonUtils.TryParseVector3(parameters["scale"], out var scale))
+            if (VectorParser.TryParseScale(parameters["scale"], out var scale))
             {
                 instance.transform.localScale = scale;
             } else if (parent == null)

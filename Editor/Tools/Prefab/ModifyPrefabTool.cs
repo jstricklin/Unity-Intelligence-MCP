@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityIntelligenceMCP.Editor.Models;
-using UnityIntelligenceMCP.Editor.Utils;
+using UnityIntelligenceMCP.Tools;
 using UnityIntelligenceMCP.Tools.Base;
 
 namespace UnityIntelligenceMCP.Tools.Prefab
@@ -82,9 +82,9 @@ namespace UnityIntelligenceMCP.Tools.Prefab
                 switch (operation)
                 {
                     case "updateTransform":
-                        if (JsonUtils.TryParseVector3(data["position"], out var pos)) root.transform.localPosition = pos;
-                        if (JsonUtils.TryParseVector3(data["rotation"], out var rot)) root.transform.localEulerAngles = rot;
-                        if (JsonUtils.TryParseVector3(data["scale"], out var scale)) root.transform.localScale = scale;
+                        if (VectorParser.TryParsePosition(data["position"], out var pos)) root.transform.localPosition = pos;
+                        if (VectorParser.TryParseRotation(data["rotation"], out var rot)) root.transform.localRotation = rot;
+                        if (VectorParser.TryParseScale(data["scale"], out var scale)) root.transform.localScale = scale;
                         return new { success = true, operation };
 
                     case "addComponent":
