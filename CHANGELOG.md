@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [Unreleased]
+### Added
+
+- Add essential Editor project resources: 
+    - Available Editor Menu Items
+    - Scene Hierarchy
+    - Project Info
+- Add new Unity Editor Tools:
+    - Create Prefab
+    - Spawn Prefab
+    - Execute Menu Item
+    - Create GameObject
+    - Create Primitive
+    - Delete GameObject
+    - Find GameObject
+    - Modify GameObject
+    - Modify/Add Component
+    - Remove Component
+    - Update Transform
+- Add Editor WebSocket server AutoStart and automatic restart on unintended server drop
+- Add new proper tool and resource usage logging in DuckDb
+
+## Changed
+
+- Update Unity Editor Window settings and layout to support new AutoRun feature
+
 
 ## [0.2.0] 2025 - 08 - 22
 ### Added

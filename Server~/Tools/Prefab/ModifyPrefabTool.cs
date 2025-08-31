@@ -8,10 +8,11 @@ using System.Text.Json;
 
 namespace UnityIntelligenceMCP.Tools.Prefab
 {
-    [McpServerToolType]
+    // [McpServerToolType]
     public class ModifyPrefabTool
     {
-        [McpServerTool(Name = "modify_prefab"), Description("Applies a series of modifications to a prefab asset. Includes: update_transform, add_component, remove_component, rename_gameobject")]
+        // TODO Atomize tool to individual prefab tools instead of single batch tool
+        // [McpServerTool(Name = "modify_prefab"), Description("Applies a series of modifications to a prefab asset. Includes: update_transform, add_component, remove_component, rename_gameobject")]
         public async Task<string> ModifyPrefab(
             [Description("The asset path of the prefab to modify.")] string prefabPath,
             [Description("A JSON string representing an array of modifications to apply, ie. [{ 'operation':'update_transform', 'data': { 'target':'targetName', 'position':'1,2,3' }}]")] string modifications)
