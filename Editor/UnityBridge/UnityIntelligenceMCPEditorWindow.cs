@@ -75,50 +75,53 @@ namespace UnityIntelligenceMCP.Unity
 
             // Server status
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Status:", GUILayout.Width(75));
+            GUILayout.FlexibleSpace();
+
+            // EditorGUILayout.LabelField("Status:", GUILayout.Width(75));
             string statusText = mcpUnityServer.IsListening ? "Server Online" : "Server Offline";
             Color statusColor = mcpUnityServer.IsListening ? Color.green : Color.red;
             GUIStyle statusStyle = new GUIStyle(EditorStyles.boldLabel);
             statusStyle.normal.textColor = statusColor;
-            EditorGUILayout.LabelField(statusText, statusStyle, GUILayout.Width(120));
+            EditorGUILayout.LabelField(statusText, statusStyle, GUILayout.Width(85));
 
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
             if (mcpUnityServer.IsListening)
             {
-                string clientText = UnityIntelligenceMCPSocketHandler.ClientsConnected ? "Client Connected" : "Awaiting Client Connection...";
-                Color clientColor = UnityIntelligenceMCPSocketHandler.ClientsConnected ? Color.green : Color.yellow;
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                bool connected = UnityIntelligenceMCPSocketHandler.ClientsConnected;
+                string clientText = connected ? "Client Connected" : "Awaiting Client Connection...";
+                Color clientColor = connected ? Color.green : Color.yellow;
                 GUIStyle clientStyle = new GUIStyle(EditorStyles.boldLabel);
                 clientStyle.normal.textColor = clientColor;
-                EditorGUILayout.LabelField(clientText, clientStyle);
+                EditorGUILayout.LabelField(clientText, clientStyle, GUILayout.Width(connected ? 110 : 175));
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.EndHorizontal();
             }
 
-            EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             // Server controls
-            EditorGUILayout.BeginHorizontal();
+            // EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginDisabledGroup(settings.AutoStart);
+
             if (!mcpUnityServer.IsListening)
             {
-                if (settings.AutoStart || connectionStarted)
-                {
-                    _controller.StartServer();
-                    connectionStarted = true;
-                }
-                else if (GUILayout.Button("Start Server", GUILayout.Height(30)))
+                if (settings.AutoStart || connectionStarted || GUILayout.Button("Start Server", GUILayout.Height(30)))
                 {
                     _controller.StartServer();
                     connectionStarted = true;
                 }
             }
-            else
+            else if (GUILayout.Button($"{(settings.AutoStart ? "AutoStart Enabled" : "Stop Server")}", GUILayout.Height(30)))
             {
-                if (!settings.AutoStart && GUILayout.Button("Stop Server", GUILayout.Height(30)))
-                {
-                    _controller.StopServer();
-                    connectionStarted = false;
-                }
+                _controller.StopServer();
+                connectionStarted = false;
             }
 
-            EditorGUILayout.EndHorizontal();
+            EditorGUI.EndDisabledGroup();
+            // EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
