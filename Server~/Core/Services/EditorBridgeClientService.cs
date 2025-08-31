@@ -45,8 +45,12 @@ namespace UnityIntelligenceMCP.Core.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Editor bridge connection failed");
-                    await Task.Delay(2500, stoppingToken);
+                    int delay = 2500;
+                    if (ex.ToString().Contains("Connection refused"))
+                        _logger.LogError($"Editor bridge connection failed. Re-attempting in {delay * 0.001}s...");
+                    else
+                        _logger.LogError(ex, "Editor bridge connection failed with an unexpected error.");
+                    await Task.Delay(delay, stoppingToken);
                 }
             }
         }
