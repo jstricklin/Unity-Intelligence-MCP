@@ -83,6 +83,7 @@ namespace UnityIntelligenceMCP.Tools.Prefab
             {
                 switch (operation)
                 {
+                    // TODO properly leverage existing Component Service for these actions where relevant
                     case "updateTransform":
                         if (VectorParser.TryParsePosition(data["position"], out var pos)) root.transform.localPosition = pos;
                         if (VectorParser.TryParseRotation(data["rotation"], out var rot)) root.transform.localRotation = rot;

@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Core.Services;
-using UnityIntelligenceMCP.Core.Attributes;
+using ModelContextProtocol.Server;
 
 namespace UnityIntelligenceMCP.Tools.Prefab
 {
@@ -12,11 +12,11 @@ namespace UnityIntelligenceMCP.Tools.Prefab
         [McpServerTool(Name = "spawn_prefab"), Description("Spawns a prefab instance in the current scene.")]
         public async Task<string> SpawnPrefab(
             [Description("The asset path of the prefab to spawn.")] string prefabPath,
-            [Description("Optional name for the new instance.")] string instanceName = null,
-            [Description("Optional instance ID of the parent GameObject.")] string parentGameObjectId = null,
-            [Description("JSON string for position, e.g., '{\"x\":0,\"y\":1,\"z\":0}'.")] string position = null,
-            [Description("JSON string for rotation (quaternion or euler angles), e.g., '{\"x\":0,\"y\":90,\"z\":0}'.")] string rotation = null,
-            [Description("JSON string for scale, e.g., '{\"x\":1,\"y\":1,\"z\":1}'.")] string scale = null,
+            [Description("Optional name for the new instance.")] string instanceName = "",
+            [Description("Optional instance ID of the parent GameObject.")] string parentGameObjectId = "",
+            [Description("JSON string for position, e.g., '{\"x\":0,\"y\":1,\"z\":0}'.")] string position = "",
+            [Description("JSON string for rotation (quaternion or euler angles), e.g., '{\"x\":0,\"y\":90,\"z\":0}'.")] string rotation = "",
+            [Description("JSON string for scale, e.g., '{\"x\":1,\"y\":1,\"z\":1}'.")] string scale = "",
             [Description("Whether to select the new instance in the editor after spawning.")] bool selectAfterSpawn = false)
         {
             var parameters = new JObject

@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Core.Services;
-using UnityIntelligenceMCP.Core.Attributes;
+using ModelContextProtocol.Server;
 
 namespace UnityIntelligenceMCP.Tools.Prefab
 {
