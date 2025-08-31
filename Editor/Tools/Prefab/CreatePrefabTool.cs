@@ -9,6 +9,7 @@ namespace UnityIntelligenceMCP.Tools.Prefab
 {
     public class CreatePrefabTool : GameObjectTool
     {
+        public override string CommandName => "create_prefab";
         // This tool requires a target GameObject from the scene.
         protected override bool findTarget { get; set; } = true;
         

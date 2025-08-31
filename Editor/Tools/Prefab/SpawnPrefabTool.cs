@@ -2,14 +2,15 @@ using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityIntelligenceMCP.Editor.Models;
-using UnityIntelligenceMCP.Tools;
 using UnityIntelligenceMCP.Tools.Base;
+using UnityIntelligenceMCP.Utils;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 
 namespace UnityIntelligenceMCP.Tools.Prefab
 {
     public class SpawnPrefabTool : GameObjectTool
     {
+        public override string CommandName => "spawn_prefab";
         // This tool does not require a pre-existing target GameObject.
         protected override bool findTarget { get; set; } = false;
 
@@ -33,13 +34,11 @@ namespace UnityIntelligenceMCP.Tools.Prefab
             }
 
             GameObject parent = null;
-            if (parameters.TryGetValue("parent_game_object_id", out var parentIdToken) &&
-                int.TryParse(parentIdToken.ToString(), out var parentId))
+            if (parameters.TryGetValue("parent", out var parentToken) && parentToken is JObject parentParams)
             {
-                parent = GameObjectService.FindById(parentId);
-                if (parent == null)
+                if (!ToolValidator.TryFindTarget(parentParams, GameObjectService, out parent, out var errorResponse))
                 {
-                    return ToolResponse.ErrorResponse($"Parent GameObject with ID {parentId} not found.");
+                    return errorResponse;
                 }
             }
             

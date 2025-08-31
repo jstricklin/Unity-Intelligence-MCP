@@ -5,7 +5,8 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEditor;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
-using UnityIntelligenceMCP.Tools;
+using UnityIntelligenceMCP.Utils;
+// using UnityIntelligenceMCP.Tools;
 
 namespace UnityIntelligenceMCP.Unity.Services
 {

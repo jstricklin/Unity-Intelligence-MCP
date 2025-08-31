@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Tools.Base;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
+using UnityIntelligenceMCP.Utils;
 using UnityEngine;
 
 namespace UnityIntelligenceMCP.Tools.GameObjectTools

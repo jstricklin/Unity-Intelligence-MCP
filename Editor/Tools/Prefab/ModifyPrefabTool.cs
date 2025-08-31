@@ -5,13 +5,15 @@ using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityIntelligenceMCP.Editor.Models;
-using UnityIntelligenceMCP.Tools;
+// using UnityIntelligenceMCP.Tools;
+using UnityIntelligenceMCP.Utils;
 using UnityIntelligenceMCP.Tools.Base;
 
 namespace UnityIntelligenceMCP.Tools.Prefab
 {
     public class ModifyPrefabTool : GameObjectTool
     {
+        public override string CommandName => "modify_prefab";
         // This tool operates on a prefab asset, not a scene object.
         protected override bool findTarget { get; set; } = false;
 

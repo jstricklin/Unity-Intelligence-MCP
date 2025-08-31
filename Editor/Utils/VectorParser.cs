@@ -1,7 +1,7 @@
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-namespace UnityIntelligenceMCP.Tools
+namespace UnityIntelligenceMCP.Utils
 {
     public static class VectorParser
     {
