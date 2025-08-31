@@ -84,6 +84,7 @@ namespace UnityIntelligenceMCP.Tools
             return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
         }
 
+        // TODO enhance this to highly multiple found options, with optional inputs for other queryables (component ownership, tags)
         [McpServerTool(Name = "find_gameobject"), Description("Find a GameObject in the scene by name or instance ID.")]
         public async Task<string> FindGameObject(
             [Description("Name or path of the GameObject, e.g., 'MyObject' or 'Parent/Child'.")]
