@@ -88,17 +88,17 @@ namespace UnityIntelligenceMCP.Tools
         }
 
         // TODO enhance this to highly multiple found options, with optional inputs for other queryables (component ownership, tags)
-        [McpServerTool(Name = "find_gameobjects"), Description("Find a GameObject(s) in the scene by name or instance ID.")]
-        public async Task<string> FindGameObject(
-            [Description("Comma-separated name or path of the GameObject(s), e.g., 'MyObject' or 'Parent/Child,MyObject'.")]
+        [McpServerTool(Name = "select_gameobjects"), Description("Select GameObjects in the scene by comma-separated list of names or instance IDs.")]
+        public async Task<string> SelectGameObjects(
+            [Description("Names or paths of the GameObject(s), e.g., 'MyObject' or 'Parent/Child,MyObject'.")]
             string targets = "",
-            [Description("Comma-separated instance IDs of the GameObject(s) to find.")]
+            [Description("Instance IDs of the GameObject(s) to find.")]
             string instanceIds = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
             {
-                command = "find_gameobjects"
+                command = "select_gameobjects"
             };
             command.parameters["targets"] = targets;
             command.parameters["instanceIds"] = instanceIds;

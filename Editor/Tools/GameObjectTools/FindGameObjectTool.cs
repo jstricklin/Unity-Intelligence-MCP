@@ -9,12 +9,12 @@ using UnityEditor;
 
 namespace UnityIntelligenceMCP.Tools.GameObjects
 {
-    public class FindGameObjectsTool : GameObjectTool
+    public class SelectGameObjectsTool : GameObjectTool
     {
-        public override string CommandName => "find_gameobjects";
+        public override string CommandName => "select_gameobjects";
         protected override bool multiple { get; set; } = true;
 
-        public FindGameObjectsTool(IGameObjectService service)
+        public SelectGameObjectsTool(IGameObjectService service)
         {
             GameObjectService = service;
         }
