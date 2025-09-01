@@ -294,6 +294,59 @@ namespace UnityIntelligenceMCP.Tools
             return UnityToolResponse.ParseResponse(response);
         }
 
+        [McpServerTool(Name = "fetch_gameobject_info"), Description("Retrieves comprehensive information about a GameObject including transform, components, hierarchy, and metadata")]
+        public async Task<string> FetchGameObjectInfo(
+            [Description("A JSON object identifying the GameObject, e.g., '{\"name\": \"Player\"}' or '{\"guid\": \"abcdef12345\"}' or '{\"path\": \"Root/Player\"}'.")]
+            string identifier,
+            [Description("Optional. A JSON object with options for what data to include, e.g., '{\"includeHierarchy\": true, \"maxDepth\": 2}'.")]
+            string options = "{}",
+            CancellationToken cancellationToken = default)
+        {
+            var command = new UnityToolRequest
+            {
+                command = "fetch_gameobject_info"
+            };
+
+            try
+            {
+                using var doc = JsonDocument.Parse(identifier);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("name", out var nameProp))
+                {
+                    command.parameters["target"] = nameProp.GetString();
+                }
+                else if (root.TryGetProperty("guid", out var guidProp))
+                {
+                    command.parameters["instanceId"] = guidProp.GetString();
+                }
+                else if (root.TryGetProperty("path", out var pathProp))
+                {
+                    command.parameters["target"] = pathProp.GetString();
+                }
+                else
+                {
+                    return JsonSerializer.Serialize(new { status = "error", message = "Invalid identifier. Must contain one of 'name', 'guid', or 'path'." });
+                }
+            }
+            catch (JsonException ex)
+            {
+                return JsonSerializer.Serialize(new { status = "error", message = $"Invalid JSON in 'identifier' parameter: {ex.Message}" });
+            }
+
+            try
+            {
+                command.parameters["options"] = JsonSerializer.Deserialize<object>(options);
+            }
+            catch (JsonException ex)
+            {
+                return JsonSerializer.Serialize(new { status = "error", message = $"Invalid JSON in 'options' parameter: {ex.Message}" });
+            }
+
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
+        }
+
         [McpServerTool(Name = "execute_menu_item"), Description("Executes a Unity Editor menu item by its path, e.g., 'File/Save Project'.")]
         public async Task<string> ExecuteMenuItem(
             [Description("The path of the menu item to execute.")]
