@@ -241,6 +241,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
             }
         }
 
+        //FIXME Resolve relevant snippets missing in return
         public async Task<IEnumerable<SemanticSearchResult>> SearchAsync(string query, int limit = 5, string sourceType = "scripting_api")
         {
             // Existing flat search implementation as a fallback
