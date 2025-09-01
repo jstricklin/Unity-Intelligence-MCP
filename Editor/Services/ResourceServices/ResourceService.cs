@@ -18,6 +18,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             RegisterHandler(new SceneHierarchyHandler());
             RegisterHandler(new EditorMenuHandler());
             RegisterHandler(new PrefabListHandler());
+            RegisterHandler(new SelectionHandler());
             // Add other handlers later
         }
 
