@@ -19,10 +19,10 @@ namespace UnityIntelligenceMCP.Tools
         private readonly IGameObjectService _gameObjectService;
         private readonly IComponentService _componentService;
 
-        public ToolService(IGameObjectService gameObjectService)
+        public ToolService(IGameObjectService gameObjectService, IComponentService componentService)
         {
             _gameObjectService = gameObjectService;
-            _componentService = new ComponentService();
+            _componentService = componentService;
             RegisterTools();
         }
 
@@ -32,6 +32,7 @@ namespace UnityIntelligenceMCP.Tools
             RegisterTool(new CreateGameObjectTool(_gameObjectService, _componentService));
             RegisterTool(new ModifyComponentTool(_gameObjectService, _componentService));
             RegisterTool(new RemoveComponentTool(_gameObjectService, _componentService));
+            RegisterTool(new GetGameObjectInfoTool(_gameObjectService, _componentService));
             RegisterTool(new CreatePrimitiveTool(_gameObjectService));
             RegisterTool(new SelectGameObjectsTool(_gameObjectService));
             RegisterTool(new DeleteGameObjectTool(_gameObjectService));

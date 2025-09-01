@@ -21,6 +21,7 @@ namespace UnityIntelligenceMCP.Unity
         private readonly UnityIntelligenceMCPSettings _settings;
         private readonly VSCodeWorkspaceService _vsCodeWorkspaceService;
         private readonly IGameObjectService _gameObjectService;
+        private readonly IComponentService _componentService;
         private readonly ToolService _toolService;
         public enum MCP_IDE
         {
@@ -40,7 +41,8 @@ namespace UnityIntelligenceMCP.Unity
             _settings = UnityIntelligenceMCPSettings.Instance;
             _vsCodeWorkspaceService = new VSCodeWorkspaceService();
             _gameObjectService = new GameObjectService();
-            _toolService = new ToolService(_gameObjectService);
+            _componentService = new ComponentService();
+            _toolService = new ToolService(_gameObjectService, _componentService);
         }
 
         public void StartServer()

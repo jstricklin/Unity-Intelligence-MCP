@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityIntelligenceMCP.Utils;
 using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Tools.Base;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
@@ -11,36 +13,40 @@ namespace UnityIntelligenceMCP.Tools.GameObjects
     public class GetGameObjectInfoTool : GameObjectTool
     {
         public override string CommandName => "fetch_gameobject_info";
-        protected override bool findTarget { get; set; } = false;
+        protected override bool findTarget { get; set; } = true;
 
-        public GetGameObjectInfoTool(IGameObjectService gameObjectService)
+        public GetGameObjectInfoTool(IGameObjectService gameObjectService, IComponentService componentService)
         {
             GameObjectService = gameObjectService;
+            ComponentService = componentService;
         }
 
-        protected override ToolResponse ExecuteOnMainThread(JObject parameters)
+        // TODO consider multiple here
+        protected override ToolResponse ExecuteOnMainThread(GameObject target, JObject parameters)
         {
-            if (!ToolValidator.TryFindTargets(parameters, GameObjectService, out var targets, out var errorResponse))
-            {
-                return errorResponse;
-            }
 
             var results = new JArray();
             var options = parameters["options"] as JObject ?? new JObject();
 
-            foreach (var target in targets)
-            {
-                results.Add(BuildGameObjectInfo(target, options));
-            }
-
+            // foreach (var target in targets)
+            // {
+            //     results.Add(BuildGameObjectInfo(target, options));
+            // }
+            // var responseData = new JObject
+            // {
+            //     ["success"] = true,
+            //     ["gameObjectData"] = results
+            //     ["count"] = targets.Count
+            // };
             var responseData = new JObject
             {
                 ["success"] = true,
-                ["gameObjects"] = results,
-                ["count"] = targets.Count
+                ["gameObjectData"] = BuildGameObjectInfo(target, options)
+                // ["count"] = targets.Count
             };
             
-            return ToolResponse.SuccessResponse($"Found {targets.Count} matching GameObjects.", responseData);
+            return ToolResponse.SuccessResponse($"Found {target.name}.", responseData);
+            // return ToolResponse.SuccessResponse($"Found {targets.Count} matching GameObjects.", responseData);
         }
         
         private JObject BuildGameObjectInfo(GameObject go, JObject options)
@@ -64,12 +70,12 @@ namespace UnityIntelligenceMCP.Tools.GameObjects
             {
                 info["transform"] = new JObject
                 {
-                    ["position"] = JObjectFromVector3(go.transform.position),
-                    ["localPosition"] = JObjectFromVector3(go.transform.localPosition),
-                    ["rotation"] = JObjectFromQuaternion(go.transform.rotation),
-                    ["eulerAngles"] = JObjectFromVector3(go.transform.eulerAngles),
-                    ["localScale"] = JObjectFromVector3(go.transform.localScale),
-                    ["lossyScale"] = JObjectFromVector3(go.transform.lossyScale)
+                    ["position"] = VectorParser.JObjectFromVector3(go.transform.position),
+                    // ["localPosition"] = VectorParser.JObjectFromVector3(go.transform.localPosition),
+                    ["rotation"] = VectorParser.JObjectFromQuaternion(go.transform.rotation),
+                    // ["eulerAngles"] = VectorParser.JObjectFromVector3(go.transform.eulerAngles),
+                    ["localScale"] = VectorParser.JObjectFromVector3(go.transform.localScale),
+                    // ["lossyScale"] = VectorParser.JObjectFromVector3(go.transform.lossyScale)
                 };
             }
 
@@ -131,15 +137,6 @@ namespace UnityIntelligenceMCP.Tools.GameObjects
             }
 
             return info;
-        }
-
-        private JObject JObjectFromVector3(Vector3 v) => new JObject { ["x"] = v.x, ["y"] = v.y, ["z"] = v.z };
-        private JObject JObjectFromQuaternion(Quaternion q) => new JObject { ["x"] = q.x, ["y"] = q.y, ["z"] = q.z, ["w"] = q.w };
-
-        protected override ToolResponse ExecuteOnMainThread(GameObject target, JObject parameters)
-        {
-            // Not used by this tool as it handles multiple targets in ExecuteOnMainThread(JObject parameters).
-            throw new System.NotImplementedException();
         }
     }
 }

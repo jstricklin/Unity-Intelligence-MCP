@@ -5,6 +5,9 @@ namespace UnityIntelligenceMCP.Utils
 {
     public static class VectorParser
     {
+
+        public static JObject JObjectFromVector3(Vector3 v) => new JObject { ["x"] = v.x, ["y"] = v.y, ["z"] = v.z };
+        public static JObject JObjectFromQuaternion(Quaternion q) => new JObject { ["x"] = q.x, ["y"] = q.y, ["z"] = q.z, ["w"] = q.w };
         public static bool TryParseVector2(JToken token, out Vector2 vector)
         {
             vector = Vector2.zero;
