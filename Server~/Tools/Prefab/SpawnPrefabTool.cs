@@ -45,7 +45,8 @@ namespace UnityIntelligenceMCP.Tools.Prefab
                 command.parameters["scale"] = scale;
             if (!string.IsNullOrWhiteSpace(parentTarget) || !string.IsNullOrWhiteSpace(parentInstanceId))
                 command.parameters["parent"] = new { target = parentTarget, instanceId = parentInstanceId };
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
     }
 }

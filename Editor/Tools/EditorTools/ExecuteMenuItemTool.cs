@@ -54,12 +54,8 @@ namespace UnityIntelligenceMCP.Tools.Editor
             }
 
             return ToolResponse.SuccessResponse(
-                $"Successfully executed menu item: '{path}'."
-                // new
-                // {
-                //     opened_windows = result.opened,
-                //     closed_windows = result.closed
-                // }
+                $"Successfully executed menu item: '{path}'.",
+                new { success = true }
             );
         }
     }

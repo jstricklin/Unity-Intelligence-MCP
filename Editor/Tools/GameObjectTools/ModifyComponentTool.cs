@@ -35,7 +35,9 @@ namespace UnityIntelligenceMCP.Tools.GameObjects
             ComponentService.ApplyProperties(component, properties);
 
             return ToolResponse.SuccessResponse(
-                $"Successfully modified component '{componentTypeName}' on GameObject '{target.name}'.");
+                $"Successfully modified component '{componentTypeName}' on GameObject '{target.name}'.",
+                new { instanceId = target.GetInstanceID() }
+                );
         }
     }
 }

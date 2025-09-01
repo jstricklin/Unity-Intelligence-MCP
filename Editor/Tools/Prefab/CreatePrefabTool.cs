@@ -64,13 +64,12 @@ namespace UnityIntelligenceMCP.Tools.Prefab
 
             AssetDatabase.Refresh();
             var guid = AssetDatabase.AssetPathToGUID(savePath);
-
+            Debug.Log("guid:" + guid);
             var responseData = new
             {
-                success = true,
-                prefabPath = savePath,
                 prefabGuid = guid,
-                replacedOriginal = replaceOriginal
+                prefabPath = savePath
+                // replacedOriginal = replaceOriginal
             };
 
             return ToolResponse.SuccessResponse("Prefab created successfully.", responseData);

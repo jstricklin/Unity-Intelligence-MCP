@@ -13,9 +13,9 @@ namespace UnityIntelligenceMCP.Editor.Models
 
         [JsonProperty("data", NullValueHandling = NullValueHandling.Ignore)]
         public object Data { get; private set; }
-
         [JsonProperty("error", NullValueHandling = NullValueHandling.Ignore)]
-        public string Error { get; private set; }
+        public object Error { get; private set; }
+
         [JsonProperty("execution_time", NullValueHandling = NullValueHandling.Ignore)]
         public float ExecutionTime { get; private set; }
 
@@ -32,7 +32,7 @@ namespace UnityIntelligenceMCP.Editor.Models
 
         public static ToolResponse ErrorResponse(string errorMessage)
         {
-            return new ToolResponse { Success = false, Error = errorMessage };
+            return new ToolResponse { Success = false, Error = new { message = errorMessage } };
         }
     }
 }

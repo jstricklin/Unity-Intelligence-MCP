@@ -77,7 +77,6 @@ namespace UnityIntelligenceMCP.Tools.Prefab
 
             var responseData = new
             {
-                success = true,
                 gameObjectId = instance.GetInstanceID(),
                 instanceName = instance.name
             };

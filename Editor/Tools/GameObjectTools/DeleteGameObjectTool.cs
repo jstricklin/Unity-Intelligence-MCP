@@ -17,12 +17,13 @@ namespace UnityIntelligenceMCP.Tools.GameObjects
 
         protected override ToolResponse ExecuteOnMainThread(GameObject target, JObject parameters)
         {
-            var name = target.name;
+            string name = target.name;
+            var instanceId = target.GetInstanceID();
             GameObjectService.Delete(target);
 
             return ToolResponse.SuccessResponse(
                 $"Deleted GameObject: {name}",
-                new { deleted = true }
+                new { deleted = instanceId }
             );
         }
     }

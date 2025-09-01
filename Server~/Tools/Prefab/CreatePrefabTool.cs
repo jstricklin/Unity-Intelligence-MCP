@@ -30,7 +30,8 @@ namespace UnityIntelligenceMCP.Tools.Prefab
             command.parameters["instanceId"] = instanceId;
             command.parameters["save_path"] = savePath;
             command.parameters["replace_original"] = replaceOriginal;
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
     }
 }

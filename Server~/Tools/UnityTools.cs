@@ -41,7 +41,9 @@ namespace UnityIntelligenceMCP.Tools
             {
                 command.parameters["parent"] = new { target = parentTarget, instanceId = parentInstanceId };
             }
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
 
         [McpServerTool(Name = "create_gameobject"), Description("Create a new, empty GameObject in Unity.")]
@@ -81,25 +83,28 @@ namespace UnityIntelligenceMCP.Tools
                 command.parameters["components"] = components.Split(',').Select(c => c.Trim()).ToArray();
             }
 
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
 
         // TODO enhance this to highly multiple found options, with optional inputs for other queryables (component ownership, tags)
-        [McpServerTool(Name = "find_gameobject"), Description("Find a GameObject in the scene by name or instance ID.")]
+        [McpServerTool(Name = "find_gameobjects"), Description("Find a GameObject(s) in the scene by name or instance ID.")]
         public async Task<string> FindGameObject(
-            [Description("Name or path of the GameObject, e.g., 'MyObject' or 'Parent/Child'.")]
-            string target = "",
-            [Description("Instance ID of the GameObject to find.")]
-            string instanceId = "",
+            [Description("Comma-separated name or path of the GameObject(s), e.g., 'MyObject' or 'Parent/Child,MyObject'.")]
+            string targets = "",
+            [Description("Comma-separated instance IDs of the GameObject(s) to find.")]
+            string instanceIds = "",
             CancellationToken cancellationToken = default)
         {
             var command = new UnityToolRequest
             {
-                command = "find_gameobject"
+                command = "find_gameobjects"
             };
-            command.parameters["target"] = target;
-            command.parameters["instanceId"] = instanceId;
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            command.parameters["targets"] = targets;
+            command.parameters["instanceIds"] = instanceIds;
+
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
 
         [McpServerTool(Name = "modify_gameobject"), Description("Modify properties of a GameObject, such as its name, tag, layer, and active state.")]
@@ -136,7 +141,8 @@ namespace UnityIntelligenceMCP.Tools
             if (isStatic.HasValue) command.parameters["is_static"] = isStatic.Value;
             if (scenePath != null) command.parameters["scene_path"] = scenePath;
 
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
 
         [McpServerTool(Name = "modify_component"), Description("Modify properties of a component on a GameObject. Adds the component if it doesn't exist.")]
@@ -167,7 +173,8 @@ namespace UnityIntelligenceMCP.Tools
                 return JsonSerializer.Serialize(new { status = "error", message = $"Invalid JSON in 'properties' parameter: {ex.Message}" });
             }
 
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
 
         [McpServerTool(Name = "remove_component"), Description("Removes a component from a GameObject.")]
@@ -188,7 +195,8 @@ namespace UnityIntelligenceMCP.Tools
             command.parameters["instanceId"] = instanceId;
             command.parameters["component_type"] = componentType;
 
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
 
         [McpServerTool(Name = "update_transform"), Description("Update the transform (position, rotation, scale, parent) of a GameObject by name or instance ID.")]
@@ -281,7 +289,9 @@ namespace UnityIntelligenceMCP.Tools
             {
                 command.parameters["parent"] = new { target = parentTarget, instanceId = parentInstanceId };
             }
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
 
         [McpServerTool(Name = "execute_menu_item"), Description("Executes a Unity Editor menu item by its path, e.g., 'File/Save Project'.")]
@@ -295,7 +305,9 @@ namespace UnityIntelligenceMCP.Tools
                 command = "execute_menu_item"
             };
             command.parameters["path"] = path;
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
 
 
@@ -313,7 +325,9 @@ namespace UnityIntelligenceMCP.Tools
             };
             command.parameters["target"] = target;
             command.parameters["instanceId"] = instanceId;
-            return await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
     }
 }

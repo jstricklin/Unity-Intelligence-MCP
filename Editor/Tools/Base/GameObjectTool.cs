@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
@@ -13,6 +14,8 @@ namespace UnityIntelligenceMCP.Tools.Base
         protected IGameObjectService GameObjectService;
         protected IComponentService ComponentService;
         protected virtual bool findTarget { get; set; } = true;
+        protected virtual bool multiple { get; set; } = false;
+        protected List<GameObject> targets = null;
         protected GameObject target = null;
         protected GameObjectTool() {}
 
@@ -28,10 +31,23 @@ namespace UnityIntelligenceMCP.Tools.Base
             {
                 return ToolResponse.ErrorResponse("Editor Tool improperly configured - GameObjectService must be injected when 'findTarget' is true.");
             }
-            if (findTarget && !ToolValidator.TryFindTarget(parameters, GameObjectService, out target, out var errorResponse))
+            if (findTarget)
             {
-                return errorResponse;
+                if (multiple)
+                {
+                    if (!ToolValidator.TryFindTargets(parameters, GameObjectService, out targets, out var errorResponseMultiple))
+                        return errorResponseMultiple;
+                }
+                else 
+                {
+                    if (!ToolValidator.TryFindTarget(parameters, GameObjectService, out target, out var errorResponse))
+                        return errorResponse;
+                }
             }
+            // if (findTarget && !ToolValidator.TryFindTargets(parameters, GameObjectService, out targets, out var errorResponse))
+            // {
+            //     return errorResponse;
+            // }
 
             var tcs = new TaskCompletionSource<ToolResponse>();
 
@@ -40,7 +56,9 @@ namespace UnityIntelligenceMCP.Tools.Base
                 try
                 {
                     ToolResponse response;
-                    if (target != null)
+                    if (targets != null && targets.Count > 0)
+                        response = ExecuteOnMainThread(targets, parameters);
+                    else if (target != null)
                         response = ExecuteOnMainThread(target, parameters);
                     else
                         response = ExecuteOnMainThread(parameters);
@@ -57,5 +75,6 @@ namespace UnityIntelligenceMCP.Tools.Base
 
         protected virtual ToolResponse ExecuteOnMainThread(JObject parameters) { throw new System.NotImplementedException(); }
         protected virtual ToolResponse ExecuteOnMainThread(GameObject target, JObject parameters) { throw new System.NotImplementedException(); }
+        protected virtual ToolResponse ExecuteOnMainThread(List<GameObject> targets, JObject parameters) { throw new System.NotImplementedException(); }
     }
 }

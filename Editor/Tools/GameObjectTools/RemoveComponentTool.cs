@@ -28,8 +28,7 @@ namespace UnityIntelligenceMCP.Tools.GameObjects
             if (ComponentService.RemoveComponent(target, componentTypeName))
             {
                 return ToolResponse.SuccessResponse(
-                    $"Removed Component: {componentTypeName} from {name}",
-                    new { removed = true }
+                    $"Removed Component: {componentTypeName} from {name}"
                 );
             } else {
                 return ToolResponse.ErrorResponse($"Component '{componentTypeName}' not found on '{name}' GameObject.");

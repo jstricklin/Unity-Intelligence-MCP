@@ -61,25 +61,7 @@ namespace UnityIntelligenceMCP.Tools.GameObjects
                 $"Updated transform of {target.name}",
                 new
                 {
-                    position = new
-                    {
-                        x = target.transform.position.x,
-                        y = target.transform.position.y,
-                        z = target.transform.position.z
-                    },
-                    rotation = new
-                    {
-                        x = target.transform.rotation.x,
-                        y = target.transform.rotation.y,
-                        z = target.transform.rotation.z,
-                        w = target.transform.rotation.w
-                    },
-                    scale = new
-                    {
-                        x = target.transform.localScale.x,
-                        y = target.transform.localScale.y,
-                        z = target.transform.localScale.z
-                    }
+                    instanceId = target.GetInstanceID()
                 }
             );
         }

@@ -33,7 +33,7 @@ namespace UnityIntelligenceMCP.Tools
             RegisterTool(new ModifyComponentTool(_gameObjectService, _componentService));
             RegisterTool(new RemoveComponentTool(_gameObjectService, _componentService));
             RegisterTool(new CreatePrimitiveTool(_gameObjectService));
-            RegisterTool(new FindGameObjectTool(_gameObjectService));
+            RegisterTool(new FindGameObjectsTool(_gameObjectService));
             RegisterTool(new DeleteGameObjectTool(_gameObjectService));
             RegisterTool(new UpdateTransformTool(_gameObjectService));
             RegisterTool(new ModifyGameObjectTool(_gameObjectService));
