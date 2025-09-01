@@ -294,11 +294,11 @@ namespace UnityIntelligenceMCP.Tools
             return UnityToolResponse.ParseResponse(response);
         }
 
-        [McpServerTool(Name = "fetch_gameobject_info"), Description("Retrieves comprehensive information about a GameObject including transform, components, hierarchy, and metadata")]
+        [McpServerTool(Name = "fetch_gameobject_info"), Description("Retrieves comprehensive information about a GameObject including transform (default), components and hierarchy")]
         public async Task<string> FetchGameObjectInfo(
             [Description("A JSON object identifying the GameObject, e.g., '{\"name\": \"Player\"}' or '{\"guid\": \"abcdef12345\"}' or '{\"path\": \"Root/Player\"}'.")]
             string identifier,
-            [Description("Optional. A JSON object with options for what data to include, e.g., '{\"includeHierarchy\": true, \"maxDepth\": 2}'.")]
+            [Description("Optional. A JSON object with options for what data to include, e.g., '{\"includeComponents\": true, \"includeTransform\": false, \"includeHierarchy\": true, \"maxDepth\": 2}'.")]
             string options = "{}",
             CancellationToken cancellationToken = default)
         {

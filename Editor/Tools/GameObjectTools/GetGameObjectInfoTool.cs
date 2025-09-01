@@ -103,6 +103,7 @@ namespace UnityIntelligenceMCP.Tools.GameObjects
                 info["components"] = componentArray;
             }
             
+            // TODO enhance hierarchy with parent traversal
             if (options.Value<bool?>("includeHierarchy") ?? false)
             {
                 var hierarchy = new JObject
@@ -111,6 +112,14 @@ namespace UnityIntelligenceMCP.Tools.GameObjects
                     ["siblingIndex"] = go.transform.GetSiblingIndex()
                 };
 
+                // if (go.transform.root != null)
+                // {
+                //     hierarchy["root"] = new JObject
+                //     {
+                //         ["name"] = go.transform.root.name,
+                //         ["guid"] = GlobalObjectId.GetGlobalObjectIdSlow(go.transform.root.gameObject).ToString()
+                //     };
+                // }
                 if (go.transform.parent != null)
                 {
                     hierarchy["parent"] = new JObject
