@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Editor.Core;
+using UnityIntelligenceMCP.Editor.Services;
 
 namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
 {
@@ -20,6 +21,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             RegisterHandler(new PrefabListHandler());
             RegisterHandler(new SelectionHandler());
             // Add other handlers later
+            ConsoleLogForwardingService.Initialize();
         }
 
         public static void RegisterHandler(IResourceHandler handler)

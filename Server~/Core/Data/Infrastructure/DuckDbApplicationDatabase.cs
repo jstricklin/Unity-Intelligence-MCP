@@ -132,6 +132,19 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             );
         ";
 
+        private const string ConsoleLogsTable = @"
+            CREATE TABLE IF NOT EXISTS ConsoleLogs (
+                Timestamp TIMESTAMP,
+                LogType VARCHAR,
+                Message VARCHAR,
+                SourceFile VARCHAR,
+                Line INTEGER,
+                StackTrace VARCHAR
+            );
+            CREATE INDEX IF NOT EXISTS idx_log_timestamp ON ConsoleLogs (Timestamp);
+            CREATE INDEX IF NOT EXISTS idx_log_type ON ConsoleLogs (LogType);
+        ";
+
         private const string SchemaStandardIndexes = @"
             CREATE INDEX idx_elements_construct_type ON content_elements(doc_id, element_type);
             CREATE INDEX idx_metadata_doc ON doc_metadata(doc_id);
@@ -253,6 +266,9 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 command.CommandText = ToolUsageLogTable;
                 await command.ExecuteNonQueryAsync();
                 
+                command.CommandText = ConsoleLogsTable;
+                await command.ExecuteNonQueryAsync();
+
                 // Processing table
                 command.CommandText = ProcessingTable;
                 await command.ExecuteNonQueryAsync();

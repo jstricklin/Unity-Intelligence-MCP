@@ -1,6 +1,7 @@
 using UnityEngine;
 using WebSocketSharp;
 using WebSocketSharp.Server;
+using System.Threading.Tasks;
 
 namespace UnityIntelligenceMCP.Unity
 {
@@ -48,11 +49,12 @@ namespace UnityIntelligenceMCP.Unity
             Debug.Log("Unity Intelligence MCP WebSocket server stopped");
         }
 
-        public void Send(string jsonPayload)
+        public Task Send(string jsonPayload)
         {
-            if (!IsListening) return;
+            if (!IsListening) return Task.CompletedTask;
 
             _wsserver?.WebSocketServices["/mcp-bridge"].Sessions.Broadcast(jsonPayload);
+            return Task.CompletedTask;
         }
     }
 }
