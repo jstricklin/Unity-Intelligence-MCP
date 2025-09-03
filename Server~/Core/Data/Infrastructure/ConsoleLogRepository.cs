@@ -39,23 +39,24 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             });
         }
 
+        //TODO Enhance with log deduplication
         public async Task<IEnumerable<ConsoleLogEntry>> GetLogsAsync(string logTypeFilter, int page, int pageSize)
         {
             var offset = (page - 1) * pageSize;
             var sql = "SELECT * FROM unity_console_logs";
             var parameters = new Dictionary<string, object>
             {
-                { "$limit", pageSize },
-                { "$offset", offset }
+                { "limit", pageSize },
+                { "offset", offset }
             };
 
             if (!string.IsNullOrEmpty(logTypeFilter))
             {
-                sql += " WHERE LogType = $logType";
-                parameters.Add("$logType", logTypeFilter);
+                sql += " WHERE log_type = $logType";
+                parameters.Add("logType", logTypeFilter);
             }
-
-            sql += " ORDER BY Timestamp DESC LIMIT $limit OFFSET $offset";
+            
+            sql += " ORDER BY timestamp DESC LIMIT $limit OFFSET $offset";
 
             return await _connectionFactory.ExecuteWithConnectionAsync(async connection =>
             {
