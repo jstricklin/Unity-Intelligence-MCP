@@ -14,7 +14,7 @@ namespace UnityIntelligenceMCP.Core.Semantics
         {
             _dbFactory = dbFactory;
         }
-        
+        // FIXME resolve issues with recommendations not returning
         public async Task<List<DocumentResult>> GetRelatedDocsAsync(
             long currentDocId, int limit = 5, string sourceType = "scripting_api")
         {

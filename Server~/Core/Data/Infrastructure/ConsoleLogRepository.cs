@@ -10,17 +10,20 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
     public class ConsoleLogRepository : IConsoleLogRepository
     {
         private readonly IDuckDbConnectionFactory _connectionFactory;
+        private readonly IDbWorkQueue _workQueue;
 
-        public ConsoleLogRepository(IDuckDbConnectionFactory connectionFactory)
+        public ConsoleLogRepository(IDbWorkQueue workQueue, IDuckDbConnectionFactory connectionFactory)
         {
+            _workQueue = workQueue;
             _connectionFactory = connectionFactory;
         }
 
-        public async Task InsertBatchAsync(IEnumerable<ConsoleLogEntry> logs)
+        public async Task InsertBatchAsync(IEnumerable<ConsoleLogEntry> logs, CancellationToken cancellationToken)
         {
             await _connectionFactory.ExecuteWithConnectionAsync(async connection =>
             {
-                using var appender = connection.CreateAppender("ConsoleLogs");
+                await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+                using var appender = connection.CreateAppender("unity_console_logs");
                 foreach (var log in logs)
                 {
                     var row = appender.CreateRow();
@@ -32,13 +35,14 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                     row.AppendValue(log.StackTrace);
                     row.EndRow();
                 }
+                await transaction.CommitAsync(cancellationToken);
             });
         }
 
         public async Task<IEnumerable<ConsoleLogEntry>> GetLogsAsync(string logTypeFilter, int page, int pageSize)
         {
             var offset = (page - 1) * pageSize;
-            var sql = "SELECT * FROM ConsoleLogs";
+            var sql = "SELECT * FROM unity_console_logs";
             var parameters = new Dictionary<string, object>
             {
                 { "$limit", pageSize },
@@ -83,13 +87,13 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
         public async Task PruneOldLogsAsync(int retentionHours)
         {
             var cutoff = DateTime.UtcNow.AddHours(-retentionHours);
-            var sql = "DELETE FROM ConsoleLogs WHERE Timestamp < $cutoff";
+            var sql = "DELETE FROM unity_console_logs WHERE Timestamp < $cutoff";
             
             await _connectionFactory.ExecuteWithConnectionAsync(async connection =>
             {
                 using var command = connection.CreateCommand();
                 command.CommandText = sql;
-                command.Parameters.Add(new DuckDBParameter("$cutoff", cutoff));
+                command.Parameters.Add(new DuckDBParameter("cutoff", cutoff));
                 await command.ExecuteNonQueryAsync();
             });
         }

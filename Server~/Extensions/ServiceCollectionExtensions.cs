@@ -19,9 +19,11 @@ using UnityIntelligenceMCP.Utilities;
 using UnityIntelligenceMCP.Models;
 using UnityIntelligenceMCP.Core.Data.Logging;
 using UnityIntelligenceMCP.Core.Data.Services;
-using UnityIntelligenceMCP.Core.Services.Contracts;
 using UnityIntelligenceMCP.Core.Services;
+using UnityIntelligenceMCP.Core.Handlers.Contracts;
+using UnityIntelligenceMCP.Core.Handlers;
 using System.Data.Common;
+using UnityIntelligenceMCP.Core.Commands.Contracts;
 
 namespace UnityIntelligenceMCP.Extensions
 {
@@ -32,6 +34,8 @@ namespace UnityIntelligenceMCP.Extensions
             services.AddSingleton<IToolUsageLogger, DuckDbToolUsageLogger>();
             services.AddSingleton<UnityInstallationService>();
             services.AddSingleton<UnityDocumentationResource>();
+            services.AddSingleton<IConsoleLogRepository, ConsoleLogRepository>();
+            services.AddHostedService<ConsoleLogPruningService>();
 
             return services;
         }
@@ -79,7 +83,9 @@ namespace UnityIntelligenceMCP.Extensions
         public static IServiceCollection AddEditorBridgeServices(this IServiceCollection services)
         {
             services.AddHostedService<EditorBridgeClientService>();
+            services.AddSingleton<ICommandService, ServerCommandService>();
             services.AddSingleton<IMessageHandler, MessageHandler>();
+
             return services;
         }
 

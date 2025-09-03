@@ -10,8 +10,8 @@ using Microsoft.AspNetCore.Http;
 using UnityIntelligenceMCP.Core.Services;
 
 var builder = WebApplication.CreateBuilder();
+// TODO Made loglevel configurable and add file logging w Serilog
 builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
-// Add configuration sources to the builder
 builder.Services.AddSingleton<ConfigurationService>();
 
 var mcpServerBuilder = builder.Services

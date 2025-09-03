@@ -132,17 +132,17 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             );
         ";
 
-        private const string ConsoleLogsTable = @"
-            CREATE TABLE IF NOT EXISTS ConsoleLogs (
-                Timestamp TIMESTAMP,
-                LogType VARCHAR,
-                Message VARCHAR,
-                SourceFile VARCHAR,
-                Line INTEGER,
-                StackTrace VARCHAR
+        private const string unity_console_logsTable = @"
+            CREATE TABLE IF NOT EXISTS unity_console_logs (
+                timestamp TIMESTAMP,
+                log_type VARCHAR,
+                message VARCHAR,
+                source_file VARCHAR,
+                line INTEGER,
+                stack_trace VARCHAR
             );
-            CREATE INDEX IF NOT EXISTS idx_log_timestamp ON ConsoleLogs (Timestamp);
-            CREATE INDEX IF NOT EXISTS idx_log_type ON ConsoleLogs (LogType);
+            CREATE INDEX IF NOT EXISTS idx_log_timestamp ON unity_console_logs (timestamp);
+            CREATE INDEX IF NOT EXISTS idx_log_type ON unity_console_logs (log_type);
         ";
 
         private const string SchemaStandardIndexes = @"
@@ -266,7 +266,7 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                 command.CommandText = ToolUsageLogTable;
                 await command.ExecuteNonQueryAsync();
                 
-                command.CommandText = ConsoleLogsTable;
+                command.CommandText = unity_console_logsTable;
                 await command.ExecuteNonQueryAsync();
 
                 // Processing table

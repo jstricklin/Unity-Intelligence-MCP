@@ -314,15 +314,15 @@ namespace UnityIntelligenceMCP.Tools
 
                 if (root.TryGetProperty("name", out var nameProp))
                 {
-                    command.parameters["target"] = nameProp.GetString();
+                    command.parameters["target"] = nameProp.GetString()!;
                 }
                 else if (root.TryGetProperty("guid", out var guidProp))
                 {
-                    command.parameters["instanceId"] = guidProp.GetString();
+                    command.parameters["instanceId"] = guidProp.GetString()!;
                 }
                 else if (root.TryGetProperty("path", out var pathProp))
                 {
-                    command.parameters["target"] = pathProp.GetString();
+                    command.parameters["target"] = pathProp.GetString()!;
                 }
                 else
                 {
@@ -336,7 +336,7 @@ namespace UnityIntelligenceMCP.Tools
 
             try
             {
-                command.parameters["options"] = JsonSerializer.Deserialize<object>(options);
+                command.parameters["options"] = JsonSerializer.Deserialize<object>(options)!;
             }
             catch (JsonException ex)
             {

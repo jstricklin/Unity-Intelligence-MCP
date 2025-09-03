@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityIntelligenceMCP.Utils;
 using UnityIntelligenceMCP.Unity.Services;
+using UnityIntelligenceMCP.Editor.Services;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Editor.Services.ResourceServices;
 using Newtonsoft.Json;
@@ -43,6 +44,7 @@ namespace UnityIntelligenceMCP.Unity
             _gameObjectService = new GameObjectService();
             _componentService = new ComponentService();
             _toolService = new ToolService(_gameObjectService, _componentService);
+            ConsoleLogForwardingService.Initialize();
         }
 
         public void StartServer()

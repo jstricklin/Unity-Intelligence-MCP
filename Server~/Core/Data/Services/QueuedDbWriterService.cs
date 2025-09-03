@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using UnityIntelligenceMCP.Core.Data.Contracts;
+using UnityIntelligenceMCP.Core.Data.Infrastructure;
 using UnityIntelligenceMCP.Models.Database;
 using UnityIntelligenceMCP.Models.Documentation;
 
@@ -12,31 +13,42 @@ namespace UnityIntelligenceMCP.Core.Data.Services
 {
     public class QueuedDbWriterService : BackgroundService
     {
+        //FIXME currently only asset indexing uses this - lets refactor the app to rely on this in all cases of DB writes in possible
         private readonly IDbWorkQueue _workQueue;
         private readonly ILogger<QueuedDbWriterService> _logger;
-        private readonly IDocumentationRepository _repository;
+        private readonly IDocumentationRepository _docRepository;
+        private readonly IConsoleLogRepository _consoleLogRepository;
         private readonly Dictionary<Type, Func<IReadOnlyList<IDbWorkItem>, CancellationToken, Task>> _handlers;
 
         public QueuedDbWriterService(
             IDbWorkQueue workQueue, 
             ILogger<QueuedDbWriterService> logger, 
-            IDocumentationRepository repository)
+            IConsoleLogRepository consoleLogRepository, 
+            IDocumentationRepository docRepository)
         {
             _workQueue = workQueue;
-            _repository = repository;
+            _docRepository = docRepository;
+            _consoleLogRepository = consoleLogRepository;
             _logger = logger;
 
             // Map work item types to their specific bulk handling logic.
             _handlers = new Dictionary<Type, Func<IReadOnlyList<IDbWorkItem>, CancellationToken, Task>>
             {
-                { typeof(SemanticDocumentRecord), HandleSemanticDocumentRecordsAsync }
+                { typeof(SemanticDocumentRecord), HandleSemanticDocumentRecordsAsync },
+                { typeof(ConsoleLogEntry), HandleConsoleLogRecordsAsync }
             };
         }
 
-        private Task HandleSemanticDocumentRecordsAsync(IReadOnlyList<IDbWorkItem> workItems, CancellationToken cancellationToken)
+        private async Task HandleConsoleLogRecordsAsync(IReadOnlyList<IDbWorkItem> workItems, CancellationToken cancellationToken)
+        {
+            var records = workItems.Cast<ConsoleLogEntry>().ToList();
+            await _consoleLogRepository.InsertBatchAsync(records, cancellationToken);
+        }
+
+        private async Task HandleSemanticDocumentRecordsAsync(IReadOnlyList<IDbWorkItem> workItems, CancellationToken cancellationToken)
         {
             var records = workItems.Cast<SemanticDocumentRecord>().ToList();
-            return _repository.InsertDocumentsInBulkAsync(records, cancellationToken);
+            await _docRepository.InsertDocumentsInBulkAsync(records, cancellationToken);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

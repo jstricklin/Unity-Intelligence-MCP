@@ -12,6 +12,8 @@ using UnityIntelligenceMCP.Models.Database;
 using UnityIntelligenceMCP.Core.Data.Logging;
 using System.Net.NetworkInformation;
 using UnityIntelligenceMCP.Core.Data.Contracts;
+using UnityIntelligenceMCP.Core.Handlers.Contracts;
+using System.Diagnostics;
 
 namespace UnityIntelligenceMCP.Core.Services
 {
@@ -20,15 +22,18 @@ namespace UnityIntelligenceMCP.Core.Services
         private readonly ILogger<EditorBridgeClientService> _logger;
         private readonly IToolUsageLogger _toolLogger;
         private readonly ConfigurationService _configurationService;
+        private readonly IMessageHandler _messageHandler;
         private ClientWebSocket _ws = new();
         private static EditorBridgeClientService? _instance;
         private readonly ConcurrentDictionary<string, (ToolUsageLog usageLog, TaskCompletionSource<string> tcs)> _pendingRequests = new();
         public EditorBridgeClientService(
             ConfigurationService configurationService,
+            IMessageHandler messageHandler,
             IToolUsageLogger toolLogger,
             ILogger<EditorBridgeClientService> logger)
         {
             _configurationService = configurationService;
+            _messageHandler = messageHandler;
             _logger = logger;
             _toolLogger = toolLogger;
             _instance = this;
@@ -84,18 +89,7 @@ namespace UnityIntelligenceMCP.Core.Services
                 try
                 {
                     responseJson = stringBuilder.ToString();
-                    _logger.LogInformation("Received: {0}", responseJson);
-                    using var doc = JsonDocument.Parse(responseJson);
-                    if (doc.RootElement.TryGetProperty("request_id", out var requestIdElement))
-                    {
-                        var requestId = requestIdElement.GetString();
-                        if (requestId != null && _pendingRequests.TryRemove(requestId, out var request))
-                        {
-                            request.tcs.SetResult(responseJson);
-                            _toolLogger.Parse(responseJson, request.usageLog);
-                            await _toolLogger.LogAsync(request.usageLog);
-                        }
-                    }
+                    await _messageHandler.ProcessMessageAsync(responseJson, _pendingRequests);
                 }
                 catch (JsonException ex)
                 {
@@ -115,6 +109,57 @@ namespace UnityIntelligenceMCP.Core.Services
             }
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             return _instance.SendRequestAsync(jsonPayload, cts.Token);
+        }
+        public static Task<string> SendResponseToUnity(string jsonPayload)
+        {
+            if (_instance == null)
+            {
+                throw new InvalidOperationException("Editor Bridge is not initialized.");
+            }
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            return _instance.SendResponseAsync(jsonPayload, cts.Token);
+        }
+        public async Task<string> SendResponseAsync(string jsonPayload, CancellationToken ct)
+        {
+            // var requestId = Guid.NewGuid().ToString();
+            // var tcs = new TaskCompletionSource<string>();
+
+            try
+            {
+                using var doc = JsonDocument.Parse(jsonPayload);
+                using var ms = new System.IO.MemoryStream();
+                using (var writer = new Utf8JsonWriter(ms))
+                {
+                    writer.WriteStartObject();
+                    // writer.WriteString("request_id", requestId);
+                    foreach (var prop in doc.RootElement.EnumerateObject())
+                    {
+                        prop.WriteTo(writer);
+                    }
+                    writer.WriteEndObject();
+                }
+                
+                var bytes = ms.ToArray();
+                // var messageWithId = Encoding.UTF8.GetString(bytes);
+                var responseWithId = Encoding.UTF8.GetString(bytes);
+
+                // _logger.LogInformation("Sending: {0}", messageWithId);
+                await _ws.SendAsync(bytes, WebSocketMessageType.Text, true, ct);
+                return JsonSerializer.Serialize(new
+                {
+                    success = true
+                });
+            }
+            catch (Exception ex)
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    success = false,
+                    error = new {
+                        message = ex.ToString(),
+                    }
+                });
+            }
         }
         public async Task<string> SendRequestAsync(string jsonPayload, CancellationToken ct)
         {
@@ -145,7 +190,7 @@ namespace UnityIntelligenceMCP.Core.Services
                 var bytes = ms.ToArray();
                 var messageWithId = Encoding.UTF8.GetString(bytes);
 
-                _logger.LogInformation("Sending: {0}", messageWithId);
+                // _logger.LogInformation("Sending: {0}", messageWithId);
                 await _ws.SendAsync(bytes, WebSocketMessageType.Text, true, ct);
 
                 using (ct.Register(() => tcs.TrySetCanceled()))

@@ -123,6 +123,8 @@ namespace UnityIntelligenceMCP.Unity
             EditorGUI.EndDisabledGroup();
             // EditorGUILayout.EndHorizontal();
 
+            // if (GUILayout.Button($"Send Test MCP Message", GUILayout.Height(30)))
+            //     _controller.SendTestMessage();
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();

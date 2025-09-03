@@ -21,7 +21,6 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             RegisterHandler(new PrefabListHandler());
             RegisterHandler(new SelectionHandler());
             // Add other handlers later
-            ConsoleLogForwardingService.Initialize();
         }
 
         public static void RegisterHandler(IResourceHandler handler)

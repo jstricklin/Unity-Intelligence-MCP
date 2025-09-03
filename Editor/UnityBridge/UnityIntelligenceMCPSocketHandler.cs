@@ -31,14 +31,15 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
     {
         UnityEditor.EditorApplication.delayCall += async () =>
         {
-            Debug.Log($"Request received: {e.Data}");
+            // Debug.Log($"Message received: {e.Data}");
             try
             {
+                //TODO update to handle response / request logic here - currently just handles requests
                 var message = JsonConvert.DeserializeObject<JObject>(e.Data);
             
                 string type = message?["type"]?.ToString();
                 string requestId = message?["request_id"]?.ToString();
-            
+                if (type == "response") return;
                 switch (type)
                 {
                     case "resource":
