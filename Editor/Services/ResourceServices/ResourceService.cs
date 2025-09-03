@@ -20,6 +20,8 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             RegisterHandler(new EditorMenuHandler());
             RegisterHandler(new PrefabListHandler());
             RegisterHandler(new SelectionHandler());
+            RegisterHandler(new AvailablePackagesHandler());
+            RegisterHandler(new InstalledPackagesHandler());
             // Add other handlers later
         }
 
