@@ -17,7 +17,7 @@ namespace UnityIntelligenceMCP.Tools.Editor
             {
                 command = "add_package",
             };
-            command.parameters["indentifier"] = identifier;
+            command.parameters["identifier"] = identifier;
 
             var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
             return UnityToolResponse.ParseResponse(response);
