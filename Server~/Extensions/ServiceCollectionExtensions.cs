@@ -31,7 +31,7 @@ namespace UnityIntelligenceMCP.Extensions
     {
         public static IServiceCollection AddCoreUnityServices(this IServiceCollection services)
         {
-            services.AddSingleton<IToolUsageLogger, DuckDbToolUsageLogger>();
+            services.AddSingleton<IMCPUsageLogger, DuckDbMCPUsageLogger>();
             services.AddSingleton<UnityInstallationService>();
             services.AddSingleton<UnityDocumentationResource>();
             services.AddSingleton<IConsoleLogRepository, ConsoleLogRepository>();

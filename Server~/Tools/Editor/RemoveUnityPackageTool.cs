@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
+using ModelContextProtocol.Server;
 using UnityIntelligenceMCP.Core.Services;
+using UnityIntelligenceMCP.Models;
 
 namespace UnityIntelligenceMCP.Tools.Editor
 {
@@ -11,13 +13,14 @@ namespace UnityIntelligenceMCP.Tools.Editor
         [McpServerTool(Name = "remove_unity_package"), Description("Removes a package from the Unity project using its name (e.g., 'com.unity.vectorgraphics').")]
         public async Task<string> RemovePackage([Description("The package name to remove.")] string name)
         {
-            var toolRequest = new JObject
+            var command = new UnityToolRequest
             {
-                ["command"] = "remove_package",
-                ["parameters"] = new JObject { ["name"] = name }
+                command = "remove_package",
             };
+            command.parameters["name"] = name;
 
-            return await EditorBridgeClientService.SendMessageToUnity(toolRequest.ToString());
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
     }
 }

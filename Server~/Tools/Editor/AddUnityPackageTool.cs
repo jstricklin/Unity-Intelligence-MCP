@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
+using ModelContextProtocol.Server;
 using UnityIntelligenceMCP.Core.Services;
+using UnityIntelligenceMCP.Models;
 
 namespace UnityIntelligenceMCP.Tools.Editor
 {
@@ -11,13 +13,14 @@ namespace UnityIntelligenceMCP.Tools.Editor
         [McpServerTool(Name = "add_unity_package"), Description("Adds a package to the Unity project using its identifier (e.g., 'com.unity.vectorgraphics' or a git URL).")]
         public async Task<string> AddPackage([Description("The package identifier to add.")] string identifier)
         {
-            var toolRequest = new JObject
+            var command = new UnityToolRequest
             {
-                ["command"] = "add_package",
-                ["parameters"] = new JObject { ["identifier"] = identifier }
+                command = "add_package",
             };
+            command.parameters["indentifier"] = identifier;
 
-            return await EditorBridgeClientService.SendMessageToUnity(toolRequest.ToString());
+            var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
+            return UnityToolResponse.ParseResponse(response);
         }
     }
 }

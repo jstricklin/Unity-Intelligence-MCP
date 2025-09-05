@@ -31,10 +31,13 @@ namespace UnityIntelligenceMCP.Tools
             command.command = "create_primitive";
             command.parameters["type"] = type;
             command.parameters["name"] = name;
-            try {
+            try 
+            {
                 var splitPos = position.Split(',');
                 command.parameters["position"] = new { x = float.Parse(splitPos[0]), y = float.Parse(splitPos[1]), z = float.Parse(splitPos[2]) };
-            } catch {
+            } 
+            catch 
+            {
                 command.parameters["position"] = new { x = 0, y = 0, z = 0 };
             }
             if (!string.IsNullOrWhiteSpace(parentTarget) || !string.IsNullOrWhiteSpace(parentInstanceId))

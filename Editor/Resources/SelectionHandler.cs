@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityIntelligenceMCP.Editor.Models;
+using UnityIntelligenceMCP.Editor.Resources.Contracts;
 
 namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
 {
@@ -10,13 +11,13 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
     {
         public string ResourceURI => "unity://selection/current";
 
-        public Task<ToolResponse> HandleRequest(JObject parameters)
+        public Task<ResourceResponse> HandleRequest(JObject parameters)
         {
             var selectedGameObjects = Selection.gameObjects;
 
             if (selectedGameObjects == null || selectedGameObjects.Length == 0)
             {
-                return Task.FromResult(ToolResponse.SuccessResponse("No GameObjects are currently selected.", new object[0]));
+                return Task.FromResult(ResourceResponse.SuccessResponse(ResourceURI, new object[0]));
             }
 
             var selectionData = selectedGameObjects.Select(go => new
@@ -25,7 +26,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
                 instanceId = go.GetInstanceID().ToString()
             }).ToList();
 
-            return Task.FromResult(ToolResponse.SuccessResponse("Successfully retrieved selected GameObjects.", selectionData));
+            return Task.FromResult(ResourceResponse.SuccessResponse(ResourceURI, selectionData));
         }
     }
 }

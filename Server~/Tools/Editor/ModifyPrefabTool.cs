@@ -23,6 +23,7 @@ namespace UnityIntelligenceMCP.Tools.Prefab
             };
             command.parameters["prefab_path"] = prefabPath;
             command.parameters["modifications"] = JArray.Parse(modifications);
+
             var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
             return UnityToolResponse.ParseResponse(response);
         }

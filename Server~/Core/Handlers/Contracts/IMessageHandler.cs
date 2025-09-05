@@ -7,7 +7,7 @@ namespace UnityIntelligenceMCP.Core.Handlers.Contracts
 {
     public interface IMessageHandler
     {
-        Task<string> ProcessMessageAsync(string message, ConcurrentDictionary<string, (ToolUsageLog usageLog, TaskCompletionSource<string> tcs)> pendingRequests);
+        Task<string> ProcessMessageAsync(string message, ConcurrentDictionary<string, (MCPUsageLog usageLog, TaskCompletionSource<string> tcs)> pendingRequests);
         // Task ProcessMessageAsync(string message, WebSocket socket);
     }
 }

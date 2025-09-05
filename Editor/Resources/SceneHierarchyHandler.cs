@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityIntelligenceMCP.Editor.Resources.Contracts;
 using UnityIntelligenceMCP.Editor.Models;
 
 namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
@@ -11,7 +12,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
     public class SceneHierarchyHandler : IResourceHandler
     {
         public string ResourceURI => "unity://scene/hierarchy";
-        public async Task<ToolResponse> HandleRequest(JObject parameters)
+        public async Task<ResourceResponse> HandleRequest(JObject parameters)
         {
             // TODO consider parameter to retrieve active scene only
             // var scene = SceneManager.GetActiveScene();
@@ -19,7 +20,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             //     .GetRootGameObjects()
             //     .Select(go => AddGameObjectNode(go));
 
-            // return await Task.FromResult(ToolResponse.SuccessResponse("Scene hierarchy retrieved", new JObject {["scene"] = scene.name, ["hierarchy"] = new JArray(hierarchy) }));
+            // return await Task.FromResult(ResourceResponse.SuccessResponse("Scene hierarchy retrieved", new JObject {["scene"] = scene.name, ["hierarchy"] = new JArray(hierarchy) }));
             JArray scenes = new JArray();
             for (int i = 0; i < SceneManager.sceneCount; i++)
             {
@@ -33,7 +34,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
                     ["hierarchy"] = new JArray(hierarchy),
                 });
             }
-            return ToolResponse.SuccessResponse("Scene hierarchy retrieved", new JObject { ["activeScene"] = SceneManager.GetActiveScene().name, ["sceneHierarchies"] = scenes });
+            return ResourceResponse.SuccessResponse(ResourceURI, new JObject { ["activeScene"] = SceneManager.GetActiveScene().name, ["sceneHierarchies"] = scenes });
         }
 
         async Task<JObject> AddGameObjectNode(GameObject go)

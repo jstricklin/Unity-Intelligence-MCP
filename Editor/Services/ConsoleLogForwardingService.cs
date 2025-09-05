@@ -32,7 +32,9 @@ namespace UnityIntelligenceMCP.Editor.Services
             // Debug.Log($"[INFO: logString]: {logString}");
             // Debug.Log($"[INFO: stackTrace]: {stackTrace}");
             var stackData = stackTrace.Split('\n');
-            var context = stackData[1];
+
+            var context = stackData.Length > 1 ? stackData[1] : stackData[0];
+            // var context = stackData[1];
             // Debug.Log($"[INFO] context: {context}");
             var fileInfo = context.Contains(" (at ") ? context.Substring(context.IndexOf(" (at ", StringComparison.Ordinal) + 5) : "N/A";
             if (fileInfo.EndsWith(")"))

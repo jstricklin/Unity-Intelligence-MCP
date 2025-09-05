@@ -1,9 +1,11 @@
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityIntelligenceMCP.Core.Services;
+using UnityIntelligenceMCP.Utilities;
 
 namespace UnityIntelligenceMCP.Resources
 {
@@ -11,7 +13,7 @@ namespace UnityIntelligenceMCP.Resources
     public class SelectionResource
     {
         [McpServerResource(Name = "get_selection"), Description("Retrieves the currently selected GameObject(s) in the Unity Editor.")]
-        public async Task<string> GetSelection(CancellationToken cancellationToken = default)
+        public async Task<TextResourceContents> GetSelection(CancellationToken cancellationToken = default)
         {
             var request = new
             {
@@ -20,7 +22,9 @@ namespace UnityIntelligenceMCP.Resources
                 resource_uri = "unity://selection/current"
             };
             var jsonPayload = JsonSerializer.Serialize(request);
-            return await EditorBridgeClientService.SendMessageToUnity(jsonPayload);
+            // return await EditorBridgeClientService.SendMessageToUnity(jsonPayload);
+            var jsonResponse = await EditorBridgeClientService.SendMessageToUnity(jsonPayload);
+            return ResourceParser.ParseTextResourceContents(jsonResponse);
         }
     }
 }

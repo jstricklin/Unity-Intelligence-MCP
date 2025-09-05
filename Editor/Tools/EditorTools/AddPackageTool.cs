@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using UnityEngine;
 using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
@@ -25,21 +26,24 @@ namespace UnityIntelligenceMCP.Tools.Editor
 
             EditorApplication.delayCall += () =>
             {
+                Debug.Log("starting package add");
                 AddRequest request = Client.Add(packageId);
-                void OnProgress(AddRequest req)
+                EditorApplication.update += OnProgress;
+                void OnProgress()
                 {
-                    if (req.Status == StatusCode.Success)
+                    if (request.Status != StatusCode.InProgress)
+                        Debug.Log($"add package complete. status: {request.Status.ToString()}");
+                    if (request.Status == StatusCode.Success)
                     {
-                        tcs.TrySetResult(ToolResponse.SuccessResponse($"Successfully added package: {req.Result.displayName}"));
-                        request.completed -= OnProgress;
+                        tcs.TrySetResult(ToolResponse.SuccessResponse($"Successfully added package: {request.Result.displayName}"));
+                        EditorApplication.update -= OnProgress;
                     }
-                    else if (req.Status >= StatusCode.Failure)
+                    else if (request.Status == StatusCode.Failure)
                     {
-                        tcs.TrySetResult(ToolResponse.ErrorResponse($"Failed to add package '{packageId}': {req.Error.message}"));
-                        request.completed -= OnProgress;
+                        tcs.TrySetResult(ToolResponse.ErrorResponse($"Failed to add package '{packageId}': {request.Error.message}"));
+                        EditorApplication.update -= OnProgress;
                     }
                 }
-                request.completed += OnProgress;
             };
 
             return tcs.Task;

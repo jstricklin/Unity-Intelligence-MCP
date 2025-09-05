@@ -1,23 +1,28 @@
 using System.ComponentModel;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using UnityIntelligenceMCP.Core.Services;
+using UnityIntelligenceMCP.Models;
+using UnityIntelligenceMCP.Utilities;
 
 namespace UnityIntelligenceMCP.Resources
 {
-    [McpServerToolType]
+    [McpServerResourceType]
     public class ListAvailableUnityPackagesResource
     {
-        [McpServerTool(Name = "list_available_unity_packages"), Description("Lists all available packages from the Unity package registry.")]
-        public async Task<string> ListAvailablePackages()
+        [McpServerResource(Name = "list_available_unity_packages"), Description("Lists all available packages from the Unity package registry.")]
+        public async Task<TextResourceContents> ListAvailablePackages()
         {
-            var resourceRequest = new JObject
+            var resourceRequest = new UnityResourceRequest
             {
-                ["resourceUri"] = "packages/available",
-                ["parameters"] = new JObject()
+                command = "list_available_unity_packages",
+                resource_uri = "unity://packages/available"
             };
 
-            return await EditorBridgeClientService.SendMessageToUnity(resourceRequest.ToString());
+            var jsonResponse = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(resourceRequest));
+            return ResourceParser.ParseTextResourceContents(jsonResponse);
         }
     }
 }

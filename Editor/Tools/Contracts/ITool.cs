@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Editor.Models;
 
-namespace UnityIntelligenceMCP.Tools
+namespace UnityIntelligenceMCP.Tools.Contracts
 {
     public interface ITool
     {

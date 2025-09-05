@@ -117,22 +117,23 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
             );
         ";
 
-        private const string ToolUsageLogTable = @"
-            CREATE SEQUENCE tool_usage_log_id_seq START 1;
-            CREATE TABLE IF NOT EXISTS tool_usage_log (
-                id BIGINT PRIMARY KEY DEFAULT nextval('tool_usage_log_id_seq'),
-                event_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        private const string MCPUsageLogTable = @"
+            CREATE SEQUENCE mcp_usage_logs_id_seq START 1;
+            CREATE TABLE IF NOT EXISTS mcp_usage_logs (
+                id BIGINT PRIMARY KEY DEFAULT nextval('mcp_usage_logs_id_seq'),
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 usage_type VARCHAR NOT NULL,
-                operation_name VARCHAR NOT NULL,
-                resource_uri VARCHAR,
+                command_name VARCHAR NOT NULL,
                 parameters_json VARCHAR,
                 result_summary_json VARCHAR,
                 execution_time_ms BIGINT,
                 was_successful BOOLEAN
             );
+            CREATE INDEX IF NOT EXISTS idx_usage_type ON mcp_usage_logs(usage_type);
+            CREATE INDEX IF NOT EXISTS idx_usage_type_time ON mcp_usage_logs(usage_type, timestamp DESC);
         ";
 
-        private const string unity_console_logsTable = @"
+        private const string UnityConsoleLogsTable = @"
             CREATE TABLE IF NOT EXISTS unity_console_logs (
                 timestamp TIMESTAMP,
                 log_type VARCHAR,
@@ -263,10 +264,10 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 
             try
             {
-                command.CommandText = ToolUsageLogTable;
+                command.CommandText = MCPUsageLogTable;
                 await command.ExecuteNonQueryAsync();
                 
-                command.CommandText = unity_console_logsTable;
+                command.CommandText = UnityConsoleLogsTable;
                 await command.ExecuteNonQueryAsync();
 
                 // Processing table

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using UnityIntelligenceMCP.Core.Data.Contracts;
 using UnityIntelligenceMCP.Models.Database;
 using DuckDB.NET.Data;
+using System.Text.Json;
 
 namespace UnityIntelligenceMCP.Core.Data.Infrastructure
 {
@@ -11,10 +12,12 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
     {
         private readonly IDuckDbConnectionFactory _connectionFactory;
         private readonly IDbWorkQueue _workQueue;
+        private readonly IMCPUsageLogger _usageLogger;
 
-        public ConsoleLogRepository(IDbWorkQueue workQueue, IDuckDbConnectionFactory connectionFactory)
+        public ConsoleLogRepository(IDbWorkQueue workQueue, IMCPUsageLogger usageLogger, IDuckDbConnectionFactory connectionFactory)
         {
             _workQueue = workQueue;
+            _usageLogger = usageLogger;
             _connectionFactory = connectionFactory;
         }
 
@@ -81,6 +84,16 @@ namespace UnityIntelligenceMCP.Core.Data.Infrastructure
                         StackTrace = reader.GetString(5)
                     });
                 }
+                await _usageLogger.LogAsync(new MCPUsageLog
+                {
+                    CommandName = "get_console_logs",
+                    UsageType = "resource",
+                    ParametersJson = JsonSerializer.Serialize(parameters),
+                    ResultSummaryJson = JsonSerializer.Serialize(results),
+                    // ExecutionTimeMs = 0,
+                    WasSuccessful = true,
+                });
+
                 return results;
             });
         }

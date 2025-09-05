@@ -6,35 +6,32 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using UnityIntelligenceMCP.Core.Services;
+using UnityIntelligenceMCP.Models;
 
 namespace UnityIntelligenceMCP.Resources
 {
     [McpServerResourceType]
     public class PrefabResource
     {
-        private readonly ILogger<PrefabResource> _logger;
+        // private readonly ILogger<PrefabResource> _logger;
 
-        public PrefabResource(ILogger<PrefabResource> logger)
-        {
-            _logger = logger;
-        }
+        // public PrefabResource(ILogger<PrefabResource> logger)
+        // {
+        //     _logger = logger;
+        // }
 
         [McpServerResource(Name = "list_prefabs")]
         [Description("Lists prefabs in the Unity project, optionally filtering by a search path.")]
         public async Task<TextResourceContents> ListPrefabsAsync(
-        [Description("The folder path to search within, e.g., 'Assets/Prefabs'. Searches the entire project if omitted.")] string searchPath = "Assets")
+        [Description("The folder path to search within, e.g., 'Assets/Prefabs'. Searches the entire project if omitted.")] 
+        string searchPath = "Assets")
         {
-            try
-            {
-                var request = new
+                var request = new UnityResourceRequest
                 {
-                    type = "resource",
-                    resource_uri = "unity://prefabs/",
-                    parameters = new
-                    {
-                        search_path = searchPath
-                    }
+                    command = "list_prefabs",
+                    resource_uri = "unity://prefabs",
                 };
+                request.parameters["search_path"] = searchPath;
 
                 var jsonPayload = JsonSerializer.Serialize(request);
                 var jsonResponse = await EditorBridgeClientService.SendMessageToUnity(jsonPayload);
@@ -42,25 +39,19 @@ namespace UnityIntelligenceMCP.Resources
                 using var doc = JsonDocument.Parse(jsonResponse);
                 var root = doc.RootElement;
 
+                string data = "";
                 if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
                 {
-                    var data = root.GetProperty("data").GetRawText();
-                    return new TextResourceContents
-                    {
-                        Uri  = request.resource_uri,
-                        Text = data,
-                        MimeType = "application/json"
-                    };
+                    data = root.GetProperty("data").GetRawText();
                 }
-
-                var message = root.TryGetProperty("message", out var msgEl) ? msgEl.GetString() : "Unknown error from Unity Editor.";
-                throw new InvalidOperationException($"Failed to list prefabs from Unity: {message}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to list prefabs from Unity Editor.");
-                throw new InvalidOperationException($"Error communicating with Unity Editor: {ex.Message}", ex);
-            }
+                else
+                    data = root.TryGetProperty("error", out var msgEl) ? msgEl.GetString()! : "Unknown error from Unity Editor.";
+                return new TextResourceContents
+                {
+                    Uri  = request.resource_uri,
+                    Text = data,
+                    MimeType = "application/json"
+                };
         }
     }
 }

@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Editor.Models;
+using UnityIntelligenceMCP.Tools.Contracts;
 using UnityIntelligenceMCP.Tools.GameObjects;
 using UnityIntelligenceMCP.Tools.Prefab;
 using UnityIntelligenceMCP.Tools.Editor;
-using UnityIntelligenceMCP.Unity.Services;
 
-namespace UnityIntelligenceMCP.Tools
+namespace UnityIntelligenceMCP.Editor.Services
 {
     public class ToolService
     {

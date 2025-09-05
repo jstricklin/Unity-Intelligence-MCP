@@ -17,12 +17,12 @@ namespace UnityIntelligenceMCP.Core.Semantics
     {
         private readonly IEmbeddingService _embedding;
         private readonly IDuckDbConnectionFactory _dbFactory;
-        private readonly IToolUsageLogger _usageLogger;
+        private readonly IMCPUsageLogger _usageLogger;
 
         public SemanticSearchService(
             IEmbeddingService embeddingService,
             IDuckDbConnectionFactory connectionFactory,
-            IToolUsageLogger usageLogger)
+            IMCPUsageLogger usageLogger)
         {
             _embedding = embeddingService;
             _dbFactory = connectionFactory;
@@ -229,9 +229,9 @@ namespace UnityIntelligenceMCP.Core.Semantics
                 var parameters = new { query, docLimit, chunksPerDoc, semanticWeight, sourceType };
                 var resultSummary = new { documentCount = results?.Count ?? 0 };
 
-                _ = _usageLogger.LogAsync(new ToolUsageLog
+                _ = _usageLogger.LogAsync(new MCPUsageLog
                 {
-                    OperationName = "hybrid_semantic_docs_search",
+                    CommandName = "hybrid_semantic_docs_search",
                     UsageType = "tool",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     ResultSummaryJson = JsonSerializer.Serialize(resultSummary),

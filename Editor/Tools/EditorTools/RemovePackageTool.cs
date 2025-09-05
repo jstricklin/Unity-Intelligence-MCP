@@ -1,6 +1,8 @@
+using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
+using UnityEngine;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 using UnityIntelligenceMCP.Editor.Models;
@@ -24,24 +26,28 @@ namespace UnityIntelligenceMCP.Tools.Editor
 
             EditorApplication.delayCall += () =>
             {
+                Debug.Log("starting package remove");
                 RemoveRequest request = Client.Remove(packageName);
-                void OnProgress(RemoveRequest req)
+                EditorApplication.update += OnProgress;
+                void OnProgress()
                 {
-                    if (req.Status == StatusCode.Success)
+                    if (request.Status != StatusCode.InProgress)
+                        Debug.Log($"package remove complete. status: {request.Status.ToString()}");
+                    if (request.Status == StatusCode.Success)
                     {
                         tcs.TrySetResult(ToolResponse.SuccessResponse($"Successfully removed package: {packageName}"));
-                        request.completed -= OnProgress;
+                        EditorApplication.update -= OnProgress;
                     }
-                    else if (req.Status >= StatusCode.Failure)
+                    else if (request.Status == StatusCode.Failure)
                     {
-                        tcs.TrySetResult(ToolResponse.ErrorResponse($"Failed to remove package '{packageName}': {req.Error.message}"));
-                        request.completed -= OnProgress;
+                        tcs.TrySetResult(ToolResponse.ErrorResponse($"Failed to remove package '{packageName}': {request.Error.message}"));
+                        EditorApplication.update -= OnProgress;
                     }
                 }
-                request.completed += OnProgress;
             };
 
             return tcs.Task;
         }
+
     }
 }

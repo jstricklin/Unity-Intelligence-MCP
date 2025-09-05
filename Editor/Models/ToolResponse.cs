@@ -13,6 +13,7 @@ namespace UnityIntelligenceMCP.Editor.Models
 
         [JsonProperty("data", NullValueHandling = NullValueHandling.Ignore)]
         public object Data { get; private set; }
+
         [JsonProperty("error", NullValueHandling = NullValueHandling.Ignore)]
         public object Error { get; private set; }
 

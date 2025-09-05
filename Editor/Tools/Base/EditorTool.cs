@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Editor.Models;
+using UnityIntelligenceMCP.Tools.Contracts;
 
 namespace UnityIntelligenceMCP.Tools.Base
 {

@@ -10,17 +10,21 @@ using UnityIntelligenceMCP.Utilities;
 namespace UnityIntelligenceMCP.Resources
 {
     [McpServerResourceType]
-    public class ListInstalledUnityPackagesResource
+    public class GetPackageInfoResource
     {
-        [McpServerResource(Name = "list_installed_unity_packages"), Description("Lists all packages currently installed in the Unity project.")]
-        public async Task<TextResourceContents> ListInstalledPackages()
+        // TODO enhance with proper URI template processing
+        [McpServerResource(Name = "get_package_info"), Description("Get package from the Unity package registry.")]
+        public async Task<TextResourceContents> GetPackageInfo(
+            [Description("Package name (e.g., 'com.unity.2d.animation')")] 
+            string packageName
+        )
         {
             var resourceRequest = new UnityResourceRequest
             {
-                command = "list_installed_unity_packes",
-                resource_uri = "unity://packages/installed"
+                command = "get_package_info",
+                resource_uri = "unity://packages/info/{package_name}"
             };
-
+            resourceRequest.parameters["package_name"] = packageName;
             var jsonResponse = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(resourceRequest));
             return ResourceParser.ParseTextResourceContents(jsonResponse);
         }

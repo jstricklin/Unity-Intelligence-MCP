@@ -24,14 +24,14 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
         private readonly PatternDetectorRegistry _patternDetectors;
         private readonly UnityComponentRelationshipAnalyzer _relationshipAnalyzer;
         private readonly UnityDependencyGraphAnalyzer _dependencyGraphAnalyzer;
-        private readonly IToolUsageLogger _usageLogger;
+        private readonly IMCPUsageLogger _usageLogger;
         
         public UnityProjectAnalyzer(
             UnityRoslynAnalysisService roslynService,
             PatternDetectorRegistry patternDetectors,
             UnityComponentRelationshipAnalyzer relationshipAnalyzer,
             UnityDependencyGraphAnalyzer dependencyGraphAnalyzer,
-            IToolUsageLogger usageLogger)
+            IMCPUsageLogger usageLogger)
         {
             _roslynService = roslynService;
             _patternDetectors = patternDetectors;
@@ -116,9 +116,9 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
                 var parameters = new { projectPath };
                 var resultSummary = new { MimeType = "Binary", TextLength = "N/A" };
 
-                await _usageLogger.LogAsync(new ToolUsageLog
+                await _usageLogger.LogAsync(new MCPUsageLog
                 {
-                    OperationName = "analyze_unity_project",
+                    CommandName = "analyze_unity_project",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     ResultSummaryJson = JsonSerializer.Serialize(resultSummary),
                     ExecutionTimeMs = stopwatch.ElapsedMilliseconds,

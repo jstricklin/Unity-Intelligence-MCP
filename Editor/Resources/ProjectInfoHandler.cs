@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityIntelligenceMCP.Editor.Resources.Contracts;
 using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Utils;
 
@@ -11,7 +12,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
     {
         public string ResourceURI => "unity://project/info";
 
-        public async Task<ToolResponse> HandleRequest(JObject parameters)
+        public async Task<ResourceResponse> HandleRequest(JObject parameters)
         {
             var projectInfo = new JObject
             {
@@ -22,8 +23,8 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
                 ["applicationVersion"] = Application.version,
                 ["isPlaying"] = EditorApplication.isPlaying
             };
-            
-            return await Task.FromResult(ToolResponse.SuccessResponse("Project info retrieved", projectInfo));
+
+            return await Task.FromResult(ResourceResponse.SuccessResponse(ResourceURI, projectInfo));
         }
     }
 }

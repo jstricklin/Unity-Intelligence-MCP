@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityIntelligenceMCP.Editor.Resources.Contracts;
 using UnityIntelligenceMCP.Editor.Models;
 
 namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
@@ -11,7 +12,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
     {
         public string ResourceURI => "unity://prefabs/";
 
-        public Task<ToolResponse> HandleRequest(JObject parameters)
+        public Task<ResourceResponse> HandleRequest(JObject parameters)
         {
             var searchPath = parameters?["search_path"]?.Value<string>()?.Trim();
             if (string.IsNullOrEmpty(searchPath))
@@ -34,7 +35,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             }).ToArray();
 
             var data = new { prefabs, totalCount = prefabs.Length, searchPath };
-            return Task.FromResult(ToolResponse.SuccessResponse("Successfully retrieved prefabs.", data));
+            return Task.FromResult(ResourceResponse.SuccessResponse(ResourceURI, data));
         }
 
         private string GetVariantParentPath(GameObject prefab)

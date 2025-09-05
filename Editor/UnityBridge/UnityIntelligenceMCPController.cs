@@ -158,7 +158,7 @@ namespace UnityIntelligenceMCP.Unity
             Utilities.WriteFile(rooCodeDir, "mcp.json", jsonContent);
         }
 
-        public async Task<ToolResponse> HandleResource(string resourceUri, JObject parameters)
+        public async Task<ResourceResponse> HandleResource(string resourceUri, JObject parameters)
         {
             return await ResourceService.HandleRequest(resourceUri, parameters);
         }

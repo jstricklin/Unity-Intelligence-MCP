@@ -6,17 +6,17 @@ using UnityIntelligenceMCP.Models.Database;
 
 namespace UnityIntelligenceMCP.Core.Data.Logging
 {
-    public class DuckDbToolUsageLogger : IToolUsageLogger
+    public class DuckDbMCPUsageLogger : IMCPUsageLogger
     {
         private readonly IDuckDbConnectionFactory _dbFactory;
-        public DuckDbToolUsageLogger(IDuckDbConnectionFactory dbFactory)
+        public DuckDbMCPUsageLogger(IDuckDbConnectionFactory dbFactory)
         {
             _dbFactory = dbFactory;
         }
 
-        public ToolUsageLog Parse(string toolData, ToolUsageLog? log = null)
+        public MCPUsageLog Parse(string toolData, MCPUsageLog? log = null)
         {
-            var usageLog = log ?? new ToolUsageLog();
+            var usageLog = log ?? new MCPUsageLog();
             using var doc = JsonDocument.Parse(toolData);
             var root = doc.RootElement;
 
@@ -36,7 +36,7 @@ namespace UnityIntelligenceMCP.Core.Data.Logging
                 switch (prop.Name)
                 {
                     case "command":
-                        usageLog.OperationName = prop.Value.ToString();
+                        usageLog.CommandName = prop.Value.ToString();
                         break;
                     case "parameters":
                         usageLog.ParametersJson = prop.Value.ToString();
@@ -75,25 +75,23 @@ namespace UnityIntelligenceMCP.Core.Data.Logging
             return usageLog;
         }
 
-        public async Task LogAsync(ToolUsageLog log)
+        public async Task LogAsync(MCPUsageLog log)
         {
             await _dbFactory.ExecuteWithConnectionAsync(async connection =>
             {
                 using var cmd = connection.CreateCommand();
                 cmd.CommandText = @"
-                    INSERT INTO tool_usage_log (
+                    INSERT INTO mcp_usage_logs (
                         usage_type,
-                        operation_name,
-                        resource_uri,
+                        command_name,
                         parameters_json, 
                         result_summary_json, 
                         execution_time_ms, 
                         was_successful
-                    ) VALUES ($usage_type, $operation_name, $resource_uri, $parameters, $summary, $execution_time, $success);
+                    ) VALUES ($usage_type, $command_name, $parameters, $summary, $execution_time, $success);
                 ";
                 cmd.Parameters.Add(new DuckDBParameter("usage_type", log.UsageType));
-                cmd.Parameters.Add(new DuckDBParameter("operation_name", log.OperationName));
-                cmd.Parameters.Add(new DuckDBParameter("resource_uri", log.ResourceUri));
+                cmd.Parameters.Add(new DuckDBParameter("command_name", log.CommandName));
                 cmd.Parameters.Add(new DuckDBParameter("parameters", log.ParametersJson));
                 cmd.Parameters.Add(new DuckDBParameter("summary", log.ResultSummaryJson));
                 cmd.Parameters.Add(new DuckDBParameter("execution_time", log.ExecutionTimeMs));

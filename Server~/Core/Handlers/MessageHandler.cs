@@ -16,11 +16,11 @@ namespace UnityIntelligenceMCP.Core.Handlers
     {
         private readonly ILogger<MessageHandler> _logger;
         private readonly ICommandService _commandService;
-        private readonly IToolUsageLogger _toolLogger;
+        private readonly IMCPUsageLogger _toolLogger;
 
         public MessageHandler(
         ICommandService commandService, 
-        IToolUsageLogger toolLogger, 
+        IMCPUsageLogger toolLogger, 
         ILogger<MessageHandler> logger)
         {
             _commandService = commandService;
@@ -28,7 +28,7 @@ namespace UnityIntelligenceMCP.Core.Handlers
             _logger = logger;
         }
 
-        public async Task<string> ProcessMessageAsync(string message, ConcurrentDictionary<string, (ToolUsageLog usageLog, TaskCompletionSource<string> tcs)> pendingRequests)
+        public async Task<string> ProcessMessageAsync(string message, ConcurrentDictionary<string, (MCPUsageLog usageLog, TaskCompletionSource<string> tcs)> pendingRequests)
         {
             // _logger.LogInformation("Processing message from Unity Editor: {message}", message);
             // Message processing logic will go here.

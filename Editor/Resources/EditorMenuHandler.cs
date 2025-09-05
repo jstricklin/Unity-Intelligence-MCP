@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityIntelligenceMCP.Editor.Models;
+using UnityIntelligenceMCP.Editor.Resources.Contracts;
 using System.Linq;
 using System;
 using System.Reflection;
@@ -12,7 +13,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
     {
         public string ResourceURI => "unity://editor/menuitems";
 
-        public Task<ToolResponse> HandleRequest(JObject parameters)
+        public Task<ResourceResponse> HandleRequest(JObject parameters)
         {
             var menuItems = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(assembly => assembly.GetTypes())
@@ -27,7 +28,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
                 })
                 .ToList();
 
-            return Task.FromResult(ToolResponse.SuccessResponse("Successfully retrieved editor menu items.", menuItems));
+            return Task.FromResult(ResourceResponse.SuccessResponse(ResourceURI, menuItems));
         }
     }
 }

@@ -20,16 +20,16 @@ namespace UnityIntelligenceMCP.Core.Services
     public class EditorBridgeClientService : BackgroundService
     {
         private readonly ILogger<EditorBridgeClientService> _logger;
-        private readonly IToolUsageLogger _toolLogger;
+        private readonly IMCPUsageLogger _toolLogger;
         private readonly ConfigurationService _configurationService;
         private readonly IMessageHandler _messageHandler;
         private ClientWebSocket _ws = new();
         private static EditorBridgeClientService? _instance;
-        private readonly ConcurrentDictionary<string, (ToolUsageLog usageLog, TaskCompletionSource<string> tcs)> _pendingRequests = new();
+        private readonly ConcurrentDictionary<string, (MCPUsageLog usageLog, TaskCompletionSource<string> tcs)> _pendingRequests = new();
         public EditorBridgeClientService(
             ConfigurationService configurationService,
             IMessageHandler messageHandler,
-            IToolUsageLogger toolLogger,
+            IMCPUsageLogger toolLogger,
             ILogger<EditorBridgeClientService> logger)
         {
             _configurationService = configurationService;
@@ -165,6 +165,7 @@ namespace UnityIntelligenceMCP.Core.Services
         {
             var requestId = Guid.NewGuid().ToString();
             var tcs = new TaskCompletionSource<string>();
+            _logger.LogInformation(jsonPayload);
             var usageLog = _toolLogger.Parse(jsonPayload);
 
             if (!_pendingRequests.TryAdd(requestId, (usageLog, tcs)))

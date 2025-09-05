@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityIntelligenceMCP.Editor.Models;
 using UnityIntelligenceMCP.Editor.Core;
 using UnityIntelligenceMCP.Editor.Services;
+using UnityIntelligenceMCP.Editor.Resources.Contracts;
 
 namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
 {
@@ -22,7 +23,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             RegisterHandler(new SelectionHandler());
             RegisterHandler(new AvailablePackagesHandler());
             RegisterHandler(new InstalledPackagesHandler());
-            // Add other handlers later
+            RegisterHandler(new PackageInfoHandler());
         }
 
         public static void RegisterHandler(IResourceHandler handler)
@@ -35,20 +36,20 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             _handlers.Add(handler.ResourceURI, handler);
         }
 
-        public static async Task<ToolResponse> HandleRequest(string resourceUri, JObject parameters = null)
+        public static async Task<ResourceResponse> HandleRequest(string resourceUri, JObject parameters = null)
         {
             try
             {
                 if (!_handlers.TryGetValue(resourceUri, out var handler))
                 {
-                    return await Task.FromResult(ToolResponse.ErrorResponse($"Resource not supported: {resourceUri}"));
+                    return await Task.FromResult(ResourceResponse.ErrorResponse(resourceUri, $"Resource not supported: {resourceUri}"));
                 }
                 return await handler.HandleRequest(parameters);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"Resource error: {ex.Message}\n{ex.StackTrace}");
-                return await Task.FromResult(ToolResponse.ErrorResponse($"Internal error: {ex.Message}"));
+                return await Task.FromResult(ResourceResponse.ErrorResponse(resourceUri, $"Internal error: {ex.Message}"));
             }
         }
     }
