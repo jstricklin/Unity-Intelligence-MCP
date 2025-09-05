@@ -2,9 +2,11 @@ using UnityEngine;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 using System.Threading.Tasks;
+using UnityEditor;
 
 namespace UnityIntelligenceMCP.Unity
 {
+    [InitializeOnLoad]
     public class UnityIntelligenceMCPServer 
     {
         private static UnityIntelligenceMCPServer _instance;
@@ -26,7 +28,6 @@ namespace UnityIntelligenceMCP.Unity
         public void Start(int port)
         {
             if (IsListening) return;
-
             try
             {
                 _wsserver = new WebSocketServer($"ws://localhost:{port}");
@@ -46,7 +47,7 @@ namespace UnityIntelligenceMCP.Unity
 
             _wsserver?.Stop();
             _wsserver = null;
-            Debug.Log("Unity Intelligence MCP WebSocket server stopped");
+            // Debug.Log("Unity Intelligence MCP WebSocket server stopped");
         }
 
         public Task Send(string jsonPayload)

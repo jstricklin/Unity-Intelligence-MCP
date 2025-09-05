@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 
 namespace UnityIntelligenceMCP.Unity
 {
+    [InitializeOnLoad]
     public class UnityIntelligenceMCPController
     {
         public static UnityIntelligenceMCPController Instance { get; private set; }

@@ -6,6 +6,7 @@ using UnityIntelligenceMCP.Editor.Services;
 
 namespace UnityIntelligenceMCP.Unity
 {
+    [InitializeOnLoad]
     public class UnityIntelligenceMCPEditorWindow : EditorWindow
     {
         private GUIStyle _headerStyle;
@@ -29,9 +30,10 @@ namespace UnityIntelligenceMCP.Unity
 
         private void OnEnable()
         {
-            // FIXME resolve disconnects on code rebuild and editor Play mode - Scriptable Object to host server?
             _controller = new UnityIntelligenceMCPController();
             _version = UnityPackageService.GetPackageInfo("com.jstricklin.unity-intelligence-mcp").Version;
+            EditorSettings.enterPlayModeOptionsEnabled = true;
+            EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
         }
 
         private void OnGUI()

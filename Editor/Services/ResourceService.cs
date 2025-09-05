@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityIntelligenceMCP.Editor.Models;
-using UnityIntelligenceMCP.Editor.Core;
 using UnityIntelligenceMCP.Editor.Services;
 using UnityIntelligenceMCP.Editor.Resources.Contracts;
 
