@@ -24,6 +24,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
             RegisterHandler(new AvailablePackagesHandler());
             RegisterHandler(new InstalledPackagesHandler());
             RegisterHandler(new PackageInfoHandler());
+            RegisterHandler(new AssetInfoHandler());
         }
 
         public static void RegisterHandler(IResourceHandler handler)
