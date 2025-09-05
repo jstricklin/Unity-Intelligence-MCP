@@ -17,13 +17,13 @@ public class UnityIntelligenceMCPSocketHandler : WebSocketBehavior
     public static bool ClientsConnected => _connections.Count > 0;
     protected override void OnOpen()
     {
-        Debug.Log($"New MCP client Started: {ID}");
+        // Debug.Log($"New MCP client Started: {ID}");
         _connections.Add(ID);
     }
 
     protected override void OnClose(CloseEventArgs e)
     {
-        Debug.Log($"MCP client disconnected: {ID}");
+        // Debug.Log($"MCP client disconnected: {ID}");
         _connections.Remove(ID);
     }
 

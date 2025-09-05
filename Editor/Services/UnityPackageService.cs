@@ -70,7 +70,6 @@ namespace UnityIntelligenceMCP.Editor.Services
             }
         }
 
-        // TODO Add new GetPackageDetails resource to retrieve full description of input package
         public static UnityPackageData GetPackageInfo(string packageName)
         {
             var tcs = new TaskCompletionSource<ResourceResponse>();

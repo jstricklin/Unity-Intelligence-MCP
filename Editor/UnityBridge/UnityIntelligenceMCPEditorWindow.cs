@@ -2,6 +2,7 @@ using System;
 // using UnityIntelligenceMCP.Utils;
 using UnityEngine;
 using UnityEditor;
+using UnityIntelligenceMCP.Editor.Services;
 
 namespace UnityIntelligenceMCP.Unity
 {
@@ -16,7 +17,8 @@ namespace UnityIntelligenceMCP.Unity
         private Vector2 _serverTabScrollPosition = Vector2.zero;
         private Vector2 _configurationTabScrollPosition = Vector2.zero;
         private UnityIntelligenceMCPController _controller;
-        private bool connectionStarted = false;
+        private bool _connectionStarted = false;
+        private string _version = "0.1.0";
 
         [MenuItem("Tools/Unity Intelligence MCP/Server Window", false, 1)]
         public static void ShowWindow()
@@ -27,7 +29,9 @@ namespace UnityIntelligenceMCP.Unity
 
         private void OnEnable()
         {
+            // FIXME resolve disconnects on code rebuild and editor Play mode - Scriptable Object to host server?
             _controller = new UnityIntelligenceMCPController();
+            _version = UnityPackageService.GetPackageInfo("com.jstricklin.unity-intelligence-mcp").Version;
         }
 
         private void OnGUI()
@@ -59,7 +63,7 @@ namespace UnityIntelligenceMCP.Unity
 
             // Version info at the bottom
             GUILayout.FlexibleSpace();
-            WrappedLabel($"Unity Intelligence MCP v0.1.0", EditorStyles.miniLabel, GUILayout.Width(150));
+            WrappedLabel($"Unity Intelligence MCP v{_version}", EditorStyles.miniLabel, GUILayout.Width(150));
             EditorGUILayout.EndVertical();
         }
 
@@ -108,16 +112,16 @@ namespace UnityIntelligenceMCP.Unity
 
             if (!mcpUnityServer.IsListening)
             {
-                if (settings.AutoStart || connectionStarted || GUILayout.Button("Start Server", GUILayout.Height(30)))
+                if (settings.AutoStart || _connectionStarted || GUILayout.Button("Start Server", GUILayout.Height(30)))
                 {
                     _controller.StartServer();
-                    connectionStarted = true;
+                    _connectionStarted = true;
                 }
             }
             else if (GUILayout.Button($"{(settings.AutoStart ? "AutoStart Enabled" : "Stop Server")}", GUILayout.Height(30)))
             {
                 _controller.StopServer();
-                connectionStarted = false;
+                _connectionStarted = false;
             }
 
             EditorGUI.EndDisabledGroup();
@@ -126,6 +130,17 @@ namespace UnityIntelligenceMCP.Unity
             // if (GUILayout.Button($"Send Test MCP Message", GUILayout.Height(30)))
             //     _controller.SendTestMessage();
             EditorGUILayout.Space();
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.BeginHorizontal();
+
+            string test = mcpUnityServer.IsListening ? "Online Test" : "Offline Test";
+            GUIStyle testStyle = new GUIStyle(EditorStyles.boldLabel);
+            testStyle.normal.textColor = Color.white;
+            EditorGUILayout.LabelField(test, testStyle, GUILayout.Width(85));
+
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }
