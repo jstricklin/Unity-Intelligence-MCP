@@ -35,7 +35,7 @@ namespace UnityIntelligenceMCP.Unity
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
         }
-        private void OnDisable()
+        private void OnDestroy()
         {
             UnityIntelligenceMCPServer.Stop();
         }
