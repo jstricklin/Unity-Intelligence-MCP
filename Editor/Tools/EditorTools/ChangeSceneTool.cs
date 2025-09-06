@@ -1,50 +1,48 @@
-using System.Linq;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityIntelligenceMCP.Editor.Models;
+using UnityIntelligenceMCP.Editor.Services.Contracts;
 using UnityIntelligenceMCP.Tools.Base;
 
 namespace UnityIntelligenceMCP.Tools.Editor
 {
     public class OpenSceneTool : EditorTool
     {
+        private readonly ISceneService _sceneService;
         public override string CommandName => "open_scene";
 
-        public override Task<ToolResponse> ExecuteAsync(JObject parameters)
+        public OpenSceneTool(ISceneService sceneService)
+        {
+            _sceneService = sceneService;
+        }
+
+        protected override ToolResponse ExecuteOnMainThread(JObject parameters)
         {
             var sceneName = parameters["sceneName"]?.Value<string>();
             if (string.IsNullOrEmpty(sceneName))
             {
-                return Task.FromResult(ToolResponse.ErrorResponse("sceneName parameter is required."));
+                return ToolResponse.ErrorResponse("sceneName parameter is required.");
             }
 
-            var sceneGuids = AssetDatabase.FindAssets($"t:Scene {sceneName}");
-            if (sceneGuids.Length == 0)
+            var scenePath = _sceneService.FindScenePathByName(sceneName);
+            if (string.IsNullOrEmpty(scenePath))
             {
-                return Task.FromResult(ToolResponse.ErrorResponse($"Scene '{sceneName}' not found in the project."));
+                return ToolResponse.ErrorResponse($"Scene '{sceneName}' not found in the project.");
             }
-
-            var scenePath = AssetDatabase.GUIDToAssetPath(sceneGuids.First());
 
             var saveChanges = parameters["saveChanges"]?.Value<bool>() ?? false;
-            var additive = parameters["additive"]?.Value<bool>() ?? false;
-
-            if (EditorSceneManager.GetActiveScene().isDirty && saveChanges)
+            if (saveChanges)
             {
-                EditorSceneManager.SaveOpenScenes();
+                _sceneService.SaveCurrentSceneIfDirty();
             }
             
-            var openMode = additive ? OpenSceneMode.Additive : OpenSceneMode.Single;
-            var scene = EditorSceneManager.OpenScene(scenePath, openMode);
-
-            if (!scene.IsValid())
+            var additive = parameters["additive"]?.Value<bool>() ?? false;
+            
+            if (!_sceneService.OpenScene(scenePath, additive))
             {
-                return Task.FromResult(ToolResponse.ErrorResponse($"Failed to open scene: {sceneName}"));
+                return ToolResponse.ErrorResponse($"Failed to open scene: {sceneName}");
             }
 
-            return Task.FromResult(ToolResponse.SuccessResponse($"Successfully opened scene: {sceneName}", new { sceneName = scene.name }));
+            return ToolResponse.SuccessResponse($"Successfully opened scene: {sceneName}", new { sceneName });
         }
     }
 }

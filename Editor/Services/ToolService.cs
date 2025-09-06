@@ -4,12 +4,13 @@ using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityIntelligenceMCP.Unity.Services.Contracts;
 using UnityIntelligenceMCP.Editor.Models;
+using UnityIntelligenceMCP.Editor.Services.Contracts;
 using UnityIntelligenceMCP.Tools.Contracts;
+using UnityIntelligenceMCP.Tools.Editor;
 using UnityIntelligenceMCP.Tools.GameObjects;
 using UnityIntelligenceMCP.Tools.Prefab;
-using UnityIntelligenceMCP.Tools.Editor;
+using UnityIntelligenceMCP.Unity.Services.Contracts;
 
 namespace UnityIntelligenceMCP.Editor.Services
 {
@@ -28,6 +29,9 @@ namespace UnityIntelligenceMCP.Editor.Services
 
         private void RegisterTools()
         {
+            // Services
+            ISceneService sceneService = new SceneService();
+            
             // Game Object Tools
             RegisterTool(new CreateGameObjectTool(_gameObjectService, _componentService));
             RegisterTool(new ModifyComponentTool(_gameObjectService, _componentService));
@@ -48,7 +52,8 @@ namespace UnityIntelligenceMCP.Editor.Services
             RegisterTool(new ExecuteMenuItemTool());
             RegisterTool(new AddPackageTool());
             RegisterTool(new RemovePackageTool());
-            RegisterTool(new OpenSceneTool());
+            RegisterTool(new OpenSceneTool(sceneService));
+            RegisterTool(new CloseSceneTool(sceneService));
 
             // Will add more tools later (analysis, docs, etc)
         }
