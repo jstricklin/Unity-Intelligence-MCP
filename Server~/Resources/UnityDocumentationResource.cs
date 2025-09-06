@@ -43,7 +43,7 @@ namespace UnityIntelligenceMCP.Resources
             string relativePath
             )
         {
-            TextResourceContents? result = null;
+            // TextResourceContents? result = null;
             try
             {
                 string projectPath = _configurationService.GetConfiguredProjectPath();

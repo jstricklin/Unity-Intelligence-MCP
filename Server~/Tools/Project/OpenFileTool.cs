@@ -11,7 +11,13 @@ namespace UnityIntelligenceMCP.Tools.Project
     [McpServerToolType]
     public class OpenFileTool
     {
-        private readonly string _projectRoot = ConfigurationService.Instance.ProjectPath;
+        private readonly ConfigurationService _configurationService;
+        private readonly string _projectRoot;
+        public OpenFileTool(ConfigurationService configurationService)
+        {
+            _configurationService = configurationService;
+            _projectRoot = _configurationService.GetConfiguredProjectPath();
+        }
 
         [McpServerTool(Name = "open_file"), Description("Opens a specified file in the default system application (e.g., an IDE for script files).")]
         public Task<string> OpenFile(
@@ -32,7 +38,7 @@ namespace UnityIntelligenceMCP.Tools.Project
             
             if (!File.Exists(fullPath))
             {
-                return Task.FromResult($"Error: File not found at '{filePath}'.");
+                return Task.FromResult($"Error: File not found at '{fullPath}'.");
             }
 
             try
