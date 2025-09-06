@@ -4,7 +4,7 @@ namespace UnityIntelligenceMCP.Editor.Services.Contracts
     {
         string FindScenePathByName(string sceneName);
         bool OpenScene(string scenePath, bool additive);
-        bool CloseScene(string sceneName);
+        bool CloseScene(string sceneName, bool saveChanges);
         void SaveCurrentSceneIfDirty();
     }
 }

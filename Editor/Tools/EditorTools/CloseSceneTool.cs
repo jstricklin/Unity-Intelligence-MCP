@@ -28,7 +28,9 @@ namespace UnityIntelligenceMCP.Tools.Editor
                 return Task.FromResult(ToolResponse.ErrorResponse("sceneName parameter is required."));
             }
 
-            if (!_sceneService.CloseScene(sceneName))
+            var saveChanges = parameters["saveChanges"]?.Value<bool>() ?? false;
+
+            if (!_sceneService.CloseScene(sceneName, saveChanges))
             {
                 return Task.FromResult(ToolResponse.ErrorResponse($"Scene '{sceneName}' could not be closed."));
             }

@@ -25,7 +25,7 @@ namespace UnityIntelligenceMCP.Editor.Services
             return scene.IsValid();
         }
 
-        public bool CloseScene(string sceneName)
+        public bool CloseScene(string sceneName, bool saveChanges)
         {
             var scene = SceneManager.GetSceneByName(sceneName);
             if (!scene.isLoaded)
@@ -33,6 +33,12 @@ namespace UnityIntelligenceMCP.Editor.Services
                 // To make it idempotent, we can return true if the scene is already closed.
                 return true; 
             }
+
+            if (scene.isDirty && saveChanges)
+            {
+                EditorSceneManager.SaveScene(scene);
+            }
+            
             return EditorSceneManager.CloseScene(scene, true);
         }
 
