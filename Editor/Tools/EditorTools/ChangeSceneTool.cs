@@ -1,4 +1,5 @@
 using System.IO;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEditor.SceneManagement;
 using UnityIntelligenceMCP.Editor.Models;
@@ -10,17 +11,17 @@ namespace UnityIntelligenceMCP.Tools.Editor
     {
         public override string CommandName => "change_scene";
 
-        protected override ToolResponse ExecuteOnMainThread(JObject parameters)
+        public override Task<ToolResponse> ExecuteAsync(JObject parameters)
         {
             var scenePath = parameters["scenePath"]?.Value<string>();
             if (string.IsNullOrEmpty(scenePath))
             {
-                return ToolResponse.ErrorResponse("scenePath parameter is required.");
+                return Task.FromResult(ToolResponse.ErrorResponse("scenePath parameter is required."));
             }
 
             if (!File.Exists(scenePath))
             {
-                return ToolResponse.ErrorResponse($"Scene file not found at path: {scenePath}");
+                return Task.FromResult(ToolResponse.ErrorResponse($"Scene file not found at path: {scenePath}"));
             }
 
             var saveChanges = parameters["saveChanges"]?.Value<bool>() ?? false;
@@ -33,10 +34,10 @@ namespace UnityIntelligenceMCP.Tools.Editor
             var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
             if (!scene.IsValid())
             {
-                return ToolResponse.ErrorResponse($"Failed to open scene: {scenePath}");
+                return Task.FromResult(ToolResponse.ErrorResponse($"Failed to open scene: {scenePath}"));
             }
 
-            return ToolResponse.SuccessResponse($"Successfully changed to scene: {scenePath}", new { sceneName = scene.name });
+            return Task.FromResult(ToolResponse.SuccessResponse($"Successfully changed to scene: {scenePath}", new { sceneName = scene.name }));
         }
     }
 }
