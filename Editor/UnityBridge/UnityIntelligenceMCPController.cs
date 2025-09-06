@@ -35,6 +35,7 @@ namespace UnityIntelligenceMCP.Unity
             {MCP_IDE.RooCode, "mcpServers"},
         };
 
+        // TODO Consider new controller scriptable object to allow server to run without editor window maintaining this in memory as seen with WebSocketServerMonitor
         public UnityIntelligenceMCPController()
         {
             Instance = this;
