@@ -10,7 +10,7 @@ namespace UnityIntelligenceMCP.Tools.Editor
     [McpServerToolType]
     public class CloseSceneTool
     {
-        [McpServerTool(Name = "close_scene"), Description("Closes/unloads an open scene in the Unity Editor.")]
+        [McpServerTool(Name = "close_scene"), Description("Closes an open scene in the Unity Editor.")]
         public async Task<string> CloseScene(
             [Description("The name of the scene to close (e.g., 'MyScene').")] string sceneName)
         {
