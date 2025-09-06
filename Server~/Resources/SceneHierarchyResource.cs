@@ -23,7 +23,7 @@ namespace UnityIntelligenceMCP.Resources
 
         [McpServerResource(Name = "get_scene_hierarchy")]
         [Description("Retrieves current scene hierarchy (GameObjects and their relationships) from the Unity Editor.")]
-        public async Task<TextResourceContents> GetSceneHierarchyAsync()
+        public async Task<string> GetSceneHierarchyAsync()
         {
             var request = new UnityResourceRequest
             {

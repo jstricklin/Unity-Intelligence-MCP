@@ -7,6 +7,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using UnityIntelligenceMCP.Core.Services;
 using UnityIntelligenceMCP.Models;
+using UnityIntelligenceMCP.Utilities;
 
 namespace UnityIntelligenceMCP.Resources
 {
@@ -22,7 +23,7 @@ namespace UnityIntelligenceMCP.Resources
 
         [McpServerResource(Name = "list_prefabs")]
         [Description("Lists prefabs in the Unity project, optionally filtering by a search path.")]
-        public async Task<TextResourceContents> ListPrefabsAsync(
+        public async Task<string> ListPrefabsAsync(
         [Description("The folder path to search within, e.g., 'Assets/Prefabs'. Searches the entire project if omitted.")] 
         string searchPath = "Assets")
         {
@@ -35,23 +36,23 @@ namespace UnityIntelligenceMCP.Resources
 
                 var jsonPayload = JsonSerializer.Serialize(request);
                 var jsonResponse = await EditorBridgeClientService.SendMessageToUnity(jsonPayload);
+            return ResourceParser.ParseTextResourceContents(jsonResponse);
+            // using var doc = JsonDocument.Parse(jsonResponse);
+            // var root = doc.RootElement;
 
-                using var doc = JsonDocument.Parse(jsonResponse);
-                var root = doc.RootElement;
-
-                string data = "";
-                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
-                {
-                    data = root.GetProperty("data").GetRawText();
-                }
-                else
-                    data = root.TryGetProperty("error", out var msgEl) ? msgEl.GetString()! : "Unknown error from Unity Editor.";
-                return new TextResourceContents
-                {
-                    Uri  = request.resource_uri,
-                    Text = data,
-                    MimeType = "application/json"
-                };
+            // string data = "";
+            // if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+            // {
+            //     data = root.GetProperty("data").GetRawText();
+            // }
+            // else
+            //     data = root.TryGetProperty("error", out var msgEl) ? msgEl.GetString()! : "Unknown error from Unity Editor.";
+            // return new TextResourceContents
+            // {
+            //     Uri  = request.resource_uri,
+            //     Text = data,
+            //     MimeType = "application/json"
+            // };
         }
     }
 }

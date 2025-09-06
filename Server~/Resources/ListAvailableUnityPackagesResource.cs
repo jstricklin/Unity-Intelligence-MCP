@@ -13,7 +13,7 @@ namespace UnityIntelligenceMCP.Resources
     public class ListAvailableUnityPackagesResource
     {
         [McpServerResource(Name = "list_available_unity_packages"), Description("Lists all available packages from the Unity package registry.")]
-        public async Task<TextResourceContents> ListAvailablePackages()
+        public async Task<string> ListAvailablePackages()
         {
             var resourceRequest = new UnityResourceRequest
             {

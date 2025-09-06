@@ -15,7 +15,7 @@ namespace UnityIntelligenceMCP.Resources
     public class AssetInfoResource
     {
         [McpServerResource(Name = "get_assets_info"), Description("Searches the AssetDatabase for assets matching a filter and returns their information.")]
-        public async Task<TextResourceContents> GetAssetsInfo(
+        public async Task<string> GetAssetsInfo(
             [Description("The space-separated filter string for searching assets. Can include names, types (t:), and labels (l:). If empty, returns all assets. One 'type' max per query.")] 
             string filter = "",
             [Description("The project area to search. Defaults to 'assets' folder. (e.g., 'assets', 'packages', 'all')")] 

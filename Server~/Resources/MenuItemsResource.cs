@@ -14,7 +14,7 @@ namespace UnityIntelligenceMCP.Resources
     public class MenuItemsResource
     {
         [McpServerResource(Name = "get_editor_menu_items"), Description("Retrieves a list of all available menu items from the Unity Editor.")]
-        public async Task<TextResourceContents> GetMenuItems(CancellationToken cancellationToken = default)
+        public async Task<string> GetMenuItems(CancellationToken cancellationToken = default)
         {
             var request = new UnityResourceRequest
             {

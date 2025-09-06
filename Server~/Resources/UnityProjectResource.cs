@@ -24,7 +24,7 @@ namespace UnityIntelligenceMCP.Resources
 
         [McpServerResource(Name = "get_project_info")]
         [Description("Retrieves information about the current Unity project from the editor.")]
-        public async Task<TextResourceContents> GetProjectInfoAsync()
+        public async Task<string> GetProjectInfoAsync()
         {
             var request = new UnityResourceRequest
             {

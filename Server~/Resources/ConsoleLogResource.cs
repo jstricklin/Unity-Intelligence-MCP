@@ -19,7 +19,7 @@ namespace UnityIntelligenceMCP.Resources
         }
 
         [McpServerResource(Name = "get_console_logs"), Description("Retrieves cached console logs from the Unity Editor.")]
-        public async Task<TextResourceContents> GetConsoleLogs(
+        public async Task<string> GetConsoleLogs(
             [Description("Filter logs by type (e.g., Error, Warning, Log)")] 
             string logType = "",
             [Description("Page number for pagination")] 
@@ -28,7 +28,8 @@ namespace UnityIntelligenceMCP.Resources
             int pageSize = 100)
         {
             var logs = await _logRepository.GetLogsAsync(logType, page, pageSize);
-            return ResourceParser.ParseTextResourceContents(JsonSerializer.Serialize(logs));
+            return ResourceParser.ParseTextResourceContents(JsonSerializer.Serialize(new { success = true, data = logs }));
+            // return JsonSerializer.Serialize(logs);
         }
     }
 }

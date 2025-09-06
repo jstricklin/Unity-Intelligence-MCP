@@ -13,7 +13,6 @@ namespace UnityIntelligenceMCP.Unity
         private static int _port => UnityIntelligenceMCPSettings.Instance.Port;
         private static WebSocketServer _wsserver;
         public static bool IsListening => _wsserver?.IsListening ?? false;
-
         
         public static void Start()
         {

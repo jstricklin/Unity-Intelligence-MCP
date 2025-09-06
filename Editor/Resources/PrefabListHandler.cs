@@ -10,7 +10,7 @@ namespace UnityIntelligenceMCP.Editor.Services.ResourceServices
 {
     public class PrefabListHandler : IResourceHandler
     {
-        public string ResourceURI => "unity://prefabs/";
+        public string ResourceURI => "unity://prefabs";
 
         public Task<ResourceResponse> HandleRequest(JObject parameters)
         {

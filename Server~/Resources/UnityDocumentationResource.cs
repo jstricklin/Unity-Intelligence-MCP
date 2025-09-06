@@ -38,7 +38,7 @@ namespace UnityIntelligenceMCP.Resources
         }
 
         [McpServerResource(Name = "get_script_reference_page")]
-        public async Task<TextResourceContents> GetScriptReferencePage(
+        public async Task<string> GetScriptReferencePage(
             [Description("The relative path to the HTML documentation file, e.g., 'MonoBehaviour.html'")] 
             string relativePath
             )
@@ -64,12 +64,8 @@ namespace UnityIntelligenceMCP.Resources
                 var parser = new UnityDocumentationParser();
                 UnityDocumentationData docData = await Task.FromResult(Task.Run(() => parser.Parse(fullPath))).Result;
 
-                result = new TextResourceContents
-                {
-                    Text = JsonSerializer.Serialize(docData),
-                    MimeType = "text/json"
-                };
-                return result;
+                var jsonResponse = JsonSerializer.Serialize(new { success = true, data = docData });
+                return ResourceParser.ParseTextResourceContents(jsonResponse);
             }
             catch (DirectoryNotFoundException ex)
             {

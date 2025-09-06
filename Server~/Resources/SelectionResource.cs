@@ -13,7 +13,7 @@ namespace UnityIntelligenceMCP.Resources
     public class SelectionResource
     {
         [McpServerResource(Name = "get_selection"), Description("Retrieves the currently selected GameObject(s) in the Unity Editor.")]
-        public async Task<TextResourceContents> GetSelection(CancellationToken cancellationToken = default)
+        public async Task<string> GetSelection(CancellationToken cancellationToken = default)
         {
             var request = new
             {
@@ -22,7 +22,6 @@ namespace UnityIntelligenceMCP.Resources
                 resource_uri = "unity://selection/current"
             };
             var jsonPayload = JsonSerializer.Serialize(request);
-            // return await EditorBridgeClientService.SendMessageToUnity(jsonPayload);
             var jsonResponse = await EditorBridgeClientService.SendMessageToUnity(jsonPayload);
             return ResourceParser.ParseTextResourceContents(jsonResponse);
         }

@@ -14,7 +14,7 @@ namespace UnityIntelligenceMCP.Resources
     {
         // TODO enhance with proper URI template processing
         [McpServerResource(Name = "get_package_info"), Description("Get package from the Unity package registry.")]
-        public async Task<TextResourceContents> GetPackageInfo(
+        public async Task<string> GetPackageInfo(
             [Description("Package name (e.g., 'com.unity.2d.animation')")] 
             string packageName
         )
@@ -27,6 +27,7 @@ namespace UnityIntelligenceMCP.Resources
             resourceRequest.parameters["package_name"] = packageName;
             var jsonResponse = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(resourceRequest));
             return ResourceParser.ParseTextResourceContents(jsonResponse);
+            // return jsonResponse;
         }
     }
 }
