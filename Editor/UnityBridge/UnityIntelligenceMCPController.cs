@@ -19,7 +19,6 @@ namespace UnityIntelligenceMCP.Unity
     public class UnityIntelligenceMCPController
     {
         public static UnityIntelligenceMCPController Instance { get; private set; }
-        private readonly UnityIntelligenceMCPServer _server;
         private readonly UnityIntelligenceMCPSettings _settings;
         private readonly VSCodeWorkspaceService _vsCodeWorkspaceService;
         private readonly IGameObjectService _gameObjectService;
@@ -39,7 +38,6 @@ namespace UnityIntelligenceMCP.Unity
         public UnityIntelligenceMCPController()
         {
             Instance = this;
-            _server = UnityIntelligenceMCPServer.Instance;
             _settings = UnityIntelligenceMCPSettings.Instance;
             _vsCodeWorkspaceService = new VSCodeWorkspaceService();
             _gameObjectService = new GameObjectService();
@@ -50,12 +48,12 @@ namespace UnityIntelligenceMCP.Unity
 
         public void StartServer()
         {
-            _server.Start(_settings.Port);
+            UnityIntelligenceMCPServer.Start();
         }
 
         public void StopServer()
         {
-            _server.Stop();
+            UnityIntelligenceMCPServer.Stop();
         }
 
         public void ChangeServerUrl(string newUrl)
@@ -85,7 +83,7 @@ namespace UnityIntelligenceMCP.Unity
             {
                 _settings.Port = newPort;
                 _settings.SaveSettings();
-                if (_server.IsListening)
+                if (UnityIntelligenceMCPServer.IsListening)
                 {
                     StopServer();
                     StartServer();
@@ -101,7 +99,7 @@ namespace UnityIntelligenceMCP.Unity
 
         public void SendTestMessage()
         {
-            _server.Send("{\"event\":\"test\", \"data\":\"Hello from Unity Editor\"}");
+            UnityIntelligenceMCPServer.Send("{\"event\":\"test\", \"data\":\"Hello from Unity Editor\"}");
         }
 
         public void CopyMCPConfigToClipboard()

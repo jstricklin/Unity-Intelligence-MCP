@@ -18,7 +18,7 @@ namespace UnityIntelligenceMCP.Unity
         private Vector2 _serverTabScrollPosition = Vector2.zero;
         private Vector2 _configurationTabScrollPosition = Vector2.zero;
         private UnityIntelligenceMCPController _controller;
-        private bool _connectionStarted = false;
+        // private bool _connectionStarted = false;
         private string _version = "0.1.0";
 
         [MenuItem("Tools/Unity Intelligence MCP/Server Window", false, 1)]
@@ -34,6 +34,10 @@ namespace UnityIntelligenceMCP.Unity
             _version = UnityPackageService.GetPackageInfo("com.jstricklin.unity-intelligence-mcp").Version;
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
+        }
+        private void OnDisable()
+        {
+            UnityIntelligenceMCPServer.Stop();
         }
 
         private void OnGUI()
@@ -77,29 +81,28 @@ namespace UnityIntelligenceMCP.Unity
             EditorGUILayout.BeginVertical("box");
 
             UnityIntelligenceMCPSettings settings = UnityIntelligenceMCPSettings.Instance;
-            UnityIntelligenceMCPServer mcpUnityServer = UnityIntelligenceMCPServer.Instance;
 
             // Server status
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
 
             // EditorGUILayout.LabelField("Status:", GUILayout.Width(75));
-            string statusText = mcpUnityServer.IsListening ? "Server Online" : "Server Offline";
-            Color statusColor = mcpUnityServer.IsListening ? Color.green : Color.red;
+            string statusText = UnityIntelligenceMCPServer.IsListening ? "Server Online" : "Server Offline";
+            Color statusColor = UnityIntelligenceMCPServer.IsListening ? Color.green : Color.red;
             GUIStyle statusStyle = new GUIStyle(EditorStyles.boldLabel);
             statusStyle.normal.textColor = statusColor;
             EditorGUILayout.LabelField(statusText, statusStyle, GUILayout.Width(85));
 
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
-            if (mcpUnityServer.IsListening)
+            if (UnityIntelligenceMCPServer.IsListening)
             {
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
                 bool connected = UnityIntelligenceMCPSocketHandler.ClientsConnected;
                 string clientText = connected ? "Client Connected" : "Awaiting Client Connection...";
                 Color clientColor = connected ? Color.green : Color.yellow;
-                GUIStyle clientStyle = new GUIStyle(EditorStyles.boldLabel);
+                GUIStyle clientStyle = new GUIStyle(EditorStyles.label);
                 clientStyle.normal.textColor = clientColor;
                 EditorGUILayout.LabelField(clientText, clientStyle, GUILayout.Width(connected ? 110 : 175));
                 GUILayout.FlexibleSpace();
@@ -107,45 +110,50 @@ namespace UnityIntelligenceMCP.Unity
             }
 
             EditorGUILayout.Space();
-
+            
             // Server controls
             // EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginDisabledGroup(settings.AutoStart);
-
-            if (!mcpUnityServer.IsListening)
+            // EditorGUI.BeginDisabledGroup(settings.AutoStart);
+            if (!UnityIntelligenceMCPServer.IsListening)
             {
-                if (settings.AutoStart || _connectionStarted || GUILayout.Button("Start Server", GUILayout.Height(30)))
+
+                // if (GUILayout.Button("Start Server", GUILayout.Height(30)))
+                if (GUILayout.Button("Start Server", GUILayout.Height(30)))
                 {
                     _controller.StartServer();
-                    _connectionStarted = true;
+                    // settings.MonitorServer = true;
                 }
             }
-            else if (GUILayout.Button($"{(settings.AutoStart ? "AutoStart Enabled" : "Stop Server")}", GUILayout.Height(30)))
+            else if (GUILayout.Button("Stop Server", GUILayout.Height(30)))
             {
                 _controller.StopServer();
-                _connectionStarted = false;
+                // settings.MonitorServer = false;
             }
 
             EditorGUI.EndDisabledGroup();
-            // EditorGUILayout.EndHorizontal();
 
+            // EditorGUILayout.EndHorizontal();
             // if (GUILayout.Button($"Send Test MCP Message", GUILayout.Height(30)))
             //     _controller.SendTestMessage();
+
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space();
             EditorGUILayout.BeginVertical("box");
             EditorGUILayout.BeginHorizontal();
 
-            string test = mcpUnityServer.IsListening ? "Online Test" : "Offline Test";
-            GUIStyle testStyle = new GUIStyle(EditorStyles.boldLabel);
-            testStyle.normal.textColor = Color.white;
-            EditorGUILayout.LabelField(test, testStyle, GUILayout.Width(85));
+            string upTime = UnityIntelligenceMCPServer.IsListening ? $"Up Time: {TimeSpan.FromSeconds(WebSocketServerMonitor.UpTimeSeconds).ToString(@"hh\:mm\:ss")}" : "Offline";
+            // string upTime = UnityIntelligenceMCPServer.IsListening ? $"Server Up Time: {TimeSpan.FromSeconds(WebSocketServerMonitor.UpTimeSeconds).ToString()}" : "Offline";
+
+            GUIStyle upTimeStyle = new GUIStyle(EditorStyles.label);
+            upTimeStyle.normal.textColor = Color.white;
+            EditorGUILayout.LabelField(upTime, upTimeStyle, GUILayout.ExpandWidth(true));
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }
+
 
         private void DrawConfigurationTab()
         {
@@ -176,6 +184,7 @@ namespace UnityIntelligenceMCP.Unity
                 _controller.ChangePort(newPort);
             }
             EditorGUILayout.EndHorizontal();
+
             EditorGUI.BeginChangeCheck();
             string newScriptsDir = EditorGUILayout.TextField("Scripts Directory", settings.ScriptsDir, GUILayout.Width(250));
             if (EditorGUI.EndChangeCheck())
@@ -187,12 +196,12 @@ namespace UnityIntelligenceMCP.Unity
 
             GUILayout.Label("Tool Settings", EditorStyles.boldLabel);
             // Simple checkboxes
-            EditorGUI.BeginChangeCheck();
-            settings.AutoStart = EditorGUILayout.Toggle("Automatically start server", settings.AutoStart);
-            if (EditorGUI.EndChangeCheck())
-            {
-                settings.SaveSettings();
-            }
+            // EditorGUI.BeginChangeCheck();
+            // settings.AutoStart = EditorGUILayout.Toggle("Auto Restart Server", settings.AutoStart);
+            // if (EditorGUI.EndChangeCheck())
+            // {
+            //     settings.SaveSettings();
+            // }
             // settings.AnalyzeProjectCode = EditorGUILayout.Toggle("Enable Code Analysis", settings.AnalyzeProjectCode);
             // settings.EmbeddUnityDocs = EditorGUILayout.Toggle("Build Unity RAG (~2GB)", settings.EmbeddUnityDocs);
 

@@ -8,6 +8,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+WebSocketServerMonitor.*
 
 # Build results
 [Bb]in/

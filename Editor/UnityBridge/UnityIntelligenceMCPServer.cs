@@ -3,58 +3,49 @@ using WebSocketSharp;
 using WebSocketSharp.Server;
 using System.Threading.Tasks;
 using UnityEditor;
+using System.Collections;
 
 namespace UnityIntelligenceMCP.Unity
 {
-    [InitializeOnLoad]
-    public class UnityIntelligenceMCPServer 
+    public static class UnityIntelligenceMCPServer 
     {
-        private static UnityIntelligenceMCPServer _instance;
-        public static UnityIntelligenceMCPServer Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new UnityIntelligenceMCPServer();
-                }
-                return _instance;
-            }
-        }
-        private WebSocketServer _wsserver;
+        private static string _url => UnityIntelligenceMCPSettings.Instance.ServerUrl;
+        private static int _port => UnityIntelligenceMCPSettings.Instance.Port;
+        private static WebSocketServer _wsserver;
+        public static bool IsListening => _wsserver?.IsListening ?? false;
 
-        public bool IsListening => _wsserver?.IsListening ?? false;
-
-        public void Start(int port)
+        
+        public static void Start()
         {
             if (IsListening) return;
+            
             try
             {
-                _wsserver = new WebSocketServer($"ws://localhost:{port}");
+                _wsserver = new WebSocketServer($"{_url}:{_port}");
                 _wsserver.AddWebSocketService<UnityIntelligenceMCPSocketHandler>("/mcp-bridge");
                 _wsserver.Start();
-                Debug.Log($"Unity Intelligence MCP WebSocket server started on port {port}");
+                WebSocketServerMonitor.Initialize();
+                Debug.Log($"Unity Intelligence MCP WebSocket server started on port {_port}");
             }
             catch (System.Exception ex)
             {
                 Debug.LogError($"Failed to start WebSocket server: {ex.Message}");
             }
         }
-
-        public void Stop()
+        
+        public static void Stop()
         {
-            if (_wsserver == null) return;
-
+            WebSocketServerMonitor.Dispose();
             _wsserver?.Stop();
             _wsserver = null;
-            // Debug.Log("Unity Intelligence MCP WebSocket server stopped");
+            Debug.Log("Unity Intelligence MCP WebSocket server stopped");
         }
-
-        public Task Send(string jsonPayload)
+        
+        public static Task Send(string jsonPayload)
         {
             if (!IsListening) return Task.CompletedTask;
-
             _wsserver?.WebSocketServices["/mcp-bridge"].Sessions.Broadcast(jsonPayload);
+            
             return Task.CompletedTask;
         }
     }

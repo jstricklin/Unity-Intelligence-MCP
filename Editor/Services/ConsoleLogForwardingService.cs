@@ -96,7 +96,7 @@ namespace UnityIntelligenceMCP.Editor.Services
                 };
                 
                 var jsonPayload = JsonConvert.SerializeObject(request);
-                await UnityIntelligenceMCPServer.Instance.Send(jsonPayload);
+                await UnityIntelligenceMCPServer.Send(jsonPayload);
             }
         }
 
