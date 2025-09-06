@@ -8,19 +8,21 @@ using UnityIntelligenceMCP.Models;
 namespace UnityIntelligenceMCP.Tools.Editor
 {
     [McpServerToolType]
-    public class ChangeSceneTool
+    public class OpenSceneTool
     {
-        [McpServerTool(Name = "change_scene"), Description("Changes the current active scene in the Unity Editor. Can optionally save changes in the current scene before switching.")]
-        public async Task<string> ChangeScene(
-            [Description("The project-relative path to the scene file (e.g., 'Assets/Scenes/MyScene.unity').")] string scenePath,
-            [Description("If true, saves any unsaved changes in the current scene before changing.")] bool saveChanges = false)
+        [McpServerTool(Name = "open_scene"), Description("Opens a scene in the Unity Editor. Can optionally save changes in the current scene and/or load the new scene additively.")]
+        public async Task<string> OpenScene(
+            [Description("The name of the scene to open (e.g., 'MyScene'). The scene must exist in the project assets.")] string sceneName,
+            [Description("If true, saves any unsaved changes in the current scene before changing.")] bool saveChanges = false,
+            [Description("If true, loads the scene additively on top of the current scene(s).")] bool additive = false)
         {
             var command = new UnityToolRequest
             {
-                command = "change_scene",
+                command = "open_scene",
             };
-            command.parameters["scenePath"] = scenePath;
+            command.parameters["sceneName"] = sceneName;
             command.parameters["saveChanges"] = saveChanges;
+            command.parameters["additive"] = additive;
 
             var response = await EditorBridgeClientService.SendMessageToUnity(JsonSerializer.Serialize(command));
             return UnityToolResponse.ParseResponse(response);
