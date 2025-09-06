@@ -48,6 +48,7 @@ namespace UnityIntelligenceMCP.Editor.Services
             RegisterTool(new ExecuteMenuItemTool());
             RegisterTool(new AddPackageTool());
             RegisterTool(new RemovePackageTool());
+            RegisterTool(new ChangeSceneTool());
 
             // Will add more tools later (analysis, docs, etc)
         }
