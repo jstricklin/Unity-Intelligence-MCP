@@ -40,17 +40,19 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
                 // Cannot perform analysis without MonoBehaviour type, return empty result.
                 return new UnityMessagesAnalysisResult(new List<UnityScriptMessageAnalysis>());
             }
-
+            Console.Error.WriteLine("CHECK 1");
             foreach (var tree in compilation.SyntaxTrees.Where(t => absoluteScriptPaths.Contains(t.FilePath)))
             {
                 var semanticModel = compilation.GetSemanticModel(tree);
                 var classNodes = tree.GetRoot(cancellationToken).DescendantNodes().OfType<ClassDeclarationSyntax>();
 
+                Console.Error.WriteLine("CHECK 2");
                 foreach (var classNode in classNodes)
                 {
                     if (semanticModel.GetDeclaredSymbol(classNode, cancellationToken) is not INamedTypeSymbol classSymbol) continue;
                     if (!IsSubclassOf(classSymbol, monoBehaviourSymbol)) continue;
 
+                    Console.Error.WriteLine("CHECK 3");
                     var messages = AnalyzeClassMethods(classSymbol);
                     if (messages.Any())
                     {

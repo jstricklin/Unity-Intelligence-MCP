@@ -119,6 +119,7 @@ namespace UnityIntelligenceMCP.Core.Analysis.Project
                 await _usageLogger.LogAsync(new MCPUsageLog
                 {
                     CommandName = "analyze_unity_project",
+                    UsageType = "tool",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     ResultSummaryJson = JsonSerializer.Serialize(resultSummary),
                     ExecutionTimeMs = stopwatch.ElapsedMilliseconds,

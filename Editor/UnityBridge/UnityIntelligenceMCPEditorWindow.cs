@@ -37,7 +37,8 @@ namespace UnityIntelligenceMCP.Unity
         }
         private void OnDestroy()
         {
-            UnityIntelligenceMCPServer.Stop();
+            if (UnityIntelligenceMCPServer.IsListening)
+                Debug.Log("Unity Intelligence MCP is running in the background.");
         }
 
         private void OnGUI()
