@@ -40,6 +40,7 @@ internal class WebSocketServerMonitor : ScriptableObject
             _monitor = ScriptableObject.CreateInstance<WebSocketServerMonitor>();
             AssetDatabase.CreateAsset(_monitor, _path);
             AssetDatabase.SaveAssets();
+            AssetDatabase.ImportAsset(_path, ImportAssetOptions.ForceUpdate);
             EditorApplication.quitting += Dispose;
         }
         return initialize;
