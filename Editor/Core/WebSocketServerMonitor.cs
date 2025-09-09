@@ -13,56 +13,53 @@ internal class WebSocketServerMonitor : ScriptableObject
     static double _startTime = 0f;
     static double _lastUpdate = 0f;
     static float _refreshRate = 0.2f;
-    public bool enabled => UnityIntelligenceMCPSettings.Instance.MonitorServer;
+    // public bool enabled => UnityIntelligenceMCPSettings.Instance.MonitorServer;
     static WebSocketServerMonitor _monitor = null;
 
     void OnEnable()
     {
         hideFlags = HideFlags.DontUnloadUnusedAsset;
-        MonitorServerStatus();
+        EditorApplication.update += MonitorServerStatus;
     }
 
     public static void Initialize()
     {
-        if(_monitor == null)
-            InitializeMonitor();
-        if (!UnityIntelligenceMCPSettings.Instance.MonitorServer)
+        if (InitializeMonitor())
         {
-            UnityIntelligenceMCPSettings.Instance.MonitorServer = true;
-            UnityIntelligenceMCPSettings.Instance.SaveSettings();
             _monitor.monitorStartTime = EditorApplication.timeSinceStartup;
         }
-        EditorApplication.update += MonitorServerStatus;
-        EditorApplication.quitting += Dispose;
         _startTime = _monitor.monitorStartTime;
     }
 
-    static void InitializeMonitor()
+    static bool InitializeMonitor()
     {
         _monitor = AssetDatabase.LoadAssetAtPath<WebSocketServerMonitor>(_path);
-        if (_monitor == null)
+        bool initialize = _monitor == null;
+        if (initialize)
         {
             _monitor = ScriptableObject.CreateInstance<WebSocketServerMonitor>();
             AssetDatabase.CreateAsset(_monitor, _path);
             AssetDatabase.SaveAssets();
+            EditorApplication.quitting += Dispose;
         }
+        return initialize;
     }
 
     public static void Dispose()
     {
-        UnityIntelligenceMCPSettings.Instance.MonitorServer = false;
-        UnityIntelligenceMCPSettings.Instance.SaveSettings();
         _startTime = 0f;
         UpTimeSeconds = 0f;
         EditorApplication.update -= MonitorServerStatus;
+        if (_monitor != null || AssetDatabase.LoadAssetAtPath<WebSocketServerMonitor>(_path) != null)
+        {
+            AssetDatabase.DeleteAsset(_path);
+            AssetDatabase.SaveAssets();
+        }
         EditorApplication.quitting -= Dispose;
     }
 
     static void MonitorServerStatus()
     {
-        if (_monitor == null)
-            InitializeMonitor();
-        if (!_monitor.enabled) return;
         if (!UnityIntelligenceMCPServer.IsListening)
             UnityIntelligenceMCPServer.Start();
         else

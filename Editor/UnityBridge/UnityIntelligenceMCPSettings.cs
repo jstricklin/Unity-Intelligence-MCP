@@ -10,7 +10,6 @@ namespace UnityIntelligenceMCP.Unity
         private const int DefaultPort = 5000;
         private const string DefaultServerUrl = "ws://localhost";
         private const bool DefaultAutoStart = false;
-        private const bool DefaultMonitorServer = false;
         // private const bool DefaultAnalyzeProjectCode = true;
         // private const bool DefaultEmbeddUnityDocs = true;
         private const string DefaultScriptsDir = "";
@@ -34,7 +33,6 @@ namespace UnityIntelligenceMCP.Unity
         // public bool AnalyzeProjectCode = DefaultAnalyzeProjectCode;
         // public bool EmbeddUnityDocs = DefaultEmbeddUnityDocs;
         public bool AutoStart = DefaultAutoStart;
-        public bool MonitorServer = DefaultMonitorServer;
         public string ScriptsDir = DefaultScriptsDir;
 
 
