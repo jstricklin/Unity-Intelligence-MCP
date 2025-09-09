@@ -20,6 +20,9 @@ namespace UnityIntelligenceMCP.Unity
         private UnityIntelligenceMCPController _controller;
         // private bool _connectionStarted = false;
         private string _version = "0.1.0";
+        private string _upTimeString = "";
+        private double _refreshRate = 1.0;
+        private double _lastUpdate = 0;
 
         [MenuItem("Tools/Unity Intelligence MCP/Server Window", false, 1)]
         public static void ShowWindow()
@@ -34,7 +37,31 @@ namespace UnityIntelligenceMCP.Unity
             _version = UnityPackageService.GetPackageInfo("com.jstricklin.unity-intelligence-mcp").Version;
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
+            EditorApplication.update += RefreshGUI;
         }
+
+        private void OnDisable()
+        {
+            EditorApplication.update -= RefreshGUI;
+        }
+
+        void RefreshGUI()
+        {
+            if (EditorApplication.timeSinceStartup > _lastUpdate + _refreshRate)
+            {
+                if (UnityIntelligenceMCPServer.IsListening)
+                {
+                    _upTimeString = $"{TimeSpan.FromSeconds(WebSocketServerMonitor.UpTimeSeconds).ToString(@"hh\:mm\:ss")}";
+                } 
+                else 
+                {
+                    _upTimeString = "Offline";
+                }
+                _lastUpdate = EditorApplication.timeSinceStartup;
+                Repaint();
+            } 
+        }
+
         private void OnDestroy()
         {
             if (UnityIntelligenceMCPServer.IsListening)
@@ -143,12 +170,10 @@ namespace UnityIntelligenceMCP.Unity
             EditorGUILayout.BeginVertical("box");
             EditorGUILayout.BeginHorizontal();
 
-            string upTime = UnityIntelligenceMCPServer.IsListening ? $"Up Time: {TimeSpan.FromSeconds(WebSocketServerMonitor.UpTimeSeconds).ToString(@"hh\:mm\:ss")}" : "Offline";
             // string upTime = UnityIntelligenceMCPServer.IsListening ? $"Server Up Time: {TimeSpan.FromSeconds(WebSocketServerMonitor.UpTimeSeconds).ToString()}" : "Offline";
-
             GUIStyle upTimeStyle = new GUIStyle(EditorStyles.label);
             upTimeStyle.normal.textColor = Color.white;
-            EditorGUILayout.LabelField(upTime, upTimeStyle, GUILayout.ExpandWidth(true));
+            EditorGUILayout.LabelField(_upTimeString, upTimeStyle, GUILayout.ExpandWidth(true));
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
